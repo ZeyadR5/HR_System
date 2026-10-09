@@ -129,6 +129,7 @@
             altInput: true,
             altFormat: "h:i K",
             time_24hr: false,
+            disableMobile: true, // يمنع استخدام الـ Native Picker على الموبايل لتسهيل الضغط
             locale: {
                 amPM: ["ص", "م"]
             }

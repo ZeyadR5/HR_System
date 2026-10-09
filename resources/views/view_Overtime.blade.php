@@ -44,7 +44,7 @@
             </div>
         </div>
 
-        @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
         <hr class="my-4 border-default">
         <form action="{{ route('view_Overtime') }}" method="GET" class="flex flex-wrap items-end gap-3">
             <input type="hidden" name="period_start" value="{{ $selectedPeriodStart }}">
@@ -70,7 +70,7 @@
         </form>
         @endif
 
-        @if(in_array(Auth::user()->role, ['admin', 'super_admin']) && $olderPendingCount > 0)
+        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']) && $olderPendingCount > 0)
             <div class="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
                 يوجد {{ $olderPendingCount }} طلب إضافي Pending من فترات أقدم.
                 يمكنك مراجعتها من خلال زر <span class="font-semibold">الدورة السابقة</span>.
@@ -108,11 +108,11 @@
                     <th scope="col" class="px-2 py-2 font-medium">To</th>
                     <th scope="col" class="px-2 py-2 font-medium">Duration</th>
                     <th scope="col" class="px-2 py-2 font-medium">Status</th>
-                    @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+                    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
                         <th scope="col" class="px-2 py-2 font-medium">Actions</th>
                     @endif
                     <th class="px-2 py-2 font-medium">Created At</th>
-                    @if(Auth::user()->role === 'super_admin')
+                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                         <th class="px-2 py-2 font-medium">IP Address</th>
                     @endif
                     <th class="px-2 py-2 font-medium">بواسطة</th>
@@ -164,7 +164,7 @@
                             @endif
                         </td>
                         
-                        @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+                        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
                         <td class="px-2 py-2">
                                 @if($item->status === 'pending')
                                     <div class="flex gap-2">
@@ -212,11 +212,11 @@
                                 
                                 <td class="px-2 py-2">
                                     {{ $item->created_at->toDateString() }}
-                                    @if(Auth::user()->role === 'super_admin')
+                                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                                         <br><span class="text-xs text-gray-500">{{ $item->created_at->format('H:i:s') }}</span>
                                     @endif
                                 </td>
-                                @if(Auth::user()->role === 'super_admin')
+                                @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                                     <td class="px-6 py-4 text-xs text-gray-500" dir="ltr" style="text-align: left;">{{ $item->created_ip ?? '-' }}</td>
                                 @endif
                 <td class="px-6 py-4">
@@ -253,10 +253,12 @@
                         </span>
                     </td>
                     <td class="px-2 py-2 text-heading">
-                        @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
-                            {{ round($monthlyTotals->sum('total'), 2) }} 
+                        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+                            @php $sumHours = $monthlyTotals->sum('total'); @endphp
+                            {{ (int) round($sumHours * 60) }} دقيقة ({{ round($sumHours, 2) }} ساعة)
                         @else
-                            {{ round($monthlyTotals->first()->total ?? 0, 2) }} 
+                            @php $userTotalHours = $monthlyTotals->first()->total ?? 0; @endphp
+                            {{ (int) round($userTotalHours * 60) }} دقيقة ({{ round($userTotalHours, 2) }} ساعة)
                         @endif
                     </td>
                     <td colspan="15"></td>
@@ -265,7 +267,7 @@
         </table>
     </div>
 
-    @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
         <div class="relative overflow-x-auto bg-neutral-primary-soft shadow-xs rounded-base border border-default mt-6">
             <div class="px-2 py-2 bg-neutral-secondary-soft border-b border-default flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <h6 class="font-semibold text-heading">
@@ -279,7 +281,7 @@
                 <thead class="bg-neutral-secondary-soft border-b border-default">
                     <tr>
                         <th class="px-2 py-2 font-medium">Employee Name</th>
-                        <th class="px-2 py-2 font-medium">Accepted Hours This Cycle</th>
+                        <th class="px-2 py-2 font-medium">Accepted Overtime This Cycle</th>
                         <th class="px-2 py-2 font-medium">OT Amount (EGP)</th>
                     </tr>
                 </thead>
@@ -289,7 +291,7 @@
                             <td class="px-2 py-2 font-medium text-heading">{{ $record->name ?? 'غير محدد' }}</td>
                             <td class="px-2 py-2">
                                 <span class="bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
-                                    {{ round($record->total, 2) }} h
+                                    {{ (int) round($record->total * 60) }} دقيقة ({{ round($record->total, 2) }} h)
                                 </span>
                             </td>
                             <td class="px-2 py-2">
@@ -314,7 +316,7 @@
             </table>
         </div>
 
-        @if(Auth::user()->role === 'super_admin')
+        @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
         <div class="flex justify-end mt-4 mb-8">
             <a href="{{ route('overtime.export', ['period_start' => $selectedPeriodStart]) }}"
                class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg">

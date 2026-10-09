@@ -14,7 +14,7 @@ class IncentiveController extends Controller
     // صفحة إضافة حافز
     public function create()
     {
-        if (Auth::user()->role !== 'super_admin') abort(403);
+        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
         $users = User::orderBy('name')->get();
         return view('incentive', compact('users'));
     }
@@ -22,7 +22,7 @@ class IncentiveController extends Controller
     // حفظ الحافز
     public function store(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') abort(403);
+        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -44,7 +44,7 @@ class IncentiveController extends Controller
     // صفحة عرض الحوافز
     public function index(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') abort(403);
+        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $period = PayrollPeriod::fromRequest($request->query('period_start'));
         $periodStart = $period['start'];
@@ -81,7 +81,7 @@ class IncentiveController extends Controller
     // تصدير Excel
     public function export(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') abort(403);
+        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $period = PayrollPeriod::fromRequest($request->query('period_start'));
         $periodStart = $period['start'];

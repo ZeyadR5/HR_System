@@ -51,6 +51,52 @@ class User extends Authenticatable
         ];
     }
 
+    // ==========================================
+    // الفئات والصلاحيات
+    // ==========================================
+
+    public function roleModel()
+    {
+        return $this->belongsTo(Role::class, 'role', 'name');
+    }
+
+    public function isDeveloper(): bool
+    {
+        return $this->role === \App\Support\Permissions::DEVELOPER_ROLE;
+    }
+
+    /** قائمة صلاحيات المستخدم الفعلية */
+    public function permissionList(): array
+    {
+        if ($this->isDeveloper()) {
+            return \App\Support\Permissions::all();
+        }
+        return Role::permissionsFor($this->role);
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        if ($this->isDeveloper()) {
+            return true;
+        }
+        return in_array($permission, Role::permissionsFor($this->role), true);
+    }
+
+    public function hasAnyPermission(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function roleDisplayName(): string
+    {
+        return Role::displayNameFor($this->role);
+    }
+
     /**
      * Send Push Notification to this user (Local).
      */

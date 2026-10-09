@@ -659,6 +659,9 @@
                                     disabled>
                             </div>
                         </div>
+                        <div id="permHoursPreview" style="margin-top:0.7rem; font-size:0.85rem; color:#2563eb; font-weight:600; display:none;">
+                            ⏱️ المدة: <span id="permHoursDisplay"></span>
+                        </div>
                     </div>
                 </div>
 
@@ -740,28 +743,71 @@ function togglePermissionTimes(val) {
     const needsTimes = (val === 'إذن تأخير' || val === 'إذن انصراف باكر');
     timesDiv.style.display = needsTimes ? 'block' : 'none';
     setInputsDisabled(['perm_from', 'perm_to'], !needsTimes);
+    if (needsTimes) {
+        updatePermHoursPreview();
+    } else {
+        const preview = document.getElementById('permHoursPreview');
+        if (preview) preview.style.display = 'none';
+    }
+}
+
+// ---- Duration Preview Helper ----
+function calculateDurationText(fromVal, toVal) {
+    if (!fromVal || !toVal) return null;
+
+    const [fh, fm] = fromVal.split(':').map(Number);
+    const [th, tm] = toVal.split(':').map(Number);
+    let totalMins = (th * 60 + tm) - (fh * 60 + fm);
+    if (totalMins < 0) totalMins += 24 * 60; // handle overnight spans
+
+    if (totalMins <= 0) return null;
+
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+
+    if (h > 0 && m > 0) return `${h} ساعة و ${m} دقيقة`;
+    if (h > 0) return `${h} ساعة`;
+    return `${m} دقيقة`;
 }
 
 // ---- Hours Preview for Overtime ----
 function updateHoursPreview() {
     const fromVal = document.getElementById('ot_from').value;
     const toVal   = document.getElementById('ot_to').value;
-    if (!fromVal || !toVal) { document.getElementById('hoursPreview').style.display = 'none'; return; }
+    const text    = calculateDurationText(fromVal, toVal);
+    const preview = document.getElementById('hoursPreview');
 
-    const [fh, fm] = fromVal.split(':').map(Number);
-    const [th, tm] = toVal.split(':').map(Number);
-    const totalMins = (th * 60 + tm) - (fh * 60 + fm);
-
-    if (totalMins <= 0) { document.getElementById('hoursPreview').style.display = 'none'; return; }
-
-    const h = Math.floor(totalMins / 60);
-    const m = totalMins % 60;
-    document.getElementById('hoursDisplay').textContent = `${h} ساعة ${m > 0 ? 'و ' + m + ' دقيقة' : ''}`;
-    document.getElementById('hoursPreview').style.display = 'block';
+    if (text) {
+        document.getElementById('hoursDisplay').textContent = text;
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
 }
 
-document.getElementById('ot_from')?.addEventListener('change', updateHoursPreview);
-document.getElementById('ot_to')?.addEventListener('change', updateHoursPreview);
+// ---- Hours Preview for Permission ----
+function updatePermHoursPreview() {
+    const fromVal = document.getElementById('perm_from').value;
+    const toVal   = document.getElementById('perm_to').value;
+    const text    = calculateDurationText(fromVal, toVal);
+    const preview = document.getElementById('permHoursPreview');
+
+    if (preview) {
+        if (text) {
+            document.getElementById('permHoursDisplay').textContent = text;
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+}
+
+['change', 'input'].forEach(evt => {
+    document.getElementById('ot_from')?.addEventListener(evt, updateHoursPreview);
+    document.getElementById('ot_to')?.addEventListener(evt, updateHoursPreview);
+    document.getElementById('perm_from')?.addEventListener(evt, updatePermHoursPreview);
+    document.getElementById('perm_to')?.addEventListener(evt, updatePermHoursPreview);
+});
 
 // ---- Employee Autocomplete ----
 const nameInput = document.getElementById('employee_name');

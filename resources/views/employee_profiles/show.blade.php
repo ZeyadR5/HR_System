@@ -7,6 +7,15 @@
     <div class="row justify-content-center">
         <div class="col-12 col-lg-10">
 
+            @if(in_array(Auth::user()->role, ['super_admin', 'developer']) || Auth::user()->role === 'admin')
+                <div class="mb-3">
+                    <a href="{{ route('employee_profiles.index') }}" class="btn btn-light btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 fw-semibold border shadow-xs" style="background: #ffffff; color: #1e293b; border-color: #cbd5e1 !important;">
+                        <span>⬅️</span>
+                        <span>العودة لصفحة الموظفين</span>
+                    </a>
+                </div>
+            @endif
+
             {{-- 1. Employee Header & Annual Leave Balance Banner --}}
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff;">
                 <div class="card-body p-4">
@@ -21,7 +30,7 @@
                                     <span>🏢 {{ $user->job_title ?? 'موظف' }}</span>
                                     <span>•</span>
                                     <span>✉️ {{ $user->email }}</span>
-                                    @if(Auth::user()->role === 'super_admin' || Auth::user()->role === 'admin' || Auth::id() === $user->id)
+                                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']) || Auth::user()->role === 'admin' || Auth::id() === $user->id)
                                         <span>•</span>
                                         <span class="badge bg-info text-dark">⏱️ {{ number_format($user->hourly_rate, 2) }} ج.م/ساعة</span>
                                     @endif

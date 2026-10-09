@@ -51,7 +51,7 @@
                     <th scope="col" class="px-4 py-3 font-medium">الملاحظة</th>
                     <th scope="col" class="px-4 py-3 font-medium">تاريخ الملاحظة</th>
                     <th scope="col" class="px-4 py-3 font-medium">تاريخ الإضافة</th>
-                    @if(Auth::user()->role === 'super_admin')
+                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                         <th class="px-4 py-3 font-medium">IP Address</th>
                     @endif
                 </tr>
@@ -66,7 +66,7 @@
                             {{ $item->created_at->format('d M Y') }}
                             <br><span class="text-xs text-gray-500">{{ $item->created_at->format('H:i:s') }}</span>
                         </td>
-                        @if(Auth::user()->role === 'super_admin')
+                        @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                             <td class="px-4 py-3 text-xs text-gray-500" dir="ltr" style="text-align: left;">{{ $item->created_ip ?? '-' }}</td>
                         @endif
                     </tr>
@@ -81,7 +81,7 @@
         </table>
     </div>
 
-    @if(Auth::user()->role === 'super_admin' && $notes->count() > 0)
+    @if(in_array(Auth::user()->role, ['super_admin', 'developer']) && $notes->count() > 0)
     <div class="flex justify-end mt-4 mb-8">
         <a href="{{ route('admin_notes.export', ['period_start' => $selectedPeriodStart]) }}"
            class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg">

@@ -104,7 +104,7 @@
         </table>
     </div>
 
-    @if(Auth::user()->role === 'super_admin')
+    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
     <div class="flex justify-end mt-4 mb-8">
         <a href="{{ route('incentives.export', ['period_start' => $selectedPeriodStart]) }}"
            class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg">

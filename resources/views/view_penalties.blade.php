@@ -7,7 +7,7 @@
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <h1 class="text-xl font-semibold text-heading">
-                    @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+                    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
                         جزاءات جميع الموظفين
                     @else
                         جزاءاتي
@@ -41,7 +41,7 @@
             </div>
         </div>
 
-        @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
         <hr class="my-4 border-default">
         <form action="{{ route('view_penalties') }}" method="GET" class="flex flex-wrap items-end gap-3">
             <input type="hidden" name="period_start" value="{{ $selectedPeriodStart }}">
@@ -89,7 +89,7 @@
             <thead class="bg-neutral-secondary-soft border-b border-default">
                 <tr>
                     <th class="px-2 py-2 font-medium">N</th>
-                    @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+                    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
                     <th class="px-2 py-2 font-medium">اسم الموظف</th>
                     @endif
                     <th class="px-2 py-2 font-medium">سبب الجزاء</th>
@@ -98,7 +98,7 @@
                     <th class="px-2 py-2 font-medium">بواسطة</th>
                     <th class="px-2 py-2 font-medium">الحالة</th>
                     <th class="px-2 py-2 font-medium">التاريخ (Create At)</th>
-                    @if(Auth::user()->role === 'super_admin')
+                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                         <th class="px-2 py-2 font-medium">IP Address</th>
                     @endif
                 </tr>
@@ -107,7 +107,7 @@
                 @forelse($penalties as $index => $item)
                 <tr class="odd:bg-neutral-primary even:bg-neutral-secondary-soft border-b border-default">
                     <td class="px-2 py-2">{{ $index + 1 }}</td>
-                    @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+                    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
                     <td class="px-2 py-2 font-medium text-heading">{{ $item->name }}</td>
                     @endif
                     <td class="px-2 py-2">{{ $item->reason }}</td>
@@ -135,11 +135,11 @@
                     </td>
                     <td class="px-2 py-2">
                         {{ $item->created_at->format('d M Y') }}
-                        @if(Auth::user()->role === 'super_admin')
+                        @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                             <br><span class="text-xs text-gray-500">{{ $item->created_at->format('H:i:s') }}</span>
                         @endif
                     </td>
-                    @if(Auth::user()->role === 'super_admin')
+                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                         <td class="px-6 py-4 text-xs text-gray-500" dir="ltr" style="text-align: left;">{{ $item->created_ip ?? '-' }}</td>
                     @endif
                 </tr>
@@ -172,7 +172,7 @@
     </div>
 
     {{-- جدول الإجمالي لكل موظف - أدمن فقط --}}
-    @if(in_array(Auth::user()->role, ['admin', 'super_admin']) && $penalties->count() > 0)
+    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']) && $penalties->count() > 0)
     <div class="relative overflow-x-auto bg-neutral-primary-soft shadow-xs rounded-base border border-default mt-6">
         <div class="px-2 py-2 bg-neutral-secondary-soft border-b border-default">
             <h6 class="font-semibold text-heading">
@@ -209,7 +209,7 @@
         </table>
     </div>
 
-    @if(Auth::user()->role === 'super_admin')
+    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
     <div class="flex justify-end mt-4 mb-8">
         <a href="{{ route('penalties.export', ['period_start' => $selectedPeriodStart]) }}"
            class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg">

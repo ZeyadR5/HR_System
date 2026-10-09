@@ -59,20 +59,36 @@
                                     class="form-select form-select-lg @error('job_title') is-invalid @enderror" 
                                     style="border-radius: 10px; font-size: 1rem;">
                                 <option value="" {{ old('job_title', $user->job_title) == '' ? 'selected' : '' }}>اختر الوظيفة...</option>
-                                <option value="Rec" {{ old('job_title', $user->job_title) == 'استقبال' ? 'selected' : '' }}>استقبال</option>
-                                <option value="Nur" {{ old('job_title', $user->job_title) == 'تمريض' ? 'selected' : '' }}>تمريض</option>
-                                <option value="Tec" {{ old('job_title', $user->job_title) == 'فني' ? 'selected' : '' }}>فني</option>
-                                <option value="Acc" {{ old('job_title', $user->job_title) == 'حسابات' ? 'selected' : '' }}>حسابات</option>
-                                <option value="Super_V" {{ old('job_title', $user->job_title) == 'اداري' ? 'selected' : '' }}>اداري</option>
+                                <option value="Rec" {{ old('job_title', $user->job_title) == 'Rec' ? 'selected' : '' }}>استقبال</option>
+                                <option value="Nur" {{ old('job_title', $user->job_title) == 'Nur' ? 'selected' : '' }}>تمريض</option>
+                                <option value="Tec" {{ old('job_title', $user->job_title) == 'Tec' ? 'selected' : '' }}>فني</option>
+                                <option value="Acc" {{ old('job_title', $user->job_title) == 'Acc' ? 'selected' : '' }}>حسابات</option>
+                                <option value="Super_V" {{ old('job_title', $user->job_title) == 'Super_V' ? 'selected' : '' }}>اداري</option>
                                 <option value="IT" {{ old('job_title', $user->job_title) == 'IT' ? 'selected' : '' }}>IT</option>
-                                <option value="Call Center" {{ old('job_title', $user->job_title) == 'كول سنتر' ? 'selected' : '' }}>كول سنتر</option>
+                                <option value="Call_Center" {{ old('job_title', $user->job_title) == 'Call_Center' ? 'selected' : '' }}>كول سنتر</option>
                             </select>
                             @error('job_title')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
-
+                        @if(Auth::user()->role === 'developer')
+                        <div class="mb-4">
+                            <label for="role" class="form-label fw-bold text-slate-700">الصلاحية (Role)</label>
+                            <select name="role" id="role" 
+                                    class="form-select form-select-lg @error('role') is-invalid @enderror" 
+                                    style="border-radius: 10px; font-size: 1rem;">
+                                @foreach($roles ?? \App\Models\Role::orderBy('id')->get() as $r)
+                                    <option value="{{ $r->name }}" {{ old('role', $user->role) == $r->name ? 'selected' : '' }}>
+                                        {{ $r->display_name }} ({{ $r->name }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('role')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        @endif
 
                         <div class="mb-4">
                             <label for="hourly_rate" class="form-label fw-bold text-slate-700">قيمة الساعة (ج.م)</label>

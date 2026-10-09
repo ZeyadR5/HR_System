@@ -25,15 +25,12 @@ class CheckInOutSummarySheet implements FromCollection, WithHeadings, WithTitle,
     {
         return $this->summary->map(function ($record) {
             return [
-                'Employee Name'        => $record->name ?? 'غير محدد',
-                'Check In (Accepted)'  => ($record->check_in_count ?? 0) . ' مرة',
-                'Check Out (Accepted)' => ($record->check_out_count ?? 0) . ' مرة',
-                'Regular Shifts'       => ($record->regular_shifts ?? 0) . ' شيفت عادي',
-                'Friday Shifts'        => ($record->friday_shifts ?? 0) . ' شيفت جمعة',
-                'Friday Hours (x1.5)'  => number_format($record->friday_bonus_hours ?? 0, 2) . ' ساعة',
-                'Total Shifts'         => ($record->shifts_count ?? 0) . ' شيفت',
-                'Total Records'        => ($record->total ?? 0) . ' سجل',
-                'Period'               => $this->periodStart->format('d M Y') . ' → ' . $this->periodEnd->format('d M Y'),
+                'Employee Name'                  => $record->name ?? 'Unspecified',
+                'Regular Shifts (Excl. Fridays)' => (int) ($record->regular_shifts ?? 0),
+                'Friday Shifts'                  => (int) ($record->friday_shifts ?? 0),
+                'Accepted Leave Days'            => (float) ($record->accepted_leaves ?? 0),
+                'Total (Shifts + Leaves)'        => (float) ($record->total_shifts_and_leaves ?? $record->shifts_count ?? 0),
+                'Friday Hours (x1.5)'            => (float) round($record->friday_bonus_hours ?? 0, 2),
             ];
         });
     }
@@ -41,15 +38,12 @@ class CheckInOutSummarySheet implements FromCollection, WithHeadings, WithTitle,
     public function headings(): array
     {
         return [
-            'اسم الموظف',
-            'حضور (مقبول)',
-            'انصراف (مقبول)',
-            'شيفتات عادية',
-            'شيفتات جمعة',
-            'ساعات الجمعة (× 1.5)',
-            'إجمالي الشيفتات',
-            'إجمالي الحركات',
-            'الفترة'
+            'Employee Name',
+            'Regular Shifts (Excl. Fridays)',
+            'Friday Shifts',
+            'Accepted Leave Days',
+            'Total (Shifts + Leaves)',
+            'Friday Hours (x1.5)',
         ];
     }
 

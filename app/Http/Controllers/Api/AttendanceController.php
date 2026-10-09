@@ -136,7 +136,7 @@ class AttendanceController extends Controller
      */
     public function adminIndex(Request $request)
     {
-        if (!in_array(Auth::user()->role, ['admin', 'super_admin'])) {
+        if (!in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'غير مصرح للوصول لهذه الصفحة'

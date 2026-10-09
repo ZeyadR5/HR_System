@@ -11,6 +11,7 @@ use App\Models\Overtime;
 use App\Models\Penalty;
 use Illuminate\Support\Facades\Auth;
 use App\Support\PayrollPeriod;
+use App\Support\Settings;
 use Carbon\Carbon;
 
 class EmployeeProfileController extends Controller
@@ -29,7 +30,7 @@ class EmployeeProfileController extends Controller
      */
     public function show(Request $request, $id)
     {
-        if (!in_array(Auth::user()->role, ['admin', 'super_admin']) && Auth::id() != $id) {
+        if (!Auth::user()->can('employees.view_profiles') && Auth::id() != $id) {
             abort(403, 'غير مصرح لك باستعراض هذا البروفايل');
         }
 
@@ -92,7 +93,7 @@ class EmployeeProfileController extends Controller
             'permissions' => [
                 'minutes' => $totalPermissionMinutes,
                 'hours'   => round($totalPermissionMinutes / 60, 2),
-                'limit_minutes' => 180,
+                'limit_minutes' => \App\Support\Settings::get('monthly_permissions_hours', 3) * 60,
             ],
             'overtime' => [
                 'hours' => round($overtimeHours, 2),
@@ -117,9 +118,16 @@ class EmployeeProfileController extends Controller
             $year = (int) now()->year;
         }
 
-        // Standard Payroll Period calculation: 26th of (month - 1) to 25th of selected month
-        $periodEnd = Carbon::createFromDate($year, $month, 25)->endOfDay();
-        $periodStart = $periodEnd->copy()->subMonthNoOverflow()->day(26)->startOfDay();
+        $startDay = (int) \App\Support\Settings::get('payroll_start_day', 26);
+        $endDay = (int) \App\Support\Settings::get('payroll_end_day', 25);
+
+        if ($endDay < $startDay) {
+            $periodEnd = Carbon::createFromDate($year, $month, $endDay)->endOfDay();
+            $periodStart = $periodEnd->copy()->subMonthNoOverflow()->day($startDay)->startOfDay();
+        } else {
+            $periodEnd = Carbon::createFromDate($year, $month, $endDay)->endOfDay();
+            $periodStart = $periodEnd->copy()->day($startDay)->startOfDay();
+        }
 
         $startStr = $periodStart->format('Y-m-d');
         $endStr   = $periodEnd->format('Y-m-d');
@@ -137,7 +145,7 @@ class EmployeeProfileController extends Controller
         $startMonthName = $arabicMonths[$periodStart->month];
         $endMonthName   = $arabicMonths[$periodEnd->month];
 
-        $selectedMonthLabel = "شهر {$endMonthName} {$year} (من 26 {$startMonthName} إلى 25 {$endMonthName})";
+        $selectedMonthLabel = "شهر {$endMonthName} {$year} (من {$startDay} {$startMonthName} إلى {$endDay} {$endMonthName})";
 
         // --- Monthly Activity Data (26th to 25th Payroll Period) ---
         // 1. Leaves (الإجازات)
@@ -239,7 +247,7 @@ class EmployeeProfileController extends Controller
 
     public function index(Request $request)
     {
-        if (!in_array(Auth::user()->role, ['admin', 'super_admin'])) {
+        if (!Auth::user()->can('employees.view_profiles')) {
             abort(403, 'غير مصرح لك بالوصول لبروفايلات الموظفين');
         }
 
@@ -255,21 +263,55 @@ class EmployeeProfileController extends Controller
         return view('employee_profiles.index', compact('users', 'allUsers'));
     }
 
+
+    public function unlockEdit(Request $request, $id)
+    {
+        if (!Auth::user()->can('employees.edit_profiles')) {
+            abort(403, 'غير مصرح لك بتعديل بروفايل الموظف');
+        }
+
+        $request->validate([
+            'system_password' => 'required'
+        ], [
+            'system_password.required' => 'كلمة مرور النظام مطلوبة'
+        ]);
+
+        $correctPassword = Settings::get('system_edit_password', '123456');
+
+        if ($request->system_password !== $correctPassword) {
+            return back()->withErrors(['system_password' => 'كلمة مرور النظام غير صحيحة!']);
+        }
+
+        // Set session valid for this user ID
+        session(['unlocked_edit_user_id' => $id]);
+
+        return redirect()->route('employee_profiles.edit', $id);
+    }
+
     public function edit($id)
     {
-        if (!in_array(Auth::user()->role, ['admin', 'super_admin'])) {
+        if (!Auth::user()->can('employees.edit_profiles')) {
             abort(403, 'غير مصرح لك بتعديل بروفايل الموظف');
+        }
+
+        if (session('unlocked_edit_user_id') != $id) {
+            return redirect()->route('employee_profiles.index')->withErrors(['system_password' => 'يُرجى فك القفل أولاً بالضغط على زر التعديل.']);
         }
 
         $user = User::findOrFail($id);
         $stats = $this->getProfileStats($user);
-        return view('employee_profiles.edit', compact('user', 'stats'));
+        $roles = \App\Models\Role::orderBy('id')->get();
+        return view('employee_profiles.edit', compact('user', 'stats', 'roles'));
     }
 
     public function update(Request $request, $id)
     {
-        if (!in_array(Auth::user()->role, ['admin', 'super_admin'])) {
+        if (!Auth::user()->can('employees.edit_profiles')) {
             abort(403, 'غير مصرح لك بتعديل بروفايل الموظف');
+        }
+
+        if (session('unlocked_edit_user_id') != $id) {
+            return redirect()->route('employee_profiles.index')->withErrors(['system_password' => 'يُرجى فك القفل أولاً بالضغط على زر التعديل.']);
         }
 
         $user = User::findOrFail($id);
@@ -277,24 +319,137 @@ class EmployeeProfileController extends Controller
         $request->validate([
             'job_title' => 'nullable|string|max:255',
             'hourly_rate' => 'required|numeric|min:0',
+            'role' => 'nullable|exists:roles,name'
         ], [
             'hourly_rate.required' => 'قيمة الساعة مطلوبة',
         ]);
 
-        $user->update([
+        $updateData = [
             'job_title' => $request->job_title,
             'hourly_rate' => $request->hourly_rate,
-        ]);
+        ];
+
+        if ($request->filled('role') && Auth::user()->role === 'developer') {
+            $updateData['role'] = $request->role;
+        }
+
+        $user->update($updateData);
 
         AuditLog::log(
             Auth::user()->name, 
             'Updated', 
             'Employee Profile', 
             $user->name, 
-            "Job: {$request->job_title}, Rate: {$request->hourly_rate}"
+            "Job: {$request->job_title}, Rate: {$request->hourly_rate}" . (isset($updateData['role']) ? ", Role: {$updateData['role']}" : "")
         );
 
         return redirect()->route('employee_profiles.index')->with('success', "✅ تم تحديث بروفايل {$user->name} بنجاح!");
+    }
+
+    /**
+     * Smart create employee form.
+     */
+    public function create()
+    {
+        if (!Auth::user()->can('employees.create')) {
+            abort(403, 'غير مصرح لك بإضافة موظف');
+        }
+
+        $roles = \App\Models\Role::orderBy('id')->get();
+        return view('employee_profiles.create', compact('roles'));
+    }
+
+    /**
+     * Store newly created employee.
+     */
+    public function store(Request $request)
+    {
+        if (!Auth::user()->can('employees.create')) {
+            abort(403, 'غير مصرح لك بإضافة موظف');
+        }
+
+        // 1. Ensure email is unique by appending a number if it exists
+        $email = mb_strtolower(trim($request->email));
+        $originalEmail = $email;
+        $counter = 1;
+        while (User::where('email', $email)->exists()) {
+            $parts = explode('@', $originalEmail);
+            if (count($parts) == 2) {
+                $email = $parts[0] . $counter . '@' . $parts[1];
+            } else {
+                $email = $originalEmail . $counter;
+            }
+            $counter++;
+        }
+        $request->merge(['email' => $email]);
+
+        $request->validate([
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:users,email',
+            'password'    => 'required|string|min:4',
+            'job_title'   => 'nullable|string|max:255',
+            'hourly_rate' => 'nullable|numeric|min:0',
+            'role'        => 'required|exists:roles,name',
+        ], [
+            'name.required'     => 'اسم الموظف مطلوب.',
+            'email.required'    => 'البريد الإلكتروني مطلوب.',
+            'email.unique'      => 'هذا البريد مأخوذ من قبل، حاول استخدام كلمة أخرى.',
+            'password.required' => 'كلمة السر مطلوبة.',
+            'role.required'     => 'فئة الموظف مطلوبة.',
+        ]);
+
+        $user = User::create([
+            'name'        => trim($request->name),
+            'email'       => $email,
+            'password'    => \Illuminate\Support\Facades\Hash::make($request->password),
+            'job_title'   => $request->job_title ?: null,
+            'hourly_rate' => $request->hourly_rate ?: 0,
+            'role'        => $request->role,
+        ]);
+
+        AuditLog::log(
+            Auth::user()->name,
+            'Created',
+            'Employee Profile',
+            $user->name,
+            "Email: {$user->email}, Role: {$user->role}, Job: {$user->job_title}"
+        );
+
+        return redirect()->route('employee_profiles.create')->with([
+            'success' => "🎉 تم إضافة الموظف «{$user->name}» بنجاح!",
+            'created_user' => [
+                'name'      => $user->name,
+                'email'     => $user->email,
+                'password'  => $request->password,
+                'job_title' => $user->job_title ?: 'غير محدد',
+                'role_name' => $user->roleDisplayName(),
+            ]
+        ]);
+    }
+
+    /**
+     * AJAX endpoint to check and generate a unique email in real-time.
+     */
+    public function checkEmail(Request $request)
+    {
+        $email = mb_strtolower(trim($request->email));
+        if (empty($email)) {
+            return response()->json(['email' => '']);
+        }
+
+        $originalEmail = $email;
+        $counter = 1;
+        while (User::where('email', $email)->exists()) {
+            $parts = explode('@', $originalEmail);
+            if (count($parts) == 2) {
+                $email = $parts[0] . $counter . '@' . $parts[1];
+            } else {
+                $email = $originalEmail . $counter;
+            }
+            $counter++;
+        }
+
+        return response()->json(['email' => $email]);
     }
 }
 

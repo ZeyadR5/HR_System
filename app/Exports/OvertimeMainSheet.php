@@ -24,18 +24,31 @@ class OvertimeMainSheet implements FromCollection, WithHeadings, WithTitle, With
     public function collection()
     {
         return $this->overtime->map(function ($item, $index) {
+            $totalMinutes = (int) round($item->total_hours * 60);
+            $hours = intdiv($totalMinutes, 60);
+            $mins = $totalMinutes % 60;
+
+            if ($hours > 0 && $mins > 0) {
+                $readableDuration = "{$hours}h {$mins}m";
+            } elseif ($hours > 0) {
+                $readableDuration = "{$hours}h";
+            } else {
+                $readableDuration = "{$mins}m";
+            }
+
             return [
-                'N'             => $index + 1,
-                'Employee Name' => $item->name,
-                'Job Title'     => $item->user->job_title ?? '—',
-                'Total Hours'   => $item->total_hours,
-                'Reason'        => $item->reason,
-                'Date'          => \Carbon\Carbon::parse($item->date)->format('d M Y'),
-                'Day'           => $item->day,
-                'From'          => $item->from ? \Carbon\Carbon::parse($item->from)->format('h:i A') : '-',
-                'To'            => $item->to ? \Carbon\Carbon::parse($item->to)->format('h:i A') : '-',
-                'Status'        => ucfirst($item->status),
-                'Refuse Reason' => $item->refuse_reason ?? '—',
+                'N'                 => $index + 1,
+                'Employee Name'     => $item->name,
+                'Job Title'         => $item->user->job_title ?? '—',
+                'Readable Duration' => $readableDuration,
+                'Total Minutes'     => $totalMinutes,
+                'Reason'            => $item->reason,
+                'Date'              => \Carbon\Carbon::parse($item->date)->format('d M Y'),
+                'Day'               => $item->day,
+                'From'              => $item->from ? \Carbon\Carbon::parse($item->from)->format('h:i A') : '-',
+                'To'                => $item->to ? \Carbon\Carbon::parse($item->to)->format('h:i A') : '-',
+                'Status'            => ucfirst($item->status),
+                'Refuse Reason'     => $item->refuse_reason ?? '—',
             ];
         });
     }
@@ -43,7 +56,7 @@ class OvertimeMainSheet implements FromCollection, WithHeadings, WithTitle, With
     public function headings(): array
     {
         return [
-            'N', 'Employee Name', 'Job Title', 'Total Hours', 'Reason',
+            'N', 'Employee Name', 'Job Title', 'Duration', 'Total Minutes (SUM)', 'Reason',
             'Date', 'Day', 'From', 'To', 'Status', 'Refuse Reason',
         ];
     }

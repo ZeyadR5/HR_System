@@ -20,7 +20,7 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') abort(403);
+        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $period = PayrollPeriod::fromRequest($request->query('period_start'));
         $periodStart         = $period['start'];
@@ -39,7 +39,7 @@ class ReportController extends Controller
 
     public function export(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') abort(403);
+        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $period = PayrollPeriod::fromRequest($request->query('period_start'));
         $periodStart = $period['start'];
@@ -78,7 +78,7 @@ class ReportController extends Controller
         $checkInOutAccepted = CheckInOut::whereBetween('date', [$startStr, $endStr])
             ->where('status', 'accepted')
             ->get();
-        $checkInOutSummary = CheckInOutController::computeCycleSummary($checkInOutAccepted);
+        $checkInOutSummary = CheckInOutController::computeCycleSummary($checkInOutAccepted, $periodStart, $periodEnd);
 
         // 6. Admin Notes
         $adminNotes = AdminNote::whereBetween('date', [$startStr, $endStr])
@@ -92,7 +92,8 @@ class ReportController extends Controller
         $settlements = Settlement::with('user')->whereBetween('date', [$startStr, $endStr])
             ->orderByDesc('date')->orderByDesc('created_at')->get();
 
-        $filename = 'full_hr_report_' . $periodStart->format('Y_m_d') . '_to_' . $periodEnd->format('Y_m_d') . '.xlsx';
+        // $filename = 'Full_HR_Report_' . $periodStart->format('d_M_Y') . '_to_' . $periodEnd->format('d_M_Y') . '.xlsx';
+        $filename = 'HR_Report' . $periodEnd->locale('ar')->isoFormat('MMMM YYYY') . '.xlsx';
 
         return Excel::download(
             new FullReportExport(

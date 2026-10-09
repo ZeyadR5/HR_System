@@ -35,7 +35,7 @@
             </div>
         </div>
 
-        @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
         <hr class="my-4 border-default">
         <form action="{{ route('view_leave') }}" method="GET" class="flex flex-wrap items-end gap-3">
             <input type="hidden" name="period_start" value="{{ $selectedPeriodStart }}">
@@ -90,11 +90,11 @@
                     <th class="px-2 py-2 font-medium">Reason</th>
                     <th class="px-2 py-2 font-medium">Substitute</th>
                     <th class="px-2 py-2 font-medium">Status</th>
-                    @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+                    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
                     <th class="px-2 py-2 font-medium">Actions</th>
                     @endif
                     <th class="px-2 py-2 font-medium">Created At</th>
-                    @if(Auth::user()->role === 'super_admin')
+                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                         <th class="px-2 py-2 font-medium">IP Address</th>
                     @endif
                     <th class="px-2 py-2 font-medium">بواسطة</th>
@@ -119,7 +119,7 @@
                             <span class="bg-yellow-100 text-yellow-700 text-xs font-medium px-2.5 py-1 rounded-full">قيد المراجعة</span>
                         @endif
                     </td>
-                    @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+                    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
                     <td class="px-2 py-2">
                         @if($item->status === 'pending')
                         <div class="flex gap-2">
@@ -156,11 +156,11 @@
                 @endif
                 <td class="px-6 py-4">
                     {{ $item->created_at->toDateString() }}
-                    @if(Auth::user()->role === 'super_admin')
+                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                         <br><span class="text-xs text-gray-500">{{ $item->created_at->format('H:i:s') }}</span>
                     @endif
                 </td>
-                @if(Auth::user()->role === 'super_admin')
+                @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                     <td class="px-6 py-4 text-xs text-gray-500" dir="ltr" style="text-align: left;">{{ $item->created_ip ?? '-' }}</td>
                 @endif
                     <td class="px-2 py-2">
@@ -201,7 +201,7 @@
         </table>
     </div>
 
-    @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
     <div class="relative overflow-x-auto bg-neutral-primary-soft shadow-xs rounded-base border border-default mt-6">
         <div class="px-2 py-2 bg-neutral-secondary-soft border-b border-default">
             <h6 class="font-semibold text-heading">
@@ -243,7 +243,7 @@
         </table>
     </div>
 
-    @if(Auth::user()->role === 'super_admin')
+    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
     <div class="flex justify-end mt-4 mb-8">
         <a href="{{ route('leave.export', ['period_start' => $selectedPeriodStart]) }}"
            class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg">

@@ -36,7 +36,7 @@ class RequestController extends Controller
                 $periodEnd->toDateString(),
             ]);
 
-        if (in_array($user->role, ['admin', 'super_admin'])) {
+        if (in_array($user->role, ['admin', 'super_admin', 'developer'])) {
             if ($request->has('user_id') && $request->user_id) {
                 $query->where('user_id', $request->user_id);
             }
@@ -104,12 +104,13 @@ class RequestController extends Controller
             ->where('status', '!=', 'refused')
             ->sum('total_hours');
 
-        if (($dayUsage + $total_hours) > 5) {
-            $remaining = 5 - $dayUsage;
+        $dailyLimit = \App\Support\Settings::get('daily_overtime_limit', 5);
+        if (($dayUsage + $total_hours) > $dailyLimit) {
+            $remaining = $dailyLimit - $dayUsage;
             if ($remaining < 0) $remaining = 0;
             return response()->json([
                 'success' => false,
-                'message' => "⚠️ عذراً، لقد تخطيت الحد المسموح به للإضافي لهذا اليوم (5 ساعات). المتبقي لك هو {$remaining} ساعة فقط."
+                'message' => "⚠️ عذراً، لقد تخطيت الحد المسموح به للإضافي لهذا اليوم ({$dailyLimit} ساعات). المتبقي لك هو {$remaining} ساعة فقط."
             ], 400);
         }
 
@@ -159,7 +160,7 @@ class RequestController extends Controller
                 $periodEnd->toDateString(),
             ]);
 
-        if (in_array($user->role, ['admin', 'super_admin'])) {
+        if (in_array($user->role, ['admin', 'super_admin', 'developer'])) {
             if ($request->has('user_id') && $request->user_id) {
                 $query->where('user_id', $request->user_id);
             }
@@ -282,7 +283,7 @@ class RequestController extends Controller
                 $periodEnd->toDateString(),
             ]);
 
-        if (in_array($user->role, ['admin', 'super_admin'])) {
+        if (in_array($user->role, ['admin', 'super_admin', 'developer'])) {
             if ($request->has('user_id') && $request->user_id) {
                 $query->where('user_id', $request->user_id);
             }
@@ -355,10 +356,12 @@ class RequestController extends Controller
             }
         }
 
-        if (($totalMinutes + $requestedMinutes) > 180) {
+        $maxMinutes = \App\Support\Settings::get('monthly_permissions_hours', 3) * 60;
+        if (($totalMinutes + $requestedMinutes) > $maxMinutes) {
+            $maxHours = \App\Support\Settings::get('monthly_permissions_hours', 3);
             return response()->json([
                 'success' => false,
-                'message' => '⚠️ عذراً، لا يمكنك تقديم هذا الإذن لأنك ستتخطى الحد الأقصى المسموح به للأذونات وهو 3 ساعات شهرياً.'
+                'message' => "⚠️ عذراً، لا يمكنك تقديم هذا الإذن لأنك ستتخطى الحد الأقصى المسموح به للأذونات وهو {$maxHours} ساعات شهرياً."
             ], 400);
         }
 

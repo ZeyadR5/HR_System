@@ -40,7 +40,7 @@ public function permission_index()
     return view('ezn', [
         'dateBounds' => \App\Support\SubmissionWindow::bounds(),
         'totalMinutes' => $totalMinutes,
-        'limitMinutes' => 180, // 3 hours
+        'limitMinutes' => \App\Support\Settings::get('monthly_permissions_hours', 3) * 60,
     ]);
 }
     // ---- LEAVE ----
@@ -68,9 +68,9 @@ public function permission_index()
 
         return view('agaza', [
             'dateBounds' => SubmissionWindow::bounds(),
-            'monthLimit' => 2,
+            'monthLimit' => \App\Support\Settings::get('monthly_leaves_limit', 2),
             'monthUsage' => $monthUsage,
-            'yearLimit' => 14,
+            'yearLimit' => \App\Support\Settings::get('annual_leaves_limit', 14),
             'yearUsage' => $yearUsage,
             'takenLeaves' => $takenLeaves,
         ]);
@@ -96,8 +96,9 @@ public function permission_index()
             ->where('status', '!=', 'refused')
             ->sum('days_count');
 
-        if (($monthUsage + $request->days_count) > 2) {
-            return redirect()->back()->with('alert_error', "⚠️ تخطيت الحد المسموح به خلال الشهر وهو يومين، يرجى الرجوع إلى المسؤول.")->withInput();
+        $monthLimit = \App\Support\Settings::get('monthly_leaves_limit', 2);
+        if (($monthUsage + $request->days_count) > $monthLimit) {
+            return redirect()->back()->with('alert_error', "⚠️ تخطيت الحد المسموح به خلال الشهر وهو {$monthLimit} أيام، يرجى الرجوع إلى المسؤول.")->withInput();
         }
 
         // 2. Check Yearly Limit (Max 14 days per year)
@@ -106,8 +107,9 @@ public function permission_index()
             ->where('status', '!=', 'refused')
             ->sum('days_count');
 
-        if (($yearUsage + $request->days_count) > 14) {
-            return redirect()->back()->with('alert_error', "⚠️ عذراً، رصيد إجازاتك السنوي (14 يوم) قد انتهى.")->withInput();
+        $yearLimit = \App\Support\Settings::get('annual_leaves_limit', 14);
+        if (($yearUsage + $request->days_count) > $yearLimit) {
+            return redirect()->back()->with('alert_error', "⚠️ عذراً، رصيد إجازاتك السنوي ({$yearLimit} يوم) قد انتهى.")->withInput();
         }
 
         SubmissionWindow::assertDateWithinAllowedWindow($request->date, 'Leave date');
@@ -187,7 +189,7 @@ public function view_leave(Request $request)
     $selectedPeriodStart = $periodStart->format('Y-m-d');
 
     $users = [];
-    if (in_array(Auth::user()->role, ['admin', 'super_admin'])) {
+    if (in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
         $users = User::orderBy('name')->get();
         $query = Leave::whereBetween('date', [$periodStart, $periodEnd]);
         if ($request->has('user_id') && $request->user_id) {
@@ -218,7 +220,7 @@ public function view_permission(Request $request)
     $selectedPeriodStart = $periodStart->format('Y-m-d');
 
     $users = [];
-    if (in_array(Auth::user()->role, ['admin', 'super_admin'])) {
+    if (in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
         $users = User::orderBy('name')->get();
         $query = Permission::whereBetween('date', [$periodStart, $periodEnd]);
         if ($request->has('user_id') && $request->user_id) {
@@ -285,8 +287,10 @@ public function view_permission(Request $request)
             }
         }
 
-        if (($totalMinutes + $requestedMinutes) > 180) {
-            return redirect()->back()->with('alert_error', "⚠️ عذراً، لا يمكنك إضافة هذا الإذن لأنك ستتخطى الحد الأقصى المسموح به للأذونات وهو 3 ساعات شهرياً.")->withInput();
+        $maxMinutes = \App\Support\Settings::get('monthly_permissions_hours', 3) * 60;
+        if (($totalMinutes + $requestedMinutes) > $maxMinutes) {
+            $maxHours = \App\Support\Settings::get('monthly_permissions_hours', 3);
+            return redirect()->back()->with('alert_error', "⚠️ عذراً، لا يمكنك إضافة هذا الإذن لأنك ستتخطى الحد الأقصى المسموح به للأذونات وهو {$maxHours} ساعات شهرياً.")->withInput();
         }
 
         $name = (Auth::user()->email === 'guest@gamma.com' && $request->has('name')) 
@@ -358,7 +362,7 @@ public function permission_refuse(Request $request, $id)
 
 public function export_lev(Request $request)
 {
-    if (Auth::user()->role !== 'super_admin') abort(403);
+    if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
     
     $period = \App\Support\PayrollPeriod::fromRequest($request->query('period_start'));
     $periodStart = $period['start'];
@@ -379,7 +383,7 @@ public function export_lev(Request $request)
 
 public function export_per(Request $request)
 {
-    if (Auth::user()->role !== 'super_admin') abort(403);
+    if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
     $period = \App\Support\PayrollPeriod::fromRequest($request->query('period_start'));
     $periodStart = $period['start'];

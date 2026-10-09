@@ -132,8 +132,38 @@
     </div>
 </div>
 
+<div id="eznDurationPreview" class="mb-3 text-xs font-semibold text-purple-600 hidden">
+    ⏱️ المدة: <span id="eznDurationDisplay"></span>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        function updateEznDuration() {
+            const fromVal = document.getElementById('from').value;
+            const toVal   = document.getElementById('to').value;
+            const preview = document.getElementById('eznDurationPreview');
+            const display = document.getElementById('eznDurationDisplay');
+
+            if (!fromVal || !toVal) { preview?.classList.add('hidden'); return; }
+
+            const [fh, fm] = fromVal.split(':').map(Number);
+            const [th, tm] = toVal.split(':').map(Number);
+            let totalMins = (th * 60 + tm) - (fh * 60 + fm);
+            if (totalMins < 0) totalMins += 24 * 60;
+
+            if (totalMins <= 0) { preview?.classList.add('hidden'); return; }
+
+            const h = Math.floor(totalMins / 60);
+            const m = totalMins % 60;
+            let text = '';
+            if (h > 0 && m > 0) text = `${h} ساعة و ${m} دقيقة`;
+            else if (h > 0) text = `${h} ساعة`;
+            else text = `${m} دقيقة`;
+
+            if (display) display.textContent = text;
+            preview?.classList.remove('hidden');
+        }
+
         const config = {
             enableTime: true,
             noCalendar: true,
@@ -143,6 +173,9 @@
             time_24hr: false,
             locale: {
                 amPM: ["ص", "م"]
+            },
+            onChange: function() {
+                updateEznDuration();
             }
         };
         flatpickr("#from", config);
@@ -155,11 +188,13 @@
             const val = typeSelect.value;
             if (val === 'إذن نسيان بصمة حضور' || val === 'إذن نسيان بصمة انصراف') {
                 timeFields.classList.add('hidden');
+                document.getElementById('eznDurationPreview')?.classList.add('hidden');
                 // Clear values when hidden to avoid confusion
                 if (document.querySelector('#from')._flatpickr) document.querySelector('#from')._flatpickr.clear();
                 if (document.querySelector('#to')._flatpickr) document.querySelector('#to')._flatpickr.clear();
             } else {
                 timeFields.classList.remove('hidden');
+                updateEznDuration();
             }
         }
 

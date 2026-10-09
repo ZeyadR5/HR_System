@@ -30,15 +30,25 @@ class PayrollPeriod
 
     public static function fromDate(Carbon $date): array
     {
+        $startDay = (int) \App\Support\Settings::get('payroll_start_day', 26);
+        $endDay = (int) \App\Support\Settings::get('payroll_end_day', 25);
+
         $periodStart = self::normalizeStart($date);
-        $periodEnd = $periodStart->copy()->addMonthNoOverflow()->day(25)->endOfDay();
+        
+        // Ensure end date falls correctly after the start date
+        if ($endDay < $startDay) {
+            $periodEnd = $periodStart->copy()->addMonthNoOverflow()->day($endDay)->endOfDay();
+        } else {
+            $periodEnd = $periodStart->copy()->day($endDay)->endOfDay();
+        }
+        
         $currentPeriod = self::currentStart();
 
         return [
             'start' => $periodStart,
             'end' => $periodEnd,
-            'previous_start' => $periodStart->copy()->subMonthNoOverflow()->day(26)->startOfDay(),
-            'next_start' => $periodStart->copy()->addMonthNoOverflow()->day(26)->startOfDay(),
+            'previous_start' => $periodStart->copy()->subMonthNoOverflow()->day($startDay)->startOfDay(),
+            'next_start' => $periodStart->copy()->addMonthNoOverflow()->day($startDay)->startOfDay(),
             'label' => $periodStart->format('d M Y') . ' → ' . $periodEnd->format('d M Y'),
             'slug' => $periodStart->format('Y-m-d'),
             'is_current' => $periodStart->isSameDay($currentPeriod),
@@ -54,10 +64,12 @@ class PayrollPeriod
 
     protected static function normalizeStart(Carbon $date): Carbon
     {
-        if ($date->day >= 26) {
-            return $date->copy()->day(26)->startOfDay();
+        $startDay = (int) \App\Support\Settings::get('payroll_start_day', 26);
+        
+        if ($date->day >= $startDay) {
+            return $date->copy()->day($startDay)->startOfDay();
         }
 
-        return $date->copy()->subMonthNoOverflow()->day(26)->startOfDay();
+        return $date->copy()->subMonthNoOverflow()->day($startDay)->startOfDay();
     }
 }

@@ -146,12 +146,30 @@
             z-index: 1001;
             display: grid;
             gap: 0.15rem;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .dropdown:hover .dropdown-menu {
             opacity: 1;
             visibility: visible;
             transform: translateY(0);
+        }
+
+        .dropdown-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+        .dropdown-menu::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        .dropdown-menu::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+        }
+        .dropdown-menu::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .dropdown-link {
@@ -378,6 +396,7 @@
             max-width: 100%;
             padding: 14px;
             overflow-x: hidden;
+            min-height: calc(100vh - 165px);
         }
 
         .footer-bar {
@@ -626,10 +645,13 @@
         request()->routeIs('incentives.index') => 'عرض الحوافز',
         request()->routeIs('admin_notes.create') => 'إضافة ملاحظة',
         request()->routeIs('admin_notes.index') => 'ملاحظات الإدارة',
+        request()->routeIs('instructions.index') => 'التعليمات والتنبيهات',
         request()->routeIs('super_admin.entry') => 'إضافة يدوية',
         request()->routeIs('audit_log') => 'Audit Log',
         request()->routeIs('full_report.index') => 'تقارير مجمعه',
         request()->routeIs('employee_profiles.*') => 'بروفايلات الموظفين',
+        request()->routeIs('developer.roles.*') => 'إدارة الفئات والصلاحيات',
+        request()->routeIs('developer.settings.*') => 'إعدادات النظام العامة',
         request()->routeIs('my_profile') => 'بروفايلي الشخصي',
         request()->routeIs('notifications.index') => 'الإشعارات',
         default => 'الرئيسية',
@@ -658,6 +680,11 @@
             <div class="nav-item"><a href="{{ route('Overtime') }}" class="nav-link {{ request()->routeIs('Overtime') ? 'active' : '' }}">⏱️ اضافي</a></div>
             <div class="nav-item"><a href="{{ route('check_in_out') }}" class="nav-link {{ request()->routeIs('check_in_out') ? 'active' : '' }}">⏳ حضور وانصراف</a></div>
             <div class="nav-item"><a href="{{ route('settlements.create') }}" class="nav-link {{ request()->routeIs('settlements.create') ? 'active' : '' }}">⚙️ تسوية</a></div>
+            
+            @can('instructions.view')
+            <div class="nav-item"><a href="{{ route('instructions.index') }}" class="nav-link {{ request()->routeIs('instructions.index') ? 'active' : '' }}">📢 التعليمات</a></div>
+            @endcan
+
             <div class="nav-item"><a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.index') ? 'active' : '' }}">
                 🔔 الإشعارات
                 @if($unreadCount > 0)
@@ -684,35 +711,64 @@
             </div>
 
             {{-- أدوات الإدارة (Admin/Super Admin) --}}
-            @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+            @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
             <div class="nav-item dropdown">
                 <div class="nav-link dropdown-trigger">
                     🛠️ الإدارة
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </div>
                 <div class="dropdown-menu">
+                    @can('penalties.create')
                     <div class="nav-group-label">إدارة الجزاءات</div>
                     <a href="{{ route('admin.penalties') }}" class="dropdown-link {{ request()->routeIs('admin.penalties') ? 'active' : '' }}">⚠️ إضافة جزاء</a>
+                    @endcan
                     
-                    @if(Auth::user()->role === 'super_admin')
-                        <div class="nav-group-label">أدوات السوبر أدمن</div>
-                        <a href="{{ route('admin.reset_password') }}" class="dropdown-link {{ request()->routeIs('admin.reset_password') ? 'active' : '' }}">🔑 استعادة كلمة السر</a>
-                        <a href="{{ route('super_admin.entry') }}" class="dropdown-link {{ request()->routeIs('super_admin.entry') ? 'active' : '' }}">➕ إضافة يدوية</a>
-                        <a href="{{ route('full_report.index') }}" class="dropdown-link {{ request()->routeIs('full_report.index') ? 'active' : '' }}">📄 التقرير الشامل</a>
+                    @if(Auth::user()->can('employees.view_profiles') || Auth::user()->can('reports.full_report') || Auth::user()->can('employees.reset_password') || Auth::user()->can('employees.manual_entry'))
+                        <div class="nav-group-label">إدارة الموظفين والتقارير</div>
                         
-                        <a href="{{ route('employee_profiles.index') }}" class="dropdown-link {{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}">👤 بروفايلات الموظفين</a>
+                        @can('employees.reset_password')
+                        <a href="{{ route('admin.reset_password') }}" class="dropdown-link {{ request()->routeIs('admin.reset_password') ? 'active' : '' }}">🔑 استعادة كلمة السر</a>
+                        @endcan
+                        
+                        @can('employees.manual_entry')
+                        <a href="{{ route('super_admin.entry') }}" class="dropdown-link {{ request()->routeIs('super_admin.entry') ? 'active' : '' }}">➕ الإضافة اليدويه</a>
+                        @endcan
 
+                        @can('reports.full_report')
+                        <a href="{{ route('full_report.index') }}" class="dropdown-link {{ request()->routeIs('full_report.index') ? 'active' : '' }}">📄 التقرير الشامل</a>
+                        @endcan
+                        
+                        @can('employees.view_profiles')
+                        <a href="{{ route('employee_profiles.index') }}" class="dropdown-link {{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}">👤 بروفايلات الموظفين</a>
+                        @endcan
+                    @endif
+
+                    @if(Auth::user()->can('incentives.create') || Auth::user()->can('admin_notes.create') || Auth::user()->can('incentives.view') || Auth::user()->can('admin_notes.view') || Auth::user()->can('instructions.view'))
                         <div class="nav-group-label">الحوافز والملاحظات</div>
+                        @can('incentives.create')
                         <a href="{{ route('incentives.create') }}" class="dropdown-link {{ request()->routeIs('incentives.create') ? 'active' : '' }}">🌟 إضافة حافز</a>
+                        @endcan
+                        @can('incentives.view')
                         <a href="{{ route('incentives.index') }}" class="dropdown-link {{ request()->routeIs('incentives.index') ? 'active' : '' }}">📈 عرض الحوافز</a>
+                        @endcan
+                        @can('admin_notes.create')
                         <a href="{{ route('admin_notes.create') }}" class="dropdown-link {{ request()->routeIs('admin_notes.create') ? 'active' : '' }}">🗒️ إضافة ملاحظة</a>
+                        @endcan
+                        @can('admin_notes.view')
                         <a href="{{ route('admin_notes.index') }}" class="dropdown-link {{ request()->routeIs('admin_notes.index') ? 'active' : '' }}">🗒️ ملاحظات الإدارة</a>
+                        @endcan
                     @endif
 
                     @if(Auth::user()->email === 'z@z.z' || Auth::user()->email === 'mtaha@gama.com')
                         <div class="nav-group-label">Security Logs</div>
                         <a href="{{ route('audit_log') }}" class="dropdown-link {{ request()->routeIs('audit_log') ? 'active' : '' }}">📜 Audit Log</a>
                     @endif
+
+                    @developer
+                        <div class="nav-group-label">منطقة المطور</div>
+                        <a href="{{ route('developer.settings.index') }}" class="dropdown-link {{ request()->routeIs('developer.settings.*') ? 'active' : '' }}">⚙️ إعدادات النظام</a>
+                        <a href="{{ route('developer.roles.index') }}" class="dropdown-link {{ request()->routeIs('developer.roles.*') ? 'active' : '' }}">🛡️ الفئات والصلاحيات</a>
+                    @enddeveloper
                 </div>
             </div>
             @endif
@@ -757,6 +813,11 @@
             <a href="{{ route('Overtime') }}" class="{{ request()->routeIs('Overtime') ? 'active' : '' }}">⏱️ اضافي</a>
             <a href="{{ route('check_in_out') }}" class="{{ request()->routeIs('check_in_out') ? 'active' : '' }}">⏳ حضور وانصراف</a>
             <a href="{{ route('settlements.create') }}" class="{{ request()->routeIs('settlements.create') ? 'active' : '' }}">⚙️ طلب تسوية</a>
+            
+            @can('instructions.view')
+            <a href="{{ route('instructions.index') }}" class="{{ request()->routeIs('instructions.index') ? 'active' : '' }}">📢 التعليمات</a>
+            @endcan
+
             <a href="{{ route('notifications.index') }}" class="{{ request()->routeIs('notifications.index') ? 'active' : '' }}">
                 🔔 الإشعارات
                 @if($unreadCount > 0)
@@ -770,26 +831,45 @@
             <a href="{{ route('view_check_in_out') }}" class="{{ request()->routeIs('view_check_in_out') ? 'active' : '' }}">📂 سجل الحضور</a>
             <a href="{{ route('view_penalties') }}" class="{{ request()->routeIs('view_penalties') ? 'active' : '' }}">📋 الجزاءات</a>
             <a href="{{ route('settlements.index') }}" class="{{ request()->routeIs('settlements.index') ? 'active' : '' }}">⚙️ التسويات</a>
-            {{-- الادمن العادي + سوبر ادمن --}}
-            @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+            @can('penalties.create')
             <div class="mobile-separator"></div>
             <a href="{{ route('admin.penalties') }}" class="{{ request()->routeIs('admin.penalties') ? 'active' : '' }}">⚠️ إضافة جزاء</a>
-            @endif
-            {{-- سوبر ادمن فقط --}}
-            @if(Auth::user()->role === 'super_admin')
+            @endcan
+            @can('employees.reset_password')
                 <a href="{{ route('admin.reset_password') }}" class="{{ request()->routeIs('admin.reset_password') ? 'active' : '' }}">🔑 ريست باسورد</a>
-                <a href="{{ route('super_admin.entry') }}" class="{{ request()->routeIs('super_admin.entry') ? 'active' : '' }}">➕ إضافة يدوية</a>
+            @endcan
+            @can('employees.manual_entry')
+                <a href="{{ route('super_admin.entry') }}" class="{{ request()->routeIs('super_admin.entry') ? 'active' : '' }}">➕ الإضافة اليدويه</a>
+            @endcan
+            @can('reports.full_report')
                 <a href="{{ route('full_report.index') }}" class="{{ request()->routeIs('full_report.index') ? 'active' : '' }}">📄 تقارير شاملة</a>
+            @endcan
+            @can('employees.view_profiles')
                 <a href="{{ route('employee_profiles.index') }}" class="{{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}">👤 بروفايلات الموظفين</a>
+            @endcan
+            @if(Auth::user()->can('incentives.create') || Auth::user()->can('admin_notes.create') || Auth::user()->can('incentives.view') || Auth::user()->can('admin_notes.view') || Auth::user()->can('instructions.view'))
                 <div class="mobile-separator"></div>
+                @can('incentives.create')
                 <a href="{{ route('incentives.create') }}" class="{{ request()->routeIs('incentives.create') ? 'active' : '' }}">🌟 إضافة حافز</a>
+                @endcan
+                @can('incentives.view')
                 <a href="{{ route('incentives.index') }}" class="{{ request()->routeIs('incentives.index') ? 'active' : '' }}">📈 الحوافز</a>
+                @endcan
+                @can('admin_notes.create')
                 <a href="{{ route('admin_notes.create') }}" class="{{ request()->routeIs('admin_notes.create') ? 'active' : '' }}">📝 إضافة ملاحظة</a>
+                @endcan
+                @can('admin_notes.view')
                 <a href="{{ route('admin_notes.index') }}" class="{{ request()->routeIs('admin_notes.index') ? 'active' : '' }}">🗒️ ملاحظات الإدارة</a>
+                @endcan
             @endif
             @if(Auth::user()->email === 'z@z.z')
                 <a href="{{ route('audit_log') }}" class="{{ request()->routeIs('audit_log') ? 'active' : '' }}">📜 Audit Log</a>
             @endif
+            @developer
+                <div class="mobile-separator"></div>
+                <a href="{{ route('developer.settings.index') }}" class="{{ request()->routeIs('developer.settings.*') ? 'active' : '' }}">⚙️ إعدادات النظام</a>
+                <a href="{{ route('developer.roles.index') }}" class="{{ request()->routeIs('developer.roles.*') ? 'active' : '' }}">🛡️ الفئات والصلاحيات</a>
+            @enddeveloper
             <div class="mobile-separator"></div>
             <form action="{{ route('logout') }}" method="POST">
                 @csrf

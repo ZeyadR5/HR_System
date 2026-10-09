@@ -12,9 +12,12 @@ use App\Http\Controllers\CheckInOutController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AdminNoteController;
 use App\Http\Controllers\IncentiveController;
+use App\Http\Controllers\InstructionController;
 use App\Http\Controllers\SettlementController;
 use App\Http\Controllers\EmployeeProfileController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RoleManagementController;
+use App\Http\Controllers\DeveloperSettingsController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -23,9 +26,6 @@ Route::get('/', function () {
 Route::get('login', [LoginController::class, 'login'])->name('login');
 Route::post('login', [LoginController::class, 'login_post'])->name('login_post');
 
-Route::get('register', [LoginController::class, 'register'])->name('register');
-Route::post('register', [LoginController::class, 'register_post'])->name('register_post');
-
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('logout', [LoginController::class, 'logout']);
 
@@ -33,6 +33,8 @@ Route::get('logout', [LoginController::class, 'logout']);
 // ==========================================
 // يوزر + ادمن + سوبر ادمن (كل المسجلين)
 // ==========================================
+
+
 Route::middleware(['auth'])->group(function () {
 
     // اضافي
@@ -97,82 +99,102 @@ Route::middleware(['auth'])->group(function () {
 
 
 // ==========================================
-// ادمن + سوبر ادمن: قبول/رفض الطلبات + إضافة جزاء
+// المسارات الإدارية — كل مسار محمي بصلاحية محددة
+// (الصلاحيات بتتحدد لكل فئة من صفحة المطور: إدارة الفئات والصلاحيات)
 // ==========================================
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
-    // قبول/رفض اضافي
-    Route::post('/overtime/{id}/accept', [OvertimeController::class, 'accept'])->name('overtime.accept');
-    Route::post('/overtime/{id}/refuse', [OvertimeController::class, 'refuse'])->name('overtime.refuse');
+    // ---------- الإضافي ----------
+    Route::post('/overtime/{id}/accept', [OvertimeController::class, 'accept'])->middleware('permission:overtime.approve')->name('overtime.accept');
+    Route::post('/overtime/{id}/refuse', [OvertimeController::class, 'refuse'])->middleware('permission:overtime.approve')->name('overtime.refuse');
+    Route::get('/overtime/export', [OvertimeController::class, 'export'])->middleware('permission:overtime.export')->name('overtime.export');
 
-    // قبول/رفض اجازات
-    Route::post('/leave/{id}/accept', [LeavePermissionController::class, 'leave_accept'])->name('leave.accept');
-    Route::post('/leave/{id}/refuse', [LeavePermissionController::class, 'leave_refuse'])->name('leave.refuse');
+    // ---------- الإجازات ----------
+    Route::post('/leave/{id}/accept', [LeavePermissionController::class, 'leave_accept'])->middleware('permission:leave.approve')->name('leave.accept');
+    Route::post('/leave/{id}/refuse', [LeavePermissionController::class, 'leave_refuse'])->middleware('permission:leave.approve')->name('leave.refuse');
+    Route::get('/leaves/export', [LeavePermissionController::class, 'export_lev'])->middleware('permission:leave.export')->name('leave.export');
 
-    // قبول/رفض اذونات
-    Route::post('/permission/{id}/accept', [LeavePermissionController::class, 'permission_accept'])->name('permission.accept');
-    Route::post('/permission/{id}/refuse', [LeavePermissionController::class, 'permission_refuse'])->name('permission.refuse');
+    // ---------- الأذونات ----------
+    Route::post('/permission/{id}/accept', [LeavePermissionController::class, 'permission_accept'])->middleware('permission:permission.approve')->name('permission.accept');
+    Route::post('/permission/{id}/refuse', [LeavePermissionController::class, 'permission_refuse'])->middleware('permission:permission.approve')->name('permission.refuse');
+    Route::get('/permissions/export', [LeavePermissionController::class, 'export_per'])->middleware('permission:permission.export')->name('permission.export');
 
-    // قبول/رفض الحضور والانصراف اليدوي
-    Route::post('/check-in-out/{id}/accept', [CheckInOutController::class, 'accept'])->name('check_in_out.accept');
-    Route::post('/check-in-out/{id}/refuse', [CheckInOutController::class, 'refuse'])->name('check_in_out.refuse');
+    // ---------- الحضور والانصراف ----------
+    Route::post('/check-in-out/{id}/accept', [CheckInOutController::class, 'accept'])->middleware('permission:checkinout.approve')->name('check_in_out.accept');
+    Route::post('/check-in-out/{id}/refuse', [CheckInOutController::class, 'refuse'])->middleware('permission:checkinout.approve')->name('check_in_out.refuse');
+    Route::get('/check-in-out/export', [CheckInOutController::class, 'export'])->middleware('permission:checkinout.export')->name('check_in_out.export');
 
-    // إضافة جزاء (بدون قبول/رفض للادمن العادي)
-    Route::get('/admin/penalties', [PenaltyController::class, 'index'])->name('admin.penalties');
-    Route::post('/admin/penalties', [PenaltyController::class, 'store'])->name('admin.penalties.store');
+    // ---------- الجزاءات ----------
+    Route::get('/admin/penalties', [PenaltyController::class, 'index'])->middleware('permission:penalties.create')->name('admin.penalties');
+    Route::post('/admin/penalties', [PenaltyController::class, 'store'])->middleware('permission:penalties.create')->name('admin.penalties.store');
+    Route::post('/penalties/{id}/accept', [PenaltyController::class, 'accept'])->middleware('permission:penalties.approve')->name('penalties.accept');
+    Route::post('/penalties/{id}/refuse', [PenaltyController::class, 'refuse'])->middleware('permission:penalties.approve')->name('penalties.refuse');
+    Route::get('/penalties/export', [PenaltyController::class, 'export'])->middleware('permission:penalties.export')->name('penalties.export');
+
+    // ---------- التسويات ----------
+    Route::post('/settlements/{id}/accept', [SettlementController::class, 'accept'])->middleware('permission:settlements.approve')->name('settlements.accept');
+    Route::post('/settlements/{id}/refuse', [SettlementController::class, 'refuse'])->middleware('permission:settlements.approve')->name('settlements.refuse');
+    Route::get('/settlements/export', [SettlementController::class, 'export'])->middleware('permission:settlements.export')->name('settlements.export');
+
+    // ---------- الموظفين ----------
+    Route::get('/admin/reset-password', [LoginController::class, 'reset_password_index'])->middleware('permission:employees.reset_password')->name('admin.reset_password');
+    Route::post('/admin/reset-password', [LoginController::class, 'reset_password_post'])->middleware('permission:employees.reset_password')->name('admin.reset_password.post');
+
+    Route::get('/super-admin/entry', [SuperAdminEntryController::class, 'index'])->middleware('permission:employees.manual_entry')->name('super_admin.entry');
+    Route::post('/super-admin/entry', [SuperAdminEntryController::class, 'store'])->middleware('permission:employees.manual_entry')->name('super_admin.entry.store');
+
+    Route::get('/employee-profiles', [EmployeeProfileController::class, 'index'])->middleware('permission:employees.view_profiles')->name('employee_profiles.index');
+    Route::get('/employee-profiles/create', [EmployeeProfileController::class, 'create'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.create');
+    Route::post('/employee-profiles/check-email', [EmployeeProfileController::class, 'checkEmail'])->name('employee_profiles.check_email');
+    Route::post('/employee-profiles/store', [EmployeeProfileController::class, 'store'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.store');
+    Route::get('/employee-profiles/{id}', [EmployeeProfileController::class, 'show'])->middleware('permission:employees.view_profiles')->name('employee_profiles.show');
+    Route::post('/employee-profiles/{id}/unlock-edit', [EmployeeProfileController::class, 'unlockEdit'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.unlock_edit');
+    Route::get('/employee-profiles/{id}/edit', [EmployeeProfileController::class, 'edit'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.edit');
+    Route::post('/employee-profiles/{id}/update', [EmployeeProfileController::class, 'update'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.update');
+
+    // ---------- التقارير والسجلات ----------
+    Route::get('/audit-log', [AuditController::class, 'index'])->middleware('permission:reports.audit_log')->name('audit_log');
+    Route::get('/full-report', [ReportController::class, 'index'])->middleware('permission:reports.full_report')->name('full_report.index');
+    Route::get('/full-report/export', [ReportController::class, 'export'])->middleware('permission:reports.full_report')->name('full_report.export');
+
+    // ---------- ملاحظات الإدارة ----------
+    Route::get('/admin-notes/create', [AdminNoteController::class, 'create'])->middleware('permission:admin_notes.create')->name('admin_notes.create');
+    Route::post('/admin-notes/store', [AdminNoteController::class, 'store'])->middleware('permission:admin_notes.create')->name('admin_notes.store');
+    Route::get('/admin-notes', [AdminNoteController::class, 'index'])->middleware('permission:admin_notes.view')->name('admin_notes.index');
+
+    // ---------- التعليمات والتنبيهات ----------
+    Route::get('/instructions', [InstructionController::class, 'index'])->name('instructions.index');
+    Route::post('/instructions', [InstructionController::class, 'store'])->name('instructions.store');
+    Route::post('/instructions/{instruction}/pin', [InstructionController::class, 'togglePin'])->name('instructions.pin');
+    Route::post('/instructions/{instruction}/delete', [InstructionController::class, 'destroy'])->name('instructions.destroy');
+    Route::get('/admin-notes/export', [AdminNoteController::class, 'export'])->middleware('permission:admin_notes.export')->name('admin_notes.export');
+
+    // ---------- الحوافز ----------
+    Route::get('/incentives/create', [IncentiveController::class, 'create'])->middleware('permission:incentives.create')->name('incentives.create');
+    Route::post('/incentives/store', [IncentiveController::class, 'store'])->middleware('permission:incentives.create')->name('incentives.store');
+    Route::get('/incentives', [IncentiveController::class, 'index'])->middleware('permission:incentives.view')->name('incentives.index');
+    Route::get('/incentives/export', [IncentiveController::class, 'export'])->middleware('permission:incentives.export')->name('incentives.export');
 });
 
 
 // ==========================================
-// سوبر ادمن فقط: export + reset password + قبول/رفض جزاءات
+// 🛡️ منطقة المطور فقط: إدارة الفئات والصلاحيات
 // ==========================================
-Route::middleware(['auth', 'super_admin'])->group(function () {
+Route::middleware(['auth', 'developer'])->prefix('developer')->name('developer.')->group(function () {
+    // إعدادات النظام
+    Route::get('/settings', [DeveloperSettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [DeveloperSettingsController::class, 'update'])->name('settings.update');
 
-    // تصدير Excel
-    Route::get('/overtime/export', [OvertimeController::class, 'export'])->name('overtime.export');
-    Route::get('/leaves/export', [LeavePermissionController::class, 'export_lev'])->name('leave.export');
-    Route::get('/permissions/export', [LeavePermissionController::class, 'export_per'])->name('permission.export');
-    Route::get('/penalties/export', [PenaltyController::class, 'export'])->name('penalties.export');
-    Route::get('/check-in-out/export', [CheckInOutController::class, 'export'])->name('check_in_out.export');
+    Route::get('/roles', [RoleManagementController::class, 'index'])->name('roles.index');
+    Route::get('/roles/create', [RoleManagementController::class, 'create'])->name('roles.create');
+    Route::post('/roles', [RoleManagementController::class, 'store'])->name('roles.store');
+    Route::get('/roles/{role}', [RoleManagementController::class, 'show'])->name('roles.show');
+    Route::get('/roles/{role}/edit', [RoleManagementController::class, 'edit'])->name('roles.edit');
+    Route::post('/roles/{role}/update', [RoleManagementController::class, 'update'])->name('roles.update');
+    Route::post('/roles/{role}/delete', [RoleManagementController::class, 'destroy'])->name('roles.destroy');
 
-    // إعادة ضبط كلمة السر
-    Route::get('/admin/reset-password', [LoginController::class, 'reset_password_index'])->name('admin.reset_password');
-    Route::post('/admin/reset-password', [LoginController::class, 'reset_password_post'])->name('admin.reset_password.post');
-
-    // قبول/رفض الجزاءات
-    Route::post('/penalties/{id}/accept', [PenaltyController::class, 'accept'])->name('penalties.accept');
-    Route::post('/penalties/{id}/refuse', [PenaltyController::class, 'refuse'])->name('penalties.refuse');
-
-    // إضافة يدوية للموظفين غير المسجلين
-    Route::get('/super-admin/entry', [SuperAdminEntryController::class, 'index'])->name('super_admin.entry');
-    Route::post('/super-admin/entry', [SuperAdminEntryController::class, 'store'])->name('super_admin.entry.store');
-
-    // Audit Log - Restricted to tech admin inside controller
-    Route::get('/audit-log', [AuditController::class, 'index'])->name('audit_log');
-
-    // التقارير الشاملة
-    Route::get('/full-report', [ReportController::class, 'index'])->name('full_report.index');
-    Route::get('/full-report/export', [ReportController::class, 'export'])->name('full_report.export');
-
-    // ملاحظات الإدارة
-    Route::get('/admin-notes/create', [AdminNoteController::class, 'create'])->name('admin_notes.create');
-    Route::post('/admin-notes/store', [AdminNoteController::class, 'store'])->name('admin_notes.store');
-    Route::get('/admin-notes', [AdminNoteController::class, 'index'])->name('admin_notes.index');
-    Route::get('/admin-notes/export', [AdminNoteController::class, 'export'])->name('admin_notes.export');
-
-    // الحوافز
-    Route::get('/incentives/create', [IncentiveController::class, 'create'])->name('incentives.create');
-    Route::post('/incentives/store', [IncentiveController::class, 'store'])->name('incentives.store');
-    Route::get('/incentives', [IncentiveController::class, 'index'])->name('incentives.index');
-    Route::get('/incentives/export', [IncentiveController::class, 'export'])->name('incentives.export');
-
-    // قبول/رفض التسويات
-    Route::post('/settlements/{id}/accept', [SettlementController::class, 'accept'])->name('settlements.accept');
-    Route::post('/settlements/{id}/refuse', [SettlementController::class, 'refuse'])->name('settlements.refuse');
-    Route::get('/settlements/export', [SettlementController::class, 'export'])->name('settlements.export');
-    // بروفايل الموظفين
-    Route::get('/employee-profiles', [EmployeeProfileController::class, 'index'])->name('employee_profiles.index');
-    Route::get('/employee-profiles/{id}', [EmployeeProfileController::class, 'show'])->name('employee_profiles.show');
-    Route::get('/employee-profiles/{id}/edit', [EmployeeProfileController::class, 'edit'])->name('employee_profiles.edit');
-    Route::post('/employee-profiles/{id}/update', [EmployeeProfileController::class, 'update'])->name('employee_profiles.update');
+    Route::post('/system-password', [RoleManagementController::class, 'updateSystemPassword'])->name('system_password.update');
+    Route::post('/roles/{role}/members', [RoleManagementController::class, 'addMembers'])->name('roles.members.add');
+    Route::post('/roles/{role}/members/{user}/remove', [RoleManagementController::class, 'removeMember'])->name('roles.members.remove');
+    Route::post('/users/{user}/role', [RoleManagementController::class, 'changeUserRole'])->name('users.role');
 });

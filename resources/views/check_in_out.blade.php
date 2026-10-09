@@ -56,7 +56,7 @@
     @endif
 
     @php
-        $isAuthorized = Auth::user()->role === 'super_admin' || 
+        $isAuthorized = in_array(Auth::user()->role, ['super_admin', 'developer']) || 
                         Auth::user()->email === 'hend@gama.com' || 
                         Auth::user()->email === 'RawanEssam@gamma.com' || 
                         Auth::user()->email === 'esraa.abdulla30@gmail.com';

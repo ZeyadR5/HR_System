@@ -44,7 +44,7 @@
             </div>
         </div>
 
-        @if(Auth::user()->role === 'super_admin' || Auth::user()->email === 'hend@gama.com' || Auth::user()->email === 'RawanEssam@gamma.com' || Auth::user()->email === 'esraa.abdulla30@gmail.com')
+        @if(in_array(Auth::user()->role, ['super_admin', 'developer']) || Auth::user()->email === 'hend@gama.com' || Auth::user()->email === 'RawanEssam@gamma.com' || Auth::user()->email === 'esraa.abdulla30@gmail.com')
         <hr class="my-4 border-default">
         <form action="{{ route('view_check_in_out') }}" method="GET" class="flex flex-wrap items-end gap-3">
             <input type="hidden" name="period_start" value="{{ $selectedPeriodStart }}">
@@ -70,7 +70,7 @@
         </form>
         @endif
 
-        @if(in_array(Auth::user()->role, ['admin', 'super_admin']) && $olderPendingCount > 0)
+        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']) && $olderPendingCount > 0)
             <div class="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
                 يوجد {{ $olderPendingCount }} طلب حضور/انصراف Pending من فترات أقدم.
                 يمكنك مراجعتها من خلال زر <span class="font-semibold">الدورة السابقة</span>.
@@ -104,11 +104,11 @@
                     <th scope="col" class="px-2 py-2 font-medium">Date</th>
                     <th scope="col" class="px-2 py-2 font-medium">Day</th>
                     <th scope="col" class="px-2 py-2 font-medium">Status</th>
-                    @if(Auth::user()->role === 'super_admin' || Auth::user()->email === 'hend@gama.com' || Auth::user()->email === 'RawanEssam@gamma.com' || Auth::user()->email === 'esraa.abdulla30@gmail.com')
+                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']) || Auth::user()->email === 'hend@gama.com' || Auth::user()->email === 'RawanEssam@gamma.com' || Auth::user()->email === 'esraa.abdulla30@gmail.com')
                         <th scope="col" class="px-2 py-2 font-medium">Actions</th>
                     @endif
                     <th class="px-2 py-2 font-medium">التاريخ (Created At)</th>
-                    @if(Auth::user()->role === 'super_admin')
+                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                         <th class="px-2 py-2 font-medium">IP Address</th>
                     @endif
                     <th class="px-2 py-2 font-medium">بواسطة</th>
@@ -148,7 +148,7 @@
                             @endif
                         </td>
                         
-                        @if(Auth::user()->role === 'super_admin' || Auth::user()->email === 'hend@gama.com' || Auth::user()->email === 'RawanEssam@gamma.com' || Auth::user()->email === 'esraa.abdulla30@gmail.com')
+                        @if(in_array(Auth::user()->role, ['super_admin', 'developer']) || Auth::user()->email === 'hend@gama.com' || Auth::user()->email === 'RawanEssam@gamma.com' || Auth::user()->email === 'esraa.abdulla30@gmail.com')
                         <td class="px-2 py-2">
                             @if($item->status === 'pending')
                                 <div class="flex gap-2">
@@ -196,11 +196,11 @@
                         
                         <td class="px-2 py-2">
                             {{ $item->created_at->format('d M Y') }}
-                            @if(Auth::user()->role === 'super_admin')
+                            @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                                 <br><span class="text-xs text-gray-500">{{ $item->created_at->format('h:i:s A') }}</span>
                             @endif
                         </td>
-                        @if(Auth::user()->role === 'super_admin')
+                        @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                             <td class="px-6 py-4 text-xs text-gray-500" dir="ltr" style="text-align: left;">{{ $item->created_ip ?? '-' }}</td>
                         @endif
                         <td class="px-2 py-2">
@@ -246,7 +246,7 @@
         </table>
     </div>
 
-    @if(in_array(Auth::user()->role, ['admin', 'super_admin']))
+    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
         <div class="relative overflow-x-auto bg-neutral-primary-soft shadow-xs rounded-base border border-default mt-6 mb-8">
             <div class="px-2 py-2 bg-neutral-secondary-soft border-b border-default flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <h6 class="font-semibold text-heading">
@@ -262,9 +262,9 @@
                         <th class="px-2 py-2 font-medium">اسم الموظف</th>
                         <th class="px-2 py-2 font-medium">شيفتات عادية</th>
                         <th class="px-2 py-2 font-medium">شيفتات الجمعة</th>
+                        <th class="px-2 py-2 font-medium">إجازات مقبولة</th>
+                        <th class="px-2 py-2 font-medium">الإجمالي (شيفتات + إجازات)</th>
                         <th class="px-2 py-2 font-medium">ساعات الجمعة (× 1.5)</th>
-                        <th class="px-2 py-2 font-medium">إجمالي الشيفتات</th>
-                        <th class="px-2 py-2 font-medium">إجمالي الحركات</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -286,9 +286,9 @@
                                 @endif
                             </td>
                             <td class="px-2 py-2">
-                                @if(($record->friday_bonus_hours ?? 0) > 0)
-                                    <span class="bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-1 rounded-full border border-purple-200">
-                                        ⏱️ {{ number_format($record->friday_bonus_hours, 2) }} ساعة
+                                @if(($record->accepted_leaves ?? 0) > 0)
+                                    <span class="bg-teal-100 text-teal-800 text-xs font-bold px-2.5 py-1 rounded-full border border-teal-300">
+                                        🏖️ {{ $record->accepted_leaves }} يوم إجازة
                                     </span>
                                 @else
                                     <span class="text-gray-400 text-xs">0</span>
@@ -296,13 +296,17 @@
                             </td>
                             <td class="px-2 py-2">
                                 <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full border border-blue-200">
-                                    ⚡ {{ $record->shifts_count }} شيفت
+                                    ⚡ {{ $record->total_shifts_and_leaves }}
                                 </span>
                             </td>
                             <td class="px-2 py-2">
-                                <span class="bg-gray-100 text-gray-700 text-xs font-medium px-2.5 py-1 rounded-full">
-                                    {{ $record->total }} سجل
-                                </span>
+                                @if(($record->friday_bonus_hours ?? 0) > 0)
+                                    <span class="bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-1 rounded-full border border-purple-200">
+                                        ⏱️ {{ number_format($record->friday_bonus_hours, 2) }} ساعة
+                                    </span>
+                                @else
+                                    <span class="text-gray-400 text-xs">0</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -314,7 +318,7 @@
             </table>
         </div>
 
-        @if(Auth::user()->role === 'super_admin')
+        @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
         <div class="flex justify-end mt-4 mb-8">
             <a href="{{ route('check_in_out.export', ['period_start' => $selectedPeriodStart]) }}"
                class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg">

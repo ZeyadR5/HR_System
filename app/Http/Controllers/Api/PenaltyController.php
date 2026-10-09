@@ -33,7 +33,7 @@ class PenaltyController extends Controller
                 $periodEnd->toDateString() . ' 23:59:59',
             ]);
 
-        if (in_array($user->role, ['admin', 'super_admin'])) {
+        if (in_array($user->role, ['admin', 'super_admin', 'developer'])) {
             if ($request->has('user_id') && $request->user_id) {
                 $query->where('user_id', $request->user_id);
             }
@@ -55,7 +55,7 @@ class PenaltyController extends Controller
     public function store(Request $request)
     {
         $admin = Auth::user();
-        if (!in_array($admin->role, ['admin', 'super_admin'])) {
+        if (!in_array($admin->role, ['admin', 'super_admin', 'developer'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'عفواً، لا تملك صلاحية القيام بهذا الإجراء.'
@@ -109,7 +109,7 @@ class PenaltyController extends Controller
      */
     public function superAdminIndex(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') {
+        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'غير مصرح للوصول لهذه الصفحة'
@@ -279,7 +279,7 @@ class PenaltyController extends Controller
      */
     public function superAdminSettlementIndex(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') {
+        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'غير مصرح للوصول لهذه الصفحة'

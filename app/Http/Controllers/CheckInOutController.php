@@ -25,7 +25,7 @@ class CheckInOutController extends Controller
 
     public function store(Request $request)
     {
-        if (!(Auth::user()->role === 'super_admin' || 
+        if (!(in_array(Auth::user()->role, ['super_admin', 'developer']) || 
               Auth::user()->email === 'hend@gama.com' || 
               Auth::user()->email === 'RawanEssam@gamma.com' || 
               Auth::user()->email === 'esraa.abdulla30@gmail.com')) {
@@ -81,7 +81,7 @@ class CheckInOutController extends Controller
 
         $users = [];
 
-        if (Auth::user()->role === 'super_admin' || Auth::user()->role === 'admin') {
+        if (in_array(Auth::user()->role, ['super_admin', 'developer']) || Auth::user()->role === 'admin') {
             $users = User::orderBy('name')->get();
             if ($request->has('user_id') && $request->user_id) {
                 $query->where('user_id', $request->user_id);
@@ -99,7 +99,7 @@ class CheckInOutController extends Controller
             ])
             ->where('status', 'accepted');
 
-        if (in_array(Auth::user()->role, ['admin', 'super_admin'])) {
+        if (in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
             if ($request->has('user_id') && $request->user_id) {
                 $summaryQuery->where('user_id', $request->user_id);
             }
@@ -107,9 +107,9 @@ class CheckInOutController extends Controller
             $summaryQuery->where('user_id', Auth::id());
         }
 
-        $cycleSummary = self::computeCycleSummary($summaryQuery->get());
+        $cycleSummary = self::computeCycleSummary($summaryQuery->get(), $periodStart, $periodEnd);
 
-        $olderPendingCount = in_array(Auth::user()->role, ['admin', 'super_admin'])
+        $olderPendingCount = in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])
             ? CheckInOut::where('status', 'pending')
                 ->whereDate('date', '<', $periodStart->toDateString())
                 ->count()
@@ -132,7 +132,7 @@ class CheckInOutController extends Controller
 
     public function accept($id)
     {
-        if (!(Auth::user()->role === 'super_admin' || 
+        if (!(in_array(Auth::user()->role, ['super_admin', 'developer']) || 
               Auth::user()->email === 'hend@gama.com' || 
               Auth::user()->email === 'RawanEssam@gamma.com' || 
               Auth::user()->email === 'esraa.abdulla30@gmail.com')) {
@@ -152,7 +152,7 @@ class CheckInOutController extends Controller
 
     public function refuse(Request $request, $id)
     {
-        if (!(Auth::user()->role === 'super_admin' || 
+        if (!(in_array(Auth::user()->role, ['super_admin', 'developer']) || 
               Auth::user()->email === 'hend@gama.com' || 
               Auth::user()->email === 'RawanEssam@gamma.com' || 
               Auth::user()->email === 'esraa.abdulla30@gmail.com')) {
@@ -173,9 +173,32 @@ class CheckInOutController extends Controller
         return redirect()->route('view_check_in_out')->with('success', 'تم رفض الحركة.');
     }
 
-    public static function computeCycleSummary($records)
+    public static function computeCycleSummary($records, $periodStart = null, $periodEnd = null)
     {
-        return $records->where('status', 'accepted')->groupBy('name')->map(function($userRecords, $name) {
+        if (!$periodStart && $records->isNotEmpty()) {
+            $periodStart = $records->min('date');
+        }
+        if (!$periodEnd && $records->isNotEmpty()) {
+            $periodEnd = $records->max('date');
+        }
+
+        $acceptedLeavesMap = collect();
+        if ($periodStart && $periodEnd) {
+            $startStr = \Carbon\Carbon::parse($periodStart)->toDateString();
+            $endStr   = \Carbon\Carbon::parse($periodEnd)->toDateString();
+
+            $acceptedLeavesMap = \App\Models\Leave::whereBetween('date', [$startStr, $endStr])
+                ->where('status', 'accepted')
+                ->selectRaw('name, user_id, SUM(days_count) as total_leave_days')
+                ->groupBy('user_id', 'name')
+                ->get()
+                ->keyBy(function($item) {
+                    return $item->user_id ? 'uid_' . $item->user_id : 'name_' . mb_strtolower(trim($item->name));
+                });
+        }
+
+        return $records->where('status', 'accepted')->groupBy('name')->map(function($userRecords, $name) use ($acceptedLeavesMap) {
+            $userId = $userRecords->first()->user_id ?? null;
             $checkInCount = $userRecords->where('type', 'حضور')->count();
             $checkOutCount = $userRecords->where('type', 'انصراف')->count();
             $totalRecords = $userRecords->count();
@@ -212,24 +235,36 @@ class CheckInOutController extends Controller
                     $regularShifts++;
                 }
             }
+
+            $leaveDays = 0;
+            if ($userId && $acceptedLeavesMap->has('uid_' . $userId)) {
+                $leaveDays = (float) $acceptedLeavesMap->get('uid_' . $userId)->total_leave_days;
+            } elseif ($acceptedLeavesMap->has('name_' . mb_strtolower(trim($name)))) {
+                $leaveDays = (float) $acceptedLeavesMap->get('name_' . mb_strtolower(trim($name)))->total_leave_days;
+            }
+
+            $totalShiftsAndLeaves = $regularShifts + $fridayShifts + $leaveDays;
             
             return (object) [
-                'name'                => $name,
-                'check_in_count'      => $checkInCount,
-                'check_out_count'     => $checkOutCount,
-                'shifts_count'        => $totalShifts,
-                'regular_shifts'      => $regularShifts,
-                'friday_shifts'       => $fridayShifts,
-                'friday_actual_hours' => round($fridayActualHours, 2),
-                'friday_bonus_hours'  => round($fridayBonusHours, 2),
-                'total'               => $totalRecords,
+                'name'                    => $name,
+                'user_id'                 => $userId,
+                'check_in_count'          => $checkInCount,
+                'check_out_count'         => $checkOutCount,
+                'shifts_count'            => $totalShifts,
+                'regular_shifts'          => $regularShifts,
+                'friday_shifts'           => $fridayShifts,
+                'accepted_leaves'         => $leaveDays,
+                'total_shifts_and_leaves' => $totalShiftsAndLeaves,
+                'friday_actual_hours'     => round($fridayActualHours, 2),
+                'friday_bonus_hours'      => round($fridayBonusHours, 2),
+                'total'                   => $totalRecords,
             ];
-        })->sortByDesc('shifts_count')->values();
+        })->sortByDesc('total_shifts_and_leaves')->values();
     }
 
     public function export(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') abort(403);
+        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $period = PayrollPeriod::fromRequest($request->query('period_start'));
         $periodStart = $period['start'];
@@ -250,7 +285,7 @@ class CheckInOutController extends Controller
             ->where('status', 'accepted')
             ->get();
 
-        $summary = self::computeCycleSummary($acceptedRecords);
+        $summary = self::computeCycleSummary($acceptedRecords, $periodStart, $periodEnd);
 
         $filename = 'check_in_out_' . $periodStart->format('Y_m_d') . '_to_' . $periodEnd->format('Y_m_d') . '.xlsx';
 

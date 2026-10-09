@@ -26,7 +26,7 @@ class PenaltyMonthlySheet implements FromCollection, WithHeadings, WithTitle, Wi
         return $this->employeeTotals->map(function ($record) {
             return [
                 'Employee Name'   => $record['name'],
-                'Total Penalties' => $record['total'] . ' جزاء',
+                'Total Penalties' => $record['total'] . ' penalty',
                 'Period'          => $this->periodStart->format('d M Y') . ' → ' . $this->periodEnd->format('d M Y'),
             ];
         });

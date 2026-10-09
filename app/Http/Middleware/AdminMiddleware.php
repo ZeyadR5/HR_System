@@ -19,7 +19,7 @@ class AdminMiddleware
 // app/Http/Middleware/AdminMiddleware.php
 public function handle(Request $request, Closure $next)
 {
-    if (Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin'])) {
+    if (Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
         return $next($request);
     }
 

@@ -48,7 +48,7 @@ class AdminReportController extends Controller
             $periodEnd->toDateString() . ' 23:59:59',
         ]);
 
-        if (!in_array($user->role, ['admin', 'super_admin'])) {
+        if (!in_array($user->role, ['admin', 'super_admin', 'developer'])) {
             $query->where('user_id', $user->id);
         } else {
             if ($request->has('user_id') && $request->user_id) {
@@ -68,7 +68,7 @@ class AdminReportController extends Controller
         $user = Auth::user();
         $query = AdminNote::orderByDesc('created_at');
 
-        if (!in_array($user->role, ['admin', 'super_admin'])) {
+        if (!in_array($user->role, ['admin', 'super_admin', 'developer'])) {
             $query->where('user_id', $user->id);
         } else {
             if ($request->has('user_id') && $request->user_id) {
@@ -353,7 +353,7 @@ class AdminReportController extends Controller
                     'permissions' => [
                         'minutes' => $totalPermMinutes,
                         'hours'   => round($totalPermMinutes / 60, 2),
-                        'limit_minutes' => 180,
+                        'limit_minutes' => \App\Support\Settings::get('monthly_permissions_hours', 3) * 60,
                     ],
                     'overtime' => [
                         'hours' => round($overtimeHours, 2),
@@ -434,7 +434,7 @@ class AdminReportController extends Controller
      */
     public function auditLogs(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') {
+        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) {
             return response()->json(['success' => false, 'message' => 'غير مصرح للوصول لهذه الصفحة'], 403);
         }
 
@@ -447,7 +447,7 @@ class AdminReportController extends Controller
      */
     public function fullReport(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') {
+        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) {
             return response()->json(['success' => false, 'message' => 'غير مصرح للوصول لهذه الصفحة'], 403);
         }
 

@@ -28,17 +28,17 @@ class IncentiveExport implements FromCollection, WithHeadings, WithTitle, WithSt
         return $users->map(function ($user, $index) {
             $userIncentive = $this->incentives->where('user_id', $user->id)->first();
             return [
-                'N'              => $index + 1,
-                'اسم الموظف'     => $user->name,
-                'التقييم'        => $userIncentive ? $userIncentive->evaluation : '',
-                'ملاحظة'         => '',
+                'N'             => $index + 1,
+                'Employee Name' => $user->name,
+                'Evaluation'    => $userIncentive ? $userIncentive->evaluation : '',
+                'Notes'         => '',
             ];
         });
     }
 
     public function headings(): array
     {
-        return ['N', 'اسم الموظف', 'التقييم', 'ملاحظة'];
+        return ['N', 'Employee Name', 'Evaluation', 'Notes'];
     }
 
     public function title(): string

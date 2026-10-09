@@ -26,7 +26,7 @@ class OvertimeController extends Controller
 
         return view('overtime', [
             'dateBounds' => SubmissionWindow::bounds(),
-            'otLimit' => 5,
+            'otLimit' => \App\Support\Settings::get('daily_overtime_limit', 5),
             'otUsage' => round($dayUsage, 2),
         ]);
     }
@@ -54,10 +54,11 @@ class OvertimeController extends Controller
             ->where('status', '!=', 'refused')
             ->sum('total_hours');
 
-        if (($dayUsage + $total_hours) > 5) {
-            $remaining = 5 - $dayUsage;
+        $dailyLimit = \App\Support\Settings::get('daily_overtime_limit', 5);
+        if (($dayUsage + $total_hours) > $dailyLimit) {
+            $remaining = $dailyLimit - $dayUsage;
             if ($remaining < 0) $remaining = 0;
-            return redirect()->back()->with('alert_error', "⚠️ عذراً، لقد تخطيت الحد المسموح به للإضافي لهذا اليوم (5 ساعات). المتبقي لك هو {$remaining} ساعة فقط.")->withInput();
+            return redirect()->back()->with('alert_error', "⚠️ عذراً، لقد تخطيت الحد المسموح به للإضافي لهذا اليوم ({$dailyLimit} ساعات). المتبقي لك هو {$remaining} ساعة فقط.")->withInput();
         }
 
         // Prevent submitting overtime before it ends
@@ -158,7 +159,7 @@ public function refuse(Request $request, $id)
             ])
             ->where('status', 'accepted');
 
-        if (Auth::user()->role !== 'super_admin') {
+        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) {
             $overtimeQuery->where('user_id', Auth::id());
             $monthlyTotalsQuery->where('user_id', Auth::id());
         }

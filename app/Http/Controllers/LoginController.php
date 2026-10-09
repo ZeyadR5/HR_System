@@ -13,29 +13,6 @@ class LoginController extends Controller
     function login(){
         return view('login');
     }
-    function register(){
-        return view('register');
-    }
-
-
-    function register_post(Request $request){
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email',
-            'job_title' => 'required|string',
-            'password' => 'required|min:6'
-        ]);
-
-        $data['name'] = $request->name;
-        $data['email'] = $request->email;
-        $data['job_title'] = $request->job_title;
-        $data['password'] = bcrypt($request->password);
-        $user = User::create($data);
-        if($user){
-            return redirect()->intended(route('login'))->with('success','Registration successful, you can now login');
-            }
-            return redirect()->intended(route('register'))->withErrors(['email'=>'Registration failed']);
-    }
 
 function login_post(Request $request){
     $request->validate([
@@ -57,13 +34,17 @@ function login_post(Request $request){
         }
     }
 
+    // تسجيل محاولة الدخول الفاشلة
+    $attemptedEmail = $request->email;
+    AuditLog::log($attemptedEmail, 'Failed Login', 'Auth', 'System', 'محاولة تسجيل دخول فاشلة للإيميل: ' . $attemptedEmail);
+
     return back()->withErrors(['email' => 'Invalid credentials.']);
 }
 
 public function reset_password_index()
 {
-    if (Auth::user()->role !== 'super_admin') {
-        abort(403);
+    if (!Auth::user()->can('employees.reset_password')) {
+        abort(403, 'غير مصرح لك باستعادة كلمة السر');
     }
     $users = User::orderBy('name')->get();
     return view('admin_reset_password', compact('users'));
@@ -71,8 +52,8 @@ public function reset_password_index()
 
 public function reset_password_post(Request $request)
 {
-    if (Auth::user()->role !== 'super_admin') {
-        abort(403);
+    if (!Auth::user()->can('employees.reset_password')) {
+        abort(403, 'غير مصرح لك باستعادة كلمة السر');
     }
     $request->validate([
         'user_id'  => 'required|exists:users,id',

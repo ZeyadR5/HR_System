@@ -35,7 +35,7 @@
             </div>
         </div>
 
-        @if(Auth::user()->role === 'super_admin')
+        @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
         <hr class="my-4 border-default">
         <form action="{{ route('settlements.index') }}" method="GET" class="flex flex-wrap items-end gap-3">
             <input type="hidden" name="period_start" value="{{ $selectedPeriodStart }}">
@@ -61,7 +61,7 @@
         </form>
         @endif
 
-        @if(Auth::user()->role === 'super_admin' && $olderPendingCount > 0)
+        @if(in_array(Auth::user()->role, ['super_admin', 'developer']) && $olderPendingCount > 0)
             <div class="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
                 يوجد {{ $olderPendingCount }} طلب تسوية Pending من فترات أقدم.
                 يمكنك مراجعتها من خلال زر <span class="font-semibold">الدورة السابقة</span>.
@@ -95,11 +95,11 @@
                     <th class="px-4 py-3 font-medium">تاريخ الطلب</th>
                     <th class="px-4 py-3 font-medium">اليوم</th>
                     <th class="px-4 py-3 font-medium">الحالة</th>
-                    @if(Auth::user()->role === 'super_admin')
+                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                         <th class="px-4 py-3 font-medium">الإجراءات</th>
                     @endif
                     <th class="px-4 py-3 font-medium">بواسطة</th>
-                    @if(Auth::user()->role === 'super_admin')
+                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                         <th class="px-4 py-3 font-medium">IP Address</th>
                     @endif
                 </tr>
@@ -121,7 +121,7 @@
                             <span class="bg-yellow-100 text-yellow-700 text-xs font-medium px-2.5 py-1 rounded-full">قيد المراجعة</span>
                         @endif
                     </td>
-                    @if(Auth::user()->role === 'super_admin')
+                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                     <td class="px-4 py-3">
                         @if($item->status === 'pending')
                             <div class="flex gap-2">
@@ -143,7 +143,7 @@
                             {{ $item->actioned_by ?? '—' }}
                         </span>
                     </td>
-                    @if(Auth::user()->role === 'super_admin')
+                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
                         <td class="px-4 py-3 text-xs text-gray-500" dir="ltr" style="text-align: left;">{{ $item->created_ip ?? '-' }}</td>
                     @endif
                 </tr>
@@ -177,7 +177,7 @@
         </table>
     </div>
 
-    @if(Auth::user()->role === 'super_admin' && $settlements->count() > 0)
+    @if(in_array(Auth::user()->role, ['super_admin', 'developer']) && $settlements->count() > 0)
     <div class="flex justify-end mt-4 mb-8">
         <a href="{{ route('settlements.export', ['period_start' => $selectedPeriodStart]) }}"
            class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg">
