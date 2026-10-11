@@ -893,6 +893,7 @@
     </div>
 </footer>
 
+<script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ asset('assets/js/flowbite.min.js') }}"></script>
 <script src="{{ asset('assets/js/tom-select.complete.min.js') }}"></script>
 <script>

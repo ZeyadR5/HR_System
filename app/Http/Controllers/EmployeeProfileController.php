@@ -34,6 +34,11 @@ class EmployeeProfileController extends Controller
             abort(403, 'غير مصرح لك باستعراض هذا البروفايل');
         }
 
+        // Require system password unlock when viewing other employees' profiles
+        if (Auth::id() != $id && !session('unlocked_show_user_id_' . $id) && session('unlocked_edit_user_id') != $id) {
+            return redirect()->route('employee_profiles.index')->withErrors(['system_password' => 'يُرجى إدخال كلمة مرور النظام أولاً لعرض بروفايل الموظف.']);
+        }
+
         $user = User::findOrFail($id);
         return $this->renderProfileView($user, $request);
     }
@@ -264,6 +269,30 @@ class EmployeeProfileController extends Controller
     }
 
 
+    public function unlockShow(Request $request, $id)
+    {
+        if (!Auth::user()->can('employees.view_profiles') && Auth::id() != $id) {
+            abort(403, 'غير مصرح لك باستعراض هذا البروفايل');
+        }
+
+        $request->validate([
+            'system_password' => 'required'
+        ], [
+            'system_password.required' => 'كلمة مرور النظام مطلوبة'
+        ]);
+
+        $correctPassword = Settings::get('system_edit_password', '123456');
+
+        if ($request->system_password !== $correctPassword) {
+            return back()->withErrors(['system_password' => 'كلمة مرور النظام غير صحيحة!']);
+        }
+
+        // Set session valid for viewing this user ID
+        session(['unlocked_show_user_id_' . $id => true]);
+
+        return redirect()->route('employee_profiles.show', $id);
+    }
+
     public function unlockEdit(Request $request, $id)
     {
         if (!Auth::user()->can('employees.edit_profiles')) {
@@ -335,12 +364,17 @@ class EmployeeProfileController extends Controller
 
         $user->update($updateData);
 
+        $calcDetails = '';
+        if ($request->filled('salary_amount') && $request->filled('working_hours')) {
+            $calcDetails = " (مرتب: {$request->salary_amount} ج.م / ساعات: {$request->working_hours})";
+        }
+
         AuditLog::log(
             Auth::user()->name, 
             'Updated', 
             'Employee Profile', 
             $user->name, 
-            "Job: {$request->job_title}, Rate: {$request->hourly_rate}" . (isset($updateData['role']) ? ", Role: {$updateData['role']}" : "")
+            "Job: {$request->job_title}, Rate: {$request->hourly_rate}{$calcDetails}" . (isset($updateData['role']) ? ", Role: {$updateData['role']}" : "")
         );
 
         return redirect()->route('employee_profiles.index')->with('success', "✅ تم تحديث بروفايل {$user->name} بنجاح!");

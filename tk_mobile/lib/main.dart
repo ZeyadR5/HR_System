@@ -1,13 +1,23 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
+}
+
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  HttpOverrides.global = MyHttpOverrides();
   
   // Initialize Local Notifications
   const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -290,12 +300,8 @@ class _WebViewerScreenState extends State<WebViewerScreen> {
             });
           },
           onWebResourceError: (WebResourceError error) {
-            // Check if error represents a disconnection or unreachable server
-            // (e.g. timeout, host lookup failure, connect fail)
-            if (error.description.contains('ERR_CONNECTION_REFUSED') ||
-                error.description.contains('ERR_INTERNET_DISCONNECTED') ||
-                error.description.contains('ERR_NAME_NOT_RESOLVED') ||
-                error.description.contains('ERR_CONNECTION_TIMED_OUT')) {
+            // Trigger offline/retry screen on any network or connection error
+            if (error.isForMainFrame ?? true) {
               setState(() {
                 _isOffline = true;
                 _isPageLoading = false;

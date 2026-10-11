@@ -90,20 +90,77 @@
                         </div>
                         @endif
 
-                        <div class="mb-4">
-                            <label for="hourly_rate" class="form-label fw-bold text-slate-700">قيمة الساعة (ج.م)</label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text bg-light border-end-0" style="border-radius: 10px 0 0 10px;">⏱️</span>
-                                <input type="number" step="0.01" name="hourly_rate" id="hourly_rate" 
-                                       class="form-control @error('hourly_rate') is-invalid @enderror" 
-                                       value="{{ old('hourly_rate', $user->hourly_rate) }}" 
-                                       placeholder="0.00"
-                                       style="border-radius: 0 10px 10px 0; font-size: 1rem;">
+                        <div class="card border-0 mb-4" style="border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <label class="form-label fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2" style="font-size: 0.95rem;">
+                                        <span>💰</span> حساب وتحديد أجر الساعة
+                                    </label>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" style="font-size: 0.75rem;">
+                                        ⚡ احتساب ذكي
+                                    </span>
+                                </div>
+
+                                <div class="row g-3">
+                                    {{-- 1. قيمة المرتب --}}
+                                    <div class="col-12 col-md-4">
+                                        <label for="salary_amount" class="form-label fw-bold text-slate-700 small mb-1">
+                                            💵 قيمة المرتب (ج.م)
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" step="any" min="0" id="salary_amount" name="salary_amount" 
+                                                   class="form-control text-center fw-semibold" 
+                                                   value="{{ old('salary_amount') }}" 
+                                                   placeholder="مثال: 6000"
+                                                   style="border-radius: 10px; font-size: 0.95rem;">
+                                        </div>
+                                        <div class="form-text extra-small text-muted" style="font-size: 0.75rem;">الراتب الأساسي/الشهري</div>
+                                    </div>
+
+                                    {{-- 2. عدد الساعات --}}
+                                    <div class="col-12 col-md-4">
+                                        <label for="working_hours" class="form-label fw-bold text-slate-700 small mb-1">
+                                            ⏳ عدد الساعات
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" step="any" min="0" id="working_hours" name="working_hours" 
+                                                   class="form-control text-center fw-semibold" 
+                                                   value="{{ old('working_hours') }}" 
+                                                   placeholder="مثال: 240"
+                                                   style="border-radius: 10px; font-size: 0.95rem;">
+                                        </div>
+                                        <div class="form-text extra-small text-muted" style="font-size: 0.75rem;">إجمالي ساعات العمل</div>
+                                    </div>
+
+                                    {{-- 3. قيمة الساعة --}}
+                                    <div class="col-12 col-md-4">
+                                        <label for="hourly_rate" class="form-label fw-bold text-primary small mb-1">
+                                            ⏱️ قيمة الساعة (ج.م) *
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" step="0.01" min="0" name="hourly_rate" id="hourly_rate" 
+                                                   class="form-control text-center fw-bold text-primary @error('hourly_rate') is-invalid @enderror" 
+                                                   value="{{ old('hourly_rate', $user->hourly_rate) }}" 
+                                                   placeholder="0.00"
+                                                   style="border-radius: 10px; font-size: 1rem; background-color: #ffffff;" required>
+                                        </div>
+                                        <div class="form-text extra-small text-muted" style="font-size: 0.75rem;">تُحسب تلقائياً أو يدوياً</div>
+                                    </div>
+                                </div>
+
+                                @error('hourly_rate')
+                                    <div class="text-danger small mt-2">{{ $message }}</div>
+                                @enderror
+
+                                <div class="mt-3 p-2 rounded-2 bg-white border border-light text-muted small d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                    <span style="font-size: 0.8rem;">
+                                        💡 <b>المعادلة:</b> قيمة الساعة = المرتب ÷ عدد الساعات
+                                    </span>
+                                    <span class="badge bg-light text-slate-600 border" id="calc_preview_badge" style="font-size: 0.78rem;">
+                                        الحاسبة جاهزة
+                                    </span>
+                                </div>
                             </div>
-                            @error('hourly_rate')
-                                <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                            <div class="form-text small text-muted">سيتم استخدام هذه القيمة لحساب الإضافي: (الساعات * 1.5 * قيمة الساعة).</div>
                         </div>
 
                         <hr class="my-4 opacity-50">
@@ -124,6 +181,59 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const salaryInput = document.getElementById('salary_amount');
+        const hoursInput = document.getElementById('working_hours');
+        const hourlyRateInput = document.getElementById('hourly_rate');
+        const previewBadge = document.getElementById('calc_preview_badge');
+
+        function calculateHourlyRate() {
+            const salary = parseFloat(salaryInput.value);
+            const hours = parseFloat(hoursInput.value);
+
+            if (!isNaN(salary) && salary > 0 && !isNaN(hours) && hours > 0) {
+                const rate = (salary / hours).toFixed(2);
+                hourlyRateInput.value = rate;
+                if (previewBadge) {
+                    previewBadge.className = 'badge bg-success-subtle text-success border border-success-subtle px-2 py-1';
+                    previewBadge.innerHTML = `✅ ${salary} ÷ ${hours} = <b>${rate} ج.م/ساعة</b>`;
+                }
+            } else if (previewBadge) {
+                if (!isNaN(salary) && salary > 0 && (!hours || hours <= 0)) {
+                    previewBadge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1';
+                    previewBadge.innerText = '⚠️ اكتب عدد الساعات لحساب القيمة';
+                } else if ((!salary || salary <= 0) && !isNaN(hours) && hours > 0) {
+                    previewBadge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1';
+                    previewBadge.innerText = '⚠️ اكتب قيمة المرتب لحساب القيمة';
+                } else {
+                    previewBadge.className = 'badge bg-light text-slate-600 border px-2 py-1';
+                    previewBadge.innerText = 'الحاسبة جاهزة';
+                }
+            }
+        }
+
+        if (salaryInput && hoursInput && hourlyRateInput) {
+            salaryInput.addEventListener('input', calculateHourlyRate);
+            hoursInput.addEventListener('input', calculateHourlyRate);
+
+            hourlyRateInput.addEventListener('input', function() {
+                if (previewBadge) {
+                    const val = parseFloat(hourlyRateInput.value);
+                    if (!isNaN(val) && val > 0) {
+                        previewBadge.className = 'badge bg-info-subtle text-info border border-info-subtle px-2 py-1';
+                        previewBadge.innerHTML = `✏️ تم تحديد القيمة يدوياً: <b>${val.toFixed(2)} ج.م</b>`;
+                    }
+                }
+            });
+
+            if (salaryInput.value || hoursInput.value) {
+                calculateHourlyRate();
+            }
+        }
+    });
+</script>
 
 <style>
     .form-control:focus {

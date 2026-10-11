@@ -10,6 +10,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
+        Schema::dropIfExists('role_permissions');
+        Schema::dropIfExists('roles');
+        Schema::enableForeignKeyConstraints();
+
         // إعادة إنشاء جدول أذونات الموظفين permissions إذا كان قد تم حذفه بالخطأ
         if (!Schema::hasTable('permissions')) {
             Schema::create('permissions', function (Blueprint $table) {
@@ -31,18 +36,16 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('roles')) {
-            Schema::create('roles', function (Blueprint $table) {
-                $table->id();
-                $table->string('name', 50)->unique();      // slug مخزن في users.role
-                $table->string('display_name', 100);
-                $table->string('description', 255)->nullable();
-                $table->string('color', 20)->default('#64748b');
-                $table->boolean('is_system')->default(false);
-                $table->json('permissions')->nullable();
-                $table->timestamps();
-            });
-        }
+        Schema::create('roles', function (Blueprint $table) {
+            $table->id();
+            $table->string('name', 50)->unique();      // slug مخزن في users.role
+            $table->string('display_name', 100);
+            $table->string('description', 255)->nullable();
+            $table->string('color', 20)->default('#64748b');
+            $table->boolean('is_system')->default(false);
+            $table->json('permissions')->nullable();
+            $table->timestamps();
+        });
 
         $defaults = Permissions::defaults();
         $now = now();
@@ -59,7 +62,7 @@ return new class extends Migration
             $role['permissions'] = json_encode($role['permissions']);
             $role['created_at'] = $now;
             $role['updated_at'] = $now;
-            DB::table('roles')->insertOrIgnore($role);
+            DB::table('roles')->insert($role);
         }
 
         // الموظفين اللي كان مسموح لهم بالحضور عن طريق إيميل مكتوب في الكود → ننقلهم للفئة الجديدة

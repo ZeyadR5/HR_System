@@ -148,6 +148,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/employee-profiles/check-email', [EmployeeProfileController::class, 'checkEmail'])->name('employee_profiles.check_email');
     Route::post('/employee-profiles/store', [EmployeeProfileController::class, 'store'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.store');
     Route::get('/employee-profiles/{id}', [EmployeeProfileController::class, 'show'])->middleware('permission:employees.view_profiles')->name('employee_profiles.show');
+    Route::post('/employee-profiles/{id}/unlock-show', [EmployeeProfileController::class, 'unlockShow'])->middleware('permission:employees.view_profiles')->name('employee_profiles.unlock_show');
     Route::post('/employee-profiles/{id}/unlock-edit', [EmployeeProfileController::class, 'unlockEdit'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.unlock_edit');
     Route::get('/employee-profiles/{id}/edit', [EmployeeProfileController::class, 'edit'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.edit');
     Route::post('/employee-profiles/{id}/update', [EmployeeProfileController::class, 'update'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.update');
