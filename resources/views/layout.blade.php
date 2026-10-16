@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Login App')</title>
+    <title>@hasSection('title') @yield('title') - HR System @else نظام الموارد البشرية - HR System @endif</title>
+
+    {{-- Favicon & Tab Icons --}}
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}?v=2">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}?v=2">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    <meta name="theme-color" content="#0f172a">
     <link href="{{ asset('assets/css/flowbite.min.css') }}" rel="stylesheet" />
     <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/flatpickr.min.css') }}" rel="stylesheet">
@@ -69,8 +77,20 @@
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.6rem;
             flex-shrink: 0;
+        }
+
+        .nav-logo-img {
+            height: 38px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));
+            transition: transform 0.2s ease;
+        }
+
+        .nav-logo:hover .nav-logo-img {
+            transform: scale(1.06);
         }
 
         .nav-logo span {
@@ -454,6 +474,10 @@
                 gap: 0.4rem;
             }
 
+            .nav-logo-img {
+                height: 30px;
+            }
+
             .nav-logo span {
                 font-size: 0.72rem;
                 padding: 2px 8px;
@@ -480,6 +504,10 @@
 
             .nav-logo {
                 font-size: 0.92rem;
+            }
+
+            .nav-logo-img {
+                height: 26px;
             }
 
             .nav-logo span {
@@ -663,6 +691,7 @@
 <nav class="main-nav">
     <div class="nav-inner">
         <a href="/" class="nav-logo">
+            <img src="{{ asset('assets/images/logo.png') }}" alt="Logo" class="nav-logo-img">
             <span>HR</span> System
         </a>
 

@@ -1,5 +1,5 @@
 @extends('layout')
-@section('title', 'Login')
+@section('title', 'تسجيل الدخول')
 @section('content')
 
 @if($errors->any())
