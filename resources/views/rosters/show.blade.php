@@ -1,10 +1,10 @@
 @extends('layout')
 
-@section('title', $roster->title . ' - جدول النوبتجيات')
+@section('title', $roster->title . ' - جدول الشيفتات')
 
 @section('styles')
 <style>
-    /* ألوان شيت النوبتجيات المطابقة 1:1 لصورة العميل */
+    /* ألوان شيت الشيفتات المطابقة 1:1 لصورة العميل */
     :root {
         --roster-maroon: #9c3b46;
         --roster-dark-maroon: #7c202a;
@@ -24,7 +24,7 @@
         margin-bottom: 2rem;
     }
 
-    /* جدول النوبتجيات */
+    /* جدول الشيفتات */
     .roster-table {
         width: 100%;
         border-collapse: collapse;
@@ -210,7 +210,7 @@
                 <span>•</span>
                 <span>👥 الموظفين المسجلين: <strong>{{ $uniqueEmployees->count() }} موظف</strong></span>
                 <span>•</span>
-                <span>⏱️ إجمالي النوبتجيات: <strong>{{ $entriesCount }}</strong></span>
+                <span>⏱️ إجمالي الشيفتات: <strong>{{ $entriesCount }}</strong></span>
             </div>
         </div>
 
@@ -269,7 +269,7 @@
         <p style="font-size: 10pt; color: #475569; margin: 4px 0 10px 0;">قسم {{ $roster->department }} - الفترة: {{ $roster->formatted_period }}</p>
     </div>
 
-    {{-- حاوية جدول النوبتجيات الرئيسي والجمعات --}}
+    {{-- حاوية جدول الشيفتات الرئيسي والجمعات --}}
     <div class="roster-card" style="padding: 1rem; overflow-x: auto;">
 
         {{-- 1. الجدول الرئيسي المطابق 1:1 لصورة الشيت --}}
@@ -443,8 +443,16 @@
         </div>
 
         <div style="margin-bottom: 1.2rem;">
-            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 0.4rem;">اسم الموظف / النوبتجي:</label>
-            <input type="text" id="modalNameInput" list="employeesDataList" placeholder="اكتب اسم الموظف..." style="width: 100%; padding: 0.65rem 0.85rem; border: 2px solid #2563eb; border-radius: 8px; font-size: 0.95rem; font-weight: 600; outline: none;">
+            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 0.4rem;">اختر موظف من مستخدمي السيستم (حسابات الموظفين):</label>
+            <select id="modalUserSelect" onchange="if(this.value) { document.getElementById('modalNameInput').value = this.value; }" style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; font-weight: 600; outline: none; margin-bottom: 0.6rem; background: #fff;">
+                <option value="">-- اختر من قائمة موظفي النظام المسجلين --</option>
+                @foreach($allUsers as $u)
+                <option value="{{ $u->name }}">{{ $u->name }} ({{ $u->job_title ?? 'موظف' }})</option>
+                @endforeach
+            </select>
+
+            <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #64748b; margin-bottom: 0.3rem;">أو اكتب/عدل الاسم:</label>
+            <input type="text" id="modalNameInput" list="employeesDataList" placeholder="اسم الموظف في السيستم..." style="width: 100%; padding: 0.65rem 0.85rem; border: 2px solid #2563eb; border-radius: 8px; font-size: 0.95rem; font-weight: 700; outline: none;">
             <datalist id="employeesDataList">
                 @foreach($allUsers as $u)
                 <option value="{{ $u->name }}">{{ $u->job_title ? '(' . $u->job_title . ')' : '' }}</option>
@@ -527,6 +535,11 @@
         document.getElementById('modalCellLabel').textContent = cellKey;
         const input = document.getElementById('modalNameInput');
         input.value = currentName;
+
+        const userSelect = document.getElementById('modalUserSelect');
+        if (userSelect) {
+            userSelect.value = currentName;
+        }
 
         document.getElementById('quickEditModal').style.display = 'flex';
         input.focus();

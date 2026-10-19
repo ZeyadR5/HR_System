@@ -67,7 +67,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/settlement', [SettlementController::class, 'store'])->name('settlements.store');
     Route::get('/view_settlements', [SettlementController::class, 'index'])->name('settlements.index');
 
-    // 📅 جدول النوبتجيات وتوزيع الشيفتات
+    // 📅 جدول الشيفتات وتوزيع الشيفتات
     Route::prefix('rosters')->name('rosters.')->group(function () {
         Route::get('/', [ShiftRosterController::class, 'index'])->name('index');
         Route::get('/create', [ShiftRosterController::class, 'create'])->name('create');

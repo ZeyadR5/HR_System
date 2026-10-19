@@ -1,6 +1,6 @@
 @extends('layout')
 
-@section('title', 'إنشاء جدول نوبتجيات جديد / رفع إكسيل')
+@section('title', 'إنشاء جدول الشيفتات جديد / رفع إكسيل')
 
 @section('content')
 <div style="max-width: 900px; margin: 0 auto; padding-bottom: 2rem;">
@@ -9,7 +9,7 @@
         <div>
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
                 <a href="{{ route('rosters.index') }}" style="color: #64748b; text-decoration: none; font-size: 1.2rem;">←</a>
-                <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0;">إنشاء جدول نوبتجيات جديد</h1>
+                <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0;">إنشاء جدول الشيفتات جديد</h1>
             </div>
             <p style="color: #64748b; font-size: 0.9rem; margin: 0;">
                 ارفع شيت الإكسيل مباشرة وسيقوم السيستم بفهمه تلقائياً، أو أنشئ جدولاً فارغاً بالهيكل الافتراضي.
@@ -49,7 +49,7 @@
                     <label style="display: block; font-weight: 700; font-size: 0.9rem; color: #1e293b; margin-bottom: 0.5rem;">
                         عنوان الجدول: <span style="color: #ef4444;">*</span>
                     </label>
-                    <input type="text" name="title" id="titleInput" value="{{ old('title', $defaultTitle) }}" required placeholder="مثال: جدول نوبتجيات تمريض أكتوبر 2026" style="width: 100%; padding: 0.7rem 0.9rem; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; font-weight: 600; outline: none;">
+                    <input type="text" name="title" id="titleInput" value="{{ old('title', $defaultTitle) }}" required placeholder="مثال: جدول الشيفتات تمريض أكتوبر 2026" style="width: 100%; padding: 0.7rem 0.9rem; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; font-weight: 600; outline: none;">
                 </div>
             </div>
 
@@ -82,7 +82,7 @@
                         اضغط هنا لاختيار ملف الإكسيل (.xlsx أو .xls) أو اسحبه إلى هنا
                     </div>
                     <p style="color: #64748b; font-size: 0.85rem; margin: 0;">
-                        يقوم السيستم بالتعرف التلقائي على أعمدة النوبتجيات (MRI, CT, X-Ray, US...) وجدول الجمعات
+                        يقوم السيستم بالتعرف التلقائي على أعمدة الشيفتات (MRI, CT, X-Ray, US...) وجدول الجمعات
                     </p>
                     <div id="selectedFileName" style="display: none; margin-top: 1rem; background: #fdf2f8; border: 1px solid #fbcfe8; color: #9d174d; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem;">
                         📄 <span id="fileNameText"></span>

@@ -1,6 +1,6 @@
 @extends('layout')
 
-@section('title', 'جدول النوبتجيات وتوزيع الشيفتات')
+@section('title', 'جدول الشيفتات وتوزيع الشيفتات')
 
 @section('content')
 <div class="rosters-container" style="max-width: 1400px; margin: 0 auto; padding-bottom: 2rem;">
@@ -10,7 +10,7 @@
         <div>
             <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.4rem;">
                 <span style="background: linear-gradient(135deg, #9c3b46 0%, #7c202a 100%); width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.4rem; box-shadow: 0 4px 12px rgba(156, 59, 70, 0.4);">📅</span>
-                <h1 style="font-size: 1.6rem; font-weight: 800; margin: 0; color: #fff;">جدول النوبتجيات وتوزيع الشيفتات</h1>
+                <h1 style="font-size: 1.6rem; font-weight: 800; margin: 0; color: #fff;">جدول الشيفتات وتوزيع الشيفتات</h1>
             </div>
             <p style="color: #94a3b8; font-size: 0.95rem; margin: 0; line-height: 1.6;">
                 إدارة وتوزيع شيفتات التمريض، الاستقبال، والعمال أسبوعياً وشهرياً مع إمكانية الرفع المباشر لملفات الإكسيل والتعديل الفوري.
@@ -115,7 +115,7 @@
                     <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: #475569; font-size: 0.88rem;">
                         <th style="padding: 1rem 1.25rem;">عنوان الجدول</th>
                         <th style="padding: 1rem 1.25rem;">القسم</th>
-                        <th style="padding: 1rem 1.25rem;">فترة النوبتجيات</th>
+                        <th style="padding: 1rem 1.25rem;">فترة الشيفتات</th>
                         <th style="padding: 1rem 1.25rem;">عدد التوزيعات المسجلة</th>
                         <th style="padding: 1rem 1.25rem;">أضيف بواسطة</th>
                         <th style="padding: 1rem 1.25rem; text-align: center;">الإجراءات</th>
@@ -166,7 +166,7 @@
                                     ✏️
                                 </a>
 
-                                <form action="{{ route('rosters.destroy', $roster->id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا الجدول وجميع نوبتجياته؟');" style="display: inline;">
+                                <form action="{{ route('rosters.destroy', $roster->id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا الجدول وجميع الشيفتاته؟');" style="display: inline;">
                                     @csrf
                                     <button type="submit" title="حذف الجدول" style="background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; padding: 0.45rem 0.65rem; border-radius: 8px; font-size: 0.82rem; cursor: pointer;">
                                         🗑️
@@ -187,9 +187,9 @@
         @else
         <div style="text-align: center; padding: 4rem 1.5rem;">
             <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
-            <h3 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">لا توجد جداول نوبتجيات مسجلة حتى الآن</h3>
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">لا توجد جداول الشيفتات مسجلة حتى الآن</h3>
             <p style="color: #64748b; font-size: 0.92rem; max-width: 500px; margin: 0 auto 1.5rem; line-height: 1.6;">
-                يمكنك إنشاء أول جدول نوبتجيات الآن سواءً عن طريق رفع ملف الإكسيل الجاهز وسيقوم النظام بقراءته فوراً، أو البدء بجدول فارغ وتعديله تفاعلياً.
+                يمكنك إنشاء أول جدول الشيفتات الآن سواءً عن طريق رفع ملف الإكسيل الجاهز وسيقوم النظام بقراءته فوراً، أو البدء بجدول فارغ وتعديله تفاعلياً.
             </p>
             @can('rosters.manage')
             <a href="{{ route('rosters.create') }}" style="background: linear-gradient(135deg, #9c3b46 0%, #b84351 100%); color: #fff; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 14px rgba(156, 59, 70, 0.35);">

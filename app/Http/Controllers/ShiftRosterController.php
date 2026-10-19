@@ -19,7 +19,7 @@ class ShiftRosterController extends Controller
     }
 
     /**
-     * عرض قائمة جداول النوبتجيات
+     * عرض قائمة جداول الشيفتات
      */
     public function index(Request $request)
     {
@@ -51,7 +51,7 @@ class ShiftRosterController extends Controller
     }
 
     /**
-     * شاشة إنشاء جدول نوبتجيات جديد (عبر رفع إكسيل أو إنشاء يدوي)
+     * شاشة إنشاء جدول الشيفتات جديد (عبر رفع إكسيل أو إنشاء يدوي)
      */
     public function create(Request $request)
     {
@@ -60,9 +60,9 @@ class ShiftRosterController extends Controller
 
         return view('rosters.create', [
             'defaultDept'   => $defaultDept,
-            'defaultStart'  => $currentPeriod->start->toDateString(),
-            'defaultEnd'    => $currentPeriod->end->toDateString(),
-            'defaultTitle'  => 'جدول نوبتجيات ' . $defaultDept . ' - ' . $currentPeriod->label,
+            'defaultStart'  => $currentPeriod['start']->toDateString(),
+            'defaultEnd'    => $currentPeriod['end']->toDateString(),
+            'defaultTitle'  => 'جدول الشيفتات ' . $defaultDept . ' - ' . $currentPeriod['label'],
         ]);
     }
 
@@ -115,14 +115,14 @@ class ShiftRosterController extends Controller
             'Created',
             'ShiftRoster',
             $roster->title,
-            "أنشأ جدول نوبتجيات لقسم {$roster->department}"
+            "أنشأ جدول الشيفتات لقسم {$roster->department}"
         );
 
-        return redirect()->route('rosters.show', $roster->id)->with('success', 'تم إنشاء جدول النوبتجيات بنجاح!');
+        return redirect()->route('rosters.show', $roster->id)->with('success', 'تم إنشاء جدول الشيفتات بنجاح!');
     }
 
     /**
-     * عرض شيت النوبتجيات بتصميم مطابق تماماً للملف الورقي
+     * عرض شيت الشيفتات بتصميم مطابق تماماً للملف الورقي
      */
     public function show(ShiftRoster $roster)
     {
@@ -185,7 +185,7 @@ class ShiftRosterController extends Controller
             'Updated',
             'ShiftRoster',
             $roster->title,
-            "عدّل جدول نوبتجيات {$roster->department}"
+            "عدّل جدول الشيفتات {$roster->department}"
         );
 
         return redirect()->route('rosters.show', $roster->id)->with('success', 'تم حفظ التعديلات بنجاح.');
@@ -245,7 +245,7 @@ class ShiftRosterController extends Controller
     {
         try {
             $filePath = $this->parser->exportExcel($roster);
-            $filename = 'جدول_نوبتجيات_' . $roster->department . '_' . $roster->start_date->format('Y-m-d') . '.xlsx';
+            $filename = 'جدول_الشيفتات_' . $roster->department . '_' . $roster->start_date->format('Y-m-d') . '.xlsx';
 
             return response()->download($filePath, $filename)->deleteFileAfterSend(true);
         } catch (\Throwable $e) {
@@ -261,7 +261,7 @@ class ShiftRosterController extends Controller
         $dept = $request->get('department', 'تمريض');
 
         $fakeRoster = new ShiftRoster([
-            'title'      => 'نموذج جدول نوبتجيات ' . $dept,
+            'title'      => 'نموذج جدول الشيفتات ' . $dept,
             'department' => $dept,
             'start_date' => now()->startOfMonth(),
             'end_date'   => now()->endOfMonth(),
@@ -269,7 +269,7 @@ class ShiftRosterController extends Controller
         ]);
 
         $filePath = $this->parser->exportExcel($fakeRoster);
-        $filename = 'نموذج_نوبتجيات_' . $dept . '.xlsx';
+        $filename = 'نموذج_الشيفتات_' . $dept . '.xlsx';
 
         return response()->download($filePath, $filename)->deleteFileAfterSend(true);
     }
@@ -287,9 +287,9 @@ class ShiftRosterController extends Controller
             'Deleted',
             'ShiftRoster',
             $title,
-            'حذف جدول النوبتجيات بالكامل'
+            'حذف جدول الشيفتات بالكامل'
         );
 
-        return redirect()->route('rosters.index')->with('success', 'تم حذف جدول النوبتجيات بنجاح.');
+        return redirect()->route('rosters.index')->with('success', 'تم حذف جدول الشيفتات بنجاح.');
     }
 }

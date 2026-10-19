@@ -50,11 +50,54 @@ class ShiftRosterExcelParser
     /**
      * الهيكل الافتراضي لجدول التمريض المطابق لشيت الصورة المرفوعة
      */
-    public static function getNursingDefaultGrid(): array
+    public static function getNursingDefaultGrid(bool $withSampleData = false): array
     {
+        $sampleCells = [
+            'السبت' => ['mri_1' => 'Hend Ramadan', 'mri_2' => 'Zinab Salah', 'mri_night' => 'Norhan eid mohamed', 'echo_1' => 'heba fouad', 'us_4d' => 'Sahar Sholqamy', 'us_sonar' => 'Yousra', 'us_2' => 'Nada Salama', 'ct_1' => 'Sabbren Abdeltwab', 'ct_2' => 'Malak Sayed', 'xray_1' => 'Yasmine Saed', 'xray_2' => 'Maha Gamal', 'mri_dexa_1' => 'Mariam Habashy', 'mri_dexa_2' => 'Reem Khaled', 'city_1' => '', 'city_2' => 'Doaa kamal'],
+            'الاحد' => ['mri_1' => 'Eman Mahmoud', 'mri_2' => 'Zinab Salah', 'mri_night' => 'Norhan eid mohamed', 'echo_1' => 'heba fouad', 'us_4d' => 'Sahar Sholqamy', 'us_sonar' => 'Mariam Habashy', 'us_2' => 'Malak Sayed', 'ct_1' => 'Sabbren Abdeltwab', 'ct_2' => 'Yasmine Saed', 'xray_1' => 'Rahma Atef', 'xray_2' => 'Maha Gamal', 'mri_dexa_1' => 'Nada Salama', 'mri_dexa_2' => 'Reem Khaled', 'city_1' => '', 'city_2' => 'Doaa kamal'],
+            'الاثنين' => ['mri_1' => 'Hend Ramadan', 'mri_2' => 'Zinab Salah', 'mri_night' => 'Norhan eid mohamed', 'echo_1' => 'heba fouad', 'us_4d' => 'Sahar Sholqamy', 'us_sonar' => 'Mariam Habashy', 'us_2' => 'Yasmine Saed', 'ct_1' => 'Yousra', 'ct_2' => 'Sabbren Abdeltwab', 'xray_1' => 'Rahma Atef', 'xray_2' => 'Maha Gamal', 'mri_dexa_1' => 'Eman Mahmoud', 'mri_dexa_2' => 'Nada Salama', 'city_1' => '', 'city_2' => 'Doaa kamal'],
+            'الثلاثاء' => ['mri_1' => 'Hend Ramadan', 'mri_2' => 'Nada Salama', 'mri_night' => 'Norhan eid mohamed', 'echo_1' => 'heba fouad', 'us_4d' => 'Reem Khaled', 'us_sonar' => 'Sahar Sholqamy', 'us_2' => 'Malak Sayed', 'ct_1' => 'Yousra', 'ct_2' => 'Sabbren Abdeltwab', 'xray_1' => 'Rahma Atef', 'xray_2' => 'Maha Gamal', 'mri_dexa_1' => 'Eman Mahmoud', 'mri_dexa_2' => 'Yasmine Saed', 'city_1' => '', 'city_2' => 'Doaa kamal'],
+            'الاربعاء' => ['mri_1' => 'Hend Ramadan', 'mri_2' => 'Zinab Salah', 'mri_night' => 'Norhan eid mohamed', 'echo_1' => 'heba fouad', 'us_4d' => 'Yasmine Saed', 'us_sonar' => 'Sahar Sholqamy', 'us_2' => 'Malak Sayed', 'ct_1' => 'Yousra', 'ct_2' => 'Sabbren Abdeltwab', 'xray_1' => 'Maha Gamal', 'xray_2' => 'Nada Salama', 'mri_dexa_1' => 'Rahma Atef', 'mri_dexa_2' => 'Reem Khaled', 'city_1' => 'Doaa kamal', 'city_2' => 'Eman Mahmoud'],
+            'الخميس' => ['mri_1' => 'Hend Ramadan', 'mri_2' => 'Zinab Salah', 'mri_night' => 'Norhan eid mohamed', 'echo_1' => 'heba fouad', 'us_4d' => 'Mariam Habashy', 'us_sonar' => 'Sahar Sholqamy', 'us_2' => 'Reem Khaled', 'ct_1' => 'Yousra', 'ct_2' => 'Eman Mahmoud', 'xray_1' => 'Yasmine Saed', 'xray_2' => 'Maha Gamal', 'mri_dexa_1' => 'Malak Sayed', 'mri_dexa_2' => 'Nada Salama', 'city_1' => '', 'city_2' => 'Doaa kamal'],
+            'الجمعه' => ['mri_1' => '', 'mri_2' => '', 'mri_night' => '', 'echo_1' => '', 'us_4d' => '', 'us_sonar' => '', 'us_2' => '', 'ct_1' => '', 'ct_2' => '', 'xray_1' => '', 'xray_2' => '', 'mri_dexa_1' => '', 'mri_dexa_2' => '', 'city_1' => 'Rahma Atef', 'city_2' => 'Eman Mahmoud'],
+        ];
+
+        $emptyCells = [
+            'mri_1' => '', 'mri_2' => '', 'mri_night' => '',
+            'echo_1' => '',
+            'us_4d' => '', 'us_sonar' => '', 'us_2' => '',
+            'ct_1' => '', 'ct_2' => '',
+            'xray_1' => '', 'xray_2' => '',
+            'mri_dexa_1' => '', 'mri_dexa_2' => '',
+            'city_1' => '', 'city_2' => '',
+        ];
+
+        $days = ['السبت', 'الاحد', 'الاثنين', 'الثلاثاء', 'الاربعاء', 'الخميس', 'الجمعه'];
+        $mainRows = [];
+        foreach ($days as $day) {
+            $mainRows[] = [
+                'day'   => $day,
+                'cells' => $withSampleData ? ($sampleCells[$day] ?? $emptyCells) : $emptyCells,
+            ];
+        }
+
+        $friEmpty = [
+            'fri_mri_1' => '', 'fri_mri_2' => '', 'fri_mri_mid' => '',
+            'fri_us_mid' => '',
+            'fri_ct_1' => '', 'fri_ct_2' => '',
+            'fri_pano_mid' => '',
+        ];
+
+        $fridayRows = [
+            ['day' => 'الجمعة 1', 'cells' => $friEmpty],
+            ['day' => 'الجمعة 2', 'cells' => $friEmpty],
+            ['day' => 'الجمعة 3', 'cells' => $friEmpty],
+            ['day' => 'الجمعة 4', 'cells' => $friEmpty],
+        ];
+
         return [
             'main_table' => [
-                'title' => 'جدول نوبتجيات التمريض الأسبوعي',
+                'title' => 'جدول الشيفتات التمريض الأسبوعي',
                 'sections' => [
                     [
                         'name' => 'MRI',
@@ -107,95 +150,10 @@ class ShiftRosterExcelParser
                         ],
                     ],
                 ],
-                'rows' => [
-                    [
-                        'day' => 'السبت',
-                        'cells' => [
-                            'mri_1' => 'هند', 'mri_2' => 'زينب', 'mri_night' => 'نورهان',
-                            'echo_1' => 'هبه',
-                            'us_4d' => 'ام ادهم', 'us_sonar' => 'يسرا', 'us_2' => 'ندي سلامه',
-                            'ct_1' => 'صابرين', 'ct_2' => 'ملك',
-                            'xray_1' => 'ياسمين', 'xray_2' => 'مها',
-                            'mri_dexa_1' => 'مريم حبشي', 'mri_dexa_2' => 'ريم',
-                            'city_1' => '', 'city_2' => 'دعاء',
-                        ],
-                    ],
-                    [
-                        'day' => 'الاحد',
-                        'cells' => [
-                            'mri_1' => 'ايمان', 'mri_2' => 'زينب', 'mri_night' => 'نورهان',
-                            'echo_1' => 'هبه',
-                            'us_4d' => 'ام ادهم', 'us_sonar' => 'مريم حبشي', 'us_2' => 'ملك',
-                            'ct_1' => 'صابرين', 'ct_2' => 'ياسمين',
-                            'xray_1' => 'رحمه', 'xray_2' => 'مها',
-                            'mri_dexa_1' => 'ندي سلامه', 'mri_dexa_2' => 'ريم',
-                            'city_1' => '', 'city_2' => 'دعاء',
-                        ],
-                    ],
-                    [
-                        'day' => 'الاثنين',
-                        'cells' => [
-                            'mri_1' => 'هند', 'mri_2' => 'زينب', 'mri_night' => 'نورهان',
-                            'echo_1' => 'هبه',
-                            'us_4d' => 'ام ادهم', 'us_sonar' => 'مريم حبشي', 'us_2' => 'ياسمين',
-                            'ct_1' => 'يسرا', 'ct_2' => 'صابرين',
-                            'xray_1' => 'رحمه', 'xray_2' => 'مها',
-                            'mri_dexa_1' => 'ايمان', 'mri_dexa_2' => 'ندي سلامه',
-                            'city_1' => '', 'city_2' => 'دعاء',
-                        ],
-                    ],
-                    [
-                        'day' => 'الثلاثاء',
-                        'cells' => [
-                            'mri_1' => 'هند', 'mri_2' => 'ندي سلامه', 'mri_night' => 'نورهان',
-                            'echo_1' => 'هبه',
-                            'us_4d' => 'ريم', 'us_sonar' => 'ام ادهم', 'us_2' => 'ملك',
-                            'ct_1' => 'يسرا', 'ct_2' => 'صابرين',
-                            'xray_1' => 'رحمه', 'xray_2' => 'مها',
-                            'mri_dexa_1' => 'ايمان', 'mri_dexa_2' => 'ياسمين',
-                            'city_1' => '', 'city_2' => 'دعاء',
-                        ],
-                    ],
-                    [
-                        'day' => 'الاربعاء',
-                        'cells' => [
-                            'mri_1' => 'هند', 'mri_2' => 'زينب', 'mri_night' => 'نورهان',
-                            'echo_1' => 'هبه',
-                            'us_4d' => 'ياسمين', 'us_sonar' => 'ام ادهم', 'us_2' => 'ملك',
-                            'ct_1' => 'يسرا', 'ct_2' => 'صابرين',
-                            'xray_1' => 'مها', 'xray_2' => 'ندي سلامه',
-                            'mri_dexa_1' => 'رحمه', 'mri_dexa_2' => 'ريم',
-                            'city_1' => 'دعاء', 'city_2' => 'ايمان',
-                        ],
-                    ],
-                    [
-                        'day' => 'الخميس',
-                        'cells' => [
-                            'mri_1' => 'هند', 'mri_2' => 'زينب', 'mri_night' => 'نورهان',
-                            'echo_1' => 'هبه',
-                            'us_4d' => 'مريم حبشي', 'us_sonar' => 'ام ادهم', 'us_2' => 'ريم',
-                            'ct_1' => 'يسرا', 'ct_2' => 'ايمان',
-                            'xray_1' => 'ياسمين', 'xray_2' => 'مها',
-                            'mri_dexa_1' => 'ملك', 'mri_dexa_2' => 'ندي سلامه',
-                            'city_1' => '', 'city_2' => 'دعاء',
-                        ],
-                    ],
-                    [
-                        'day' => 'الجمعه',
-                        'cells' => [
-                            'mri_1' => '', 'mri_2' => '', 'mri_night' => '',
-                            'echo_1' => '',
-                            'us_4d' => '', 'us_sonar' => '', 'us_2' => '',
-                            'ct_1' => '', 'ct_2' => '',
-                            'xray_1' => '', 'xray_2' => '',
-                            'mri_dexa_1' => '', 'mri_dexa_2' => '',
-                            'city_1' => 'رحمه', 'city_2' => 'ايمان',
-                        ],
-                    ],
-                ],
+                'rows' => $mainRows,
             ],
             'friday_table' => [
-                'title' => 'نوبتجيات أيام الجمعة',
+                'title' => 'الشيفتات أيام الجمعة',
                 'sections' => [
                     [
                         'name' => 'MRI',
@@ -225,44 +183,7 @@ class ShiftRosterExcelParser
                         ],
                     ],
                 ],
-                'rows' => [
-                    [
-                        'day' => 'الجمعه 9/4',
-                        'cells' => [
-                            'fri_mri_1' => 'ندي سلامه', 'fri_mri_2' => 'ندي سلامه', 'fri_mri_mid' => 'مها',
-                            'fri_us_mid' => 'ياسمين',
-                            'fri_ct_1' => 'ملك', 'fri_ct_2' => 'ريم',
-                            'fri_pano_mid' => 'ريم',
-                        ],
-                    ],
-                    [
-                        'day' => 'الجمعه 9/11',
-                        'cells' => [
-                            'fri_mri_1' => 'مريم حبشي', 'fri_mri_2' => 'ندي سلامه', 'fri_mri_mid' => 'مها',
-                            'fri_us_mid' => 'يسرا',
-                            'fri_ct_1' => 'ملك', 'fri_ct_2' => 'ريم',
-                            'fri_pano_mid' => 'ريم',
-                        ],
-                    ],
-                    [
-                        'day' => 'الجمعه 9/18',
-                        'cells' => [
-                            'fri_mri_1' => 'ياسمين', 'fri_mri_2' => 'دعاء', 'fri_mri_mid' => 'مها',
-                            'fri_us_mid' => 'ملك',
-                            'fri_ct_1' => 'ياسمين', 'fri_ct_2' => 'ندي سلامه',
-                            'fri_pano_mid' => 'ندي سلامه',
-                        ],
-                    ],
-                    [
-                        'day' => 'الجمعه 9/25',
-                        'cells' => [
-                            'fri_mri_1' => 'زينب', 'fri_mri_2' => 'ايمان', 'fri_mri_mid' => 'مها',
-                            'fri_us_mid' => 'ملك',
-                            'fri_ct_1' => 'ملك', 'fri_ct_2' => 'ريم',
-                            'fri_pano_mid' => 'ريم',
-                        ],
-                    ],
-                ],
+                'rows' => $fridayRows,
             ],
         ];
     }
@@ -274,7 +195,7 @@ class ShiftRosterExcelParser
     {
         return [
             'main_table' => [
-                'title' => 'جدول نوبتجيات الاستقبال الأسبوعي',
+                'title' => 'جدول الشيفتات الاستقبال الأسبوعي',
                 'sections' => [
                     [
                         'name' => 'كاونتر 1 (الرئيسي)',
@@ -318,7 +239,7 @@ class ShiftRosterExcelParser
                 ],
             ],
             'friday_table' => [
-                'title' => 'نوبتجيات استقبال أيام الجمعة',
+                'title' => 'الشيفتات استقبال أيام الجمعة',
                 'sections' => [
                     [
                         'name' => 'الاستقبال الرئيسي',
@@ -352,7 +273,7 @@ class ShiftRosterExcelParser
     {
         return [
             'main_table' => [
-                'title' => 'جدول نوبتجيات الخدمات المعاونة والعمال',
+                'title' => 'جدول الشيفتات الخدمات المعاونة والعمال',
                 'sections' => [
                     [
                         'name' => 'أدوار الفحص والأشعة',
@@ -388,7 +309,7 @@ class ShiftRosterExcelParser
                 ],
             ],
             'friday_table' => [
-                'title' => 'نوبتجيات العمال أيام الجمعة',
+                'title' => 'الشيفتات العمال أيام الجمعة',
                 'sections' => [
                     [
                         'name' => 'نظافة وخدمات شاملة',
@@ -657,11 +578,12 @@ class ShiftRosterExcelParser
 
                 // محاولة مطابقة الاسم مع مستخدم مسجل
                 $matchedUser = $this->findMatchingUser($empName, $allUsers);
+                $finalEmpName = $matchedUser ? $matchedUser->name : $empName;
 
                 $entriesToInsert[] = [
                     'shift_roster_id' => $roster->id,
                     'user_id'         => $matchedUser?->id,
-                    'employee_name'   => $empName,
+                    'employee_name'   => $finalEmpName,
                     'department'      => $roster->department,
                     'section_name'    => $meta['section'],
                     'sub_section'     => $meta['sub'],
@@ -726,11 +648,12 @@ class ShiftRosterExcelParser
                 ];
 
                 $matchedUser = $this->findMatchingUser($empName, $allUsers);
+                $finalEmpName = $matchedUser ? $matchedUser->name : $empName;
 
                 $entriesToInsert[] = [
                     'shift_roster_id' => $roster->id,
                     'user_id'         => $matchedUser?->id,
-                    'employee_name'   => $empName,
+                    'employee_name'   => $finalEmpName,
                     'department'      => $roster->department,
                     'section_name'    => $meta['section'],
                     'sub_section'     => $meta['sub'],
@@ -753,7 +676,7 @@ class ShiftRosterExcelParser
     }
 
     /**
-     * مطابقة ذكية للاسم مع مستخدم في النظام
+     * مطابقة ذكية للاسم مع مستخدم في النظام (مع دعم الأسماء الحركية والعربية)
      */
     protected function findMatchingUser(string $name, $users): ?User
     {
@@ -762,6 +685,64 @@ class ShiftRosterExcelParser
         $clean = str_replace('ة', 'ه', $clean);
         $clean = str_replace('ى', 'ي', $clean);
 
+        // قاموس الأسماء الشائعة والحركية للربط بمستخدمي النظام
+        $aliases = [
+            'ام ادهم' => 'sahar',
+            'أم أدهم' => 'sahar',
+            'سحر'     => 'sahar',
+            'هند'     => 'hend',
+            'زينب'    => 'zinab',
+            'نورهان'  => 'norhan',
+            'هبه'     => 'heba',
+            'هبة'     => 'heba',
+            'يسرا'    => 'yousra',
+            'ندي'     => 'nada',
+            'ندى'     => 'nada',
+            'ندي سلامه' => 'nada salama',
+            'ندى سلامة' => 'nada salama',
+            'صابرين'  => 'sabbren',
+            'ملك'     => 'malak',
+            'ياسمين'  => 'yasmine',
+            'مها'     => 'maha',
+            'مريم'    => 'mariam',
+            'مريم حبشي' => 'mariam habashy',
+            'ريم'     => 'reem',
+            'دعاء'    => 'doaa',
+            'رحمه'    => 'rahma',
+            'رحمة'    => 'rahma',
+            'ايمان'   => 'eman',
+            'إيمان'   => 'eman',
+            'اميره'   => 'amira',
+            'أميرة'   => 'amira',
+            'اماني'   => 'amany',
+            'أماني'   => 'amany',
+            'ايه'     => 'aya',
+            'آية'     => 'aya',
+            'محمد'    => 'mohamed',
+            'اسراء'   => 'esraa',
+            'إسراء'   => 'esraa',
+            'يوسف'    => 'youssef',
+            'شهد'     => 'shahd',
+            'حبيبه'   => 'habiba',
+            'حسام'    => 'hossam',
+            'سها'     => 'soha',
+            'زياد'    => 'zeyad',
+            'ادم'     => 'adam',
+            'منة'     => 'menaa',
+            'منه'     => 'menaa',
+        ];
+
+        // 1. فحص القاموس الحركي أولاً
+        if (isset($aliases[$clean])) {
+            $keyword = $aliases[$clean];
+            foreach ($users as $u) {
+                if (stripos($u->name, $keyword) !== false) {
+                    return $u;
+                }
+            }
+        }
+
+        // 2. مطابقة الاسم العربي أو الإنجليزي المباشر
         foreach ($users as $u) {
             $uName = mb_strtolower(trim($u->name));
             $uNameNorm = str_replace(['أ', 'إ', 'آ'], 'ا', $uName);
@@ -769,14 +750,14 @@ class ShiftRosterExcelParser
             $uNameNorm = str_replace('ى', 'ي', $uNameNorm);
 
             // تطابق كامل
-            if ($clean === $uNameNorm) {
+            if ($clean === $uNameNorm || $clean === $uName) {
                 return $u;
             }
 
             // الاسم الأول
             $uParts = explode(' ', $uNameNorm);
             $firstPart = $uParts[0] ?? '';
-            if (mb_strlen($clean) >= 3 && ($clean === $firstPart || str_starts_with($uNameNorm, $clean . ' '))) {
+            if (mb_strlen($clean) >= 3 && ($clean === $firstPart || str_starts_with($uNameNorm, $clean . ' ') || str_starts_with($uName, $clean . ' '))) {
                 return $u;
             }
         }

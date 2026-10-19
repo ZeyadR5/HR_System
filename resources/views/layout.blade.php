@@ -675,7 +675,7 @@
         request()->routeIs('admin_notes.index') => 'ملاحظات الإدارة',
         request()->routeIs('instructions.index') => 'التعليمات والتنبيهات',
         request()->routeIs('super_admin.entry') => 'إضافة يدوية',
-        request()->routeIs('rosters.*') => 'جدول النوبتجيات',
+        request()->routeIs('rosters.*') => 'جدول الشيفتات',
         request()->routeIs('audit_log') => 'Audit Log',
         request()->routeIs('full_report.index') => 'تقارير مجمعه',
         request()->routeIs('employee_profiles.*') => 'ملفات الموظفين',
@@ -712,9 +712,9 @@
             <div class="nav-item"><a href="{{ route('check_in_out') }}" class="nav-link {{ request()->routeIs('check_in_out') ? 'active' : '' }}">⏳ حضور وانصراف</a></div>
             <div class="nav-item"><a href="{{ route('settlements.create') }}" class="nav-link {{ request()->routeIs('settlements.create') ? 'active' : '' }}">⚙️ تسوية</a></div>
             
-            @can('rosters.view')
-            <div class="nav-item"><a href="{{ route('rosters.index') }}" class="nav-link {{ request()->routeIs('rosters.*') ? 'active' : '' }}">📅 النوبتجيات</a></div>
-            @endcan
+            <!-- @can('rosters.view')
+            <div class="nav-item"><a href="{{ route('rosters.index') }}" class="nav-link {{ request()->routeIs('rosters.*') ? 'active' : '' }}">📅 الشيفتات</a></div>
+            @endcan -->
 
             @can('instructions.view')
             <div class="nav-item"><a href="{{ route('instructions.index') }}" class="nav-link {{ request()->routeIs('instructions.index') ? 'active' : '' }}">📢 التعليمات</a></div>
@@ -743,7 +743,7 @@
                     <a href="{{ route('view_penalties') }}" class="dropdown-link {{ request()->routeIs('view_penalties') ? 'active' : '' }}">⚠️ سجل الجزاءات</a>
                     <a href="{{ route('settlements.index') }}" class="dropdown-link {{ request()->routeIs('settlements.index') ? 'active' : '' }}">⚙️ سجل التسويات</a>
                     @can('rosters.view')
-                    <a href="{{ route('rosters.index') }}" class="dropdown-link {{ request()->routeIs('rosters.*') ? 'active' : '' }}">📅 جدول النوبتجيات والشيفتات</a>
+                    <a href="{{ route('rosters.index') }}" class="dropdown-link {{ request()->routeIs('rosters.*') ? 'active' : '' }}">📅 جدول الشيفتات </a>
                     @endcan
                 </div>
             </div>
@@ -871,7 +871,7 @@
             <a href="{{ route('view_penalties') }}" class="{{ request()->routeIs('view_penalties') ? 'active' : '' }}">📋 الجزاءات</a>
             <a href="{{ route('settlements.index') }}" class="{{ request()->routeIs('settlements.index') ? 'active' : '' }}">⚙️ التسويات</a>
             @can('rosters.view')
-            <a href="{{ route('rosters.index') }}" class="{{ request()->routeIs('rosters.*') ? 'active' : '' }}">📅 جدول النوبتجيات والشيفتات</a>
+            <a href="{{ route('rosters.index') }}" class="{{ request()->routeIs('rosters.*') ? 'active' : '' }}">📅 جدول الشيفتات </a>
             @endcan
             @can('penalties.create')
             <div class="mobile-separator"></div>

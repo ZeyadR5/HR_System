@@ -113,11 +113,11 @@ class Permissions
                 ],
             ],
             'rosters' => [
-                'label' => 'جدول النوبتجيات والشيفتات',
+                'label' => 'جدول الشيفتات',
                 'icon'  => '📅',
                 'permissions' => [
-                    'rosters.view'   => 'عرض جدول النوبتجيات وتوزيع الشيفتات',
-                    'rosters.manage' => 'إنشاء وتعديل ورفع جداول النوبتجيات (Excel)',
+                    'rosters.view'   => 'عرض جدول الشيفتات وتوزيع الشيفتات',
+                    'rosters.manage' => 'إنشاء وتعديل ورفع جداول الشيفتات (Excel)',
                 ],
             ],
             'instructions' => [
