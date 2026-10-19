@@ -1,6 +1,6 @@
 @extends('layout')
 
-@section('title', 'بروفايلات الموظفين')
+@section('title', 'ملفات الموظفين')
 
 @section('content')
 <div class="container-fluid py-4">
@@ -9,7 +9,7 @@
             
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                 <div>
-                    <h2 class="fw-bold text-slate-800 mb-1" style="color: #1e293b;">👤 بروفايلات الموظفين</h2>
+                    <h2 class="fw-bold text-slate-800 mb-1" style="color: #1e293b;">👤 ملفات الموظفين</h2>
                     <p class="text-muted small mb-0">إدارة المسمى الوظيفي وقيمة الشيفت لكل موظف</p>
                 </div>
                 

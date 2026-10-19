@@ -16,7 +16,7 @@ class view_Overtime extends Controller
         $periodStart = $period['start'];
         $periodEnd = $period['end'];
 
-        $overtimeQuery = Overtime::with('user')
+        $overtimeQuery = Overtime::with(['user.shiftGroup'])
             ->whereBetween('date', [
                 $periodStart->toDateString(),
                 $periodEnd->toDateString(),

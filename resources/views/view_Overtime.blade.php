@@ -123,7 +123,12 @@
                     <tr class="odd:bg-neutral-primary even:bg-neutral-secondary-soft border-b border-default">
                         <td class="px-2 py-2">{{ $index + 1 }}</td>
                         <th scope="row" class="px-2 py-2 font-medium text-heading">
-                            {{ $item->name }}
+                            <div>{{ $item->name }}</div>
+                            @if($item->user?->shiftGroup)
+                                <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full mt-1" style="background: {{ $item->user->shiftGroup->color }}15; color: {{ $item->user->shiftGroup->color }}; border: 1px solid {{ $item->user->shiftGroup->color }}30;">
+                                    {{ $item->user->shiftGroup->icon }} {{ $item->user->shiftGroup->name }}
+                                </span>
+                            @endif
                         </th>
                         <!-- <td class="px-2 py-2">{{ $item->total_hours }}</td> -->
                         <td class="px-2 py-2">{{ $item->reason }}</td>

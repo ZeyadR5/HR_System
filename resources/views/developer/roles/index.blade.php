@@ -33,7 +33,7 @@
     {{-- ========== كلمة مرور النظام ========== --}}
     <div class="dv-section-title mt-5">
         <h2>🔒 كلمة مرور التعديلات</h2>
-        <small>كلمة المرور المطلوبة عند الدخول لتعديل بروفايلات الموظفين لزيادة الأمان.</small>
+        <small>كلمة المرور المطلوبة عند الدخول لتعديل ملفات الموظفين لزيادة الأمان.</small>
     </div>
 
     <div class="card mb-5 border-0 shadow-sm" style="border-radius: 12px; background: #fff; padding: 20px;">

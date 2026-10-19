@@ -24,22 +24,37 @@ class OvertimeController extends Controller
             ->where('status', '!=', 'refused')
             ->sum('total_hours');
 
+        $user = Auth::user();
+
         return view('overtime', [
             'dateBounds' => SubmissionWindow::bounds(),
-            'otLimit' => \App\Support\Settings::get('daily_overtime_limit', 5),
-            'otUsage' => round($dayUsage, 2),
+            'otLimit'    => \App\Support\Settings::get('daily_overtime_limit', 5),
+            'otUsage'    => round($dayUsage, 2),
+            'shiftGroup' => $user?->shiftGroup,
         ]);
     }
 
     public function overtime_post(Request $request)
     {
         $request->validate([
-            'date' => 'required|date',
-            'day' => 'required|string|max:255',
+            'date'   => 'required|date',
+            'day'    => 'required|string|max:255',
             'reason' => 'required|string|max:1000',
-            'from' => 'required|date_format:H:i',
-            'to' => 'required|date_format:H:i|after:from',
+            'from'   => 'required|date_format:H:i',
+            'to'     => 'required|date_format:H:i|after:from',
         ]);
+
+        $user = Auth::user();
+
+        // منع تسجيل إضافي داخل ساعات الشيفت الأساسي للموظف
+        if ($user && $user->shiftGroup) {
+            $shift = $user->shiftGroup;
+            if ($shift->overlapsWith($request->from, $request->to)) {
+                return redirect()->back()
+                    ->with('alert_error', "🛑 عذراً، لا يمكنك تسجيل وقت إضافي (من {$request->from} إلى {$request->to}) لأنه يقع داخل ساعات شيفتك المسجل في «{$shift->name}» ({$shift->formatted_hours}). الإضافي يُحتسب فقط قبل بداية الشيفت أو بعد نهايته.")
+                    ->withInput();
+            }
+        }
 
         $from = \Carbon\Carbon::createFromFormat('H:i', $request->from);
         $to = \Carbon\Carbon::createFromFormat('H:i', $request->to);

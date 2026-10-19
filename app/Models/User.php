@@ -26,6 +26,7 @@ class User extends Authenticatable
         'job_title',
         'hourly_rate',
         'onesignal_id',
+        'shift_group_id',
     ];
 
     /**
@@ -49,6 +50,15 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // ==========================================
+    // مجموعات الشيفتات
+    // ==========================================
+
+    public function shiftGroup()
+    {
+        return $this->belongsTo(ShiftGroup::class, 'shift_group_id');
     }
 
     // ==========================================

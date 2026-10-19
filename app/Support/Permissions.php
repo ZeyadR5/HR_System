@@ -96,8 +96,8 @@ class Permissions
                 'label' => 'الموظفين',
                 'icon'  => '👥',
                 'permissions' => [
-                    'employees.view_profiles'  => 'عرض بروفايلات الموظفين',
-                    'employees.edit_profiles'  => 'تعديل بروفايلات الموظفين',
+                    'employees.view_profiles'  => 'عرض ملفات الموظفين',
+                    'employees.edit_profiles'  => 'تعديل ملفات الموظفين',
                     'employees.reset_password' => 'إعادة ضبط كلمة السر',
                     'employees.create'         => 'إضافة موظفين',
                     'employees.manual_entry'   => 'الإضافة اليدوية (إجازات، أذونات، إضافي للموظفين)',
@@ -110,6 +110,14 @@ class Permissions
                     'reports.full_report' => 'التقرير الشامل + تصديره',
                     'reports.audit_log'   => 'سجل العمليات (Audit Log)',
                     'system.view_ip'      => 'عرض الـ IP ووقت التسجيل الدقيق',
+                ],
+            ],
+            'rosters' => [
+                'label' => 'جدول النوبتجيات والشيفتات',
+                'icon'  => '📅',
+                'permissions' => [
+                    'rosters.view'   => 'عرض جدول النوبتجيات وتوزيع الشيفتات',
+                    'rosters.manage' => 'إنشاء وتعديل ورفع جداول النوبتجيات (Excel)',
                 ],
             ],
             'instructions' => [
@@ -165,6 +173,7 @@ class Permissions
             'permission.view_all', 'permission.approve',
             'checkinout.view_all',
             'penalties.view_all', 'penalties.create',
+            'rosters.view', 'rosters.manage',
         ];
 
         return [

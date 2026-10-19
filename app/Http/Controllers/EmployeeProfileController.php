@@ -253,7 +253,7 @@ class EmployeeProfileController extends Controller
     public function index(Request $request)
     {
         if (!Auth::user()->can('employees.view_profiles')) {
-            abort(403, 'غير مصرح لك بالوصول لبروفايلات الموظفين');
+            abort(403, 'غير مصرح لك بالوصول ملفات الموظفين');
         }
 
         $query = User::orderBy('name');

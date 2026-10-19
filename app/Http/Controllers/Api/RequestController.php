@@ -98,6 +98,17 @@ class RequestController extends Controller
             ], 400);
         }
 
+        // Prevent submitting overtime within scheduled shift hours
+        if ($user && $user->shiftGroup) {
+            $shift = $user->shiftGroup;
+            if ($shift->overlapsWith($request->from, $request->to)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "🛑 عذراً، لا يمكنك تسجيل وقت إضافي (من {$request->from} إلى {$request->to}) لأنه يقع داخل ساعات شيفتك المسجل في «{$shift->name}» ({$shift->formatted_hours}). الإضافي يُحتسب فقط قبل بداية الشيفت أو بعد نهايته."
+                ], 422);
+            }
+        }
+
         // Check Daily Overtime Limit (Max 5 hours)
         $dayUsage = Overtime::where('user_id', $user->id)
             ->where('date', $request->date)

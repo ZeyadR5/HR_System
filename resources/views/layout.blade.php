@@ -675,10 +675,12 @@
         request()->routeIs('admin_notes.index') => 'ملاحظات الإدارة',
         request()->routeIs('instructions.index') => 'التعليمات والتنبيهات',
         request()->routeIs('super_admin.entry') => 'إضافة يدوية',
+        request()->routeIs('rosters.*') => 'جدول النوبتجيات',
         request()->routeIs('audit_log') => 'Audit Log',
         request()->routeIs('full_report.index') => 'تقارير مجمعه',
-        request()->routeIs('employee_profiles.*') => 'بروفايلات الموظفين',
+        request()->routeIs('employee_profiles.*') => 'ملفات الموظفين',
         request()->routeIs('developer.roles.*') => 'إدارة الفئات والصلاحيات',
+        request()->routeIs('developer.shifts.*') => 'مجموعات الشيفتات',
         request()->routeIs('developer.settings.*') => 'إعدادات النظام العامة',
         request()->routeIs('my_profile') => 'بروفايلي الشخصي',
         request()->routeIs('notifications.index') => 'الإشعارات',
@@ -710,6 +712,10 @@
             <div class="nav-item"><a href="{{ route('check_in_out') }}" class="nav-link {{ request()->routeIs('check_in_out') ? 'active' : '' }}">⏳ حضور وانصراف</a></div>
             <div class="nav-item"><a href="{{ route('settlements.create') }}" class="nav-link {{ request()->routeIs('settlements.create') ? 'active' : '' }}">⚙️ تسوية</a></div>
             
+            @can('rosters.view')
+            <div class="nav-item"><a href="{{ route('rosters.index') }}" class="nav-link {{ request()->routeIs('rosters.*') ? 'active' : '' }}">📅 النوبتجيات</a></div>
+            @endcan
+
             @can('instructions.view')
             <div class="nav-item"><a href="{{ route('instructions.index') }}" class="nav-link {{ request()->routeIs('instructions.index') ? 'active' : '' }}">📢 التعليمات</a></div>
             @endcan
@@ -736,6 +742,9 @@
                     <a href="{{ route('view_check_in_out') }}" class="dropdown-link {{ request()->routeIs('view_check_in_out') ? 'active' : '' }}">📂 سجل الحضور</a>
                     <a href="{{ route('view_penalties') }}" class="dropdown-link {{ request()->routeIs('view_penalties') ? 'active' : '' }}">⚠️ سجل الجزاءات</a>
                     <a href="{{ route('settlements.index') }}" class="dropdown-link {{ request()->routeIs('settlements.index') ? 'active' : '' }}">⚙️ سجل التسويات</a>
+                    @can('rosters.view')
+                    <a href="{{ route('rosters.index') }}" class="dropdown-link {{ request()->routeIs('rosters.*') ? 'active' : '' }}">📅 جدول النوبتجيات والشيفتات</a>
+                    @endcan
                 </div>
             </div>
 
@@ -768,7 +777,7 @@
                         @endcan
                         
                         @can('employees.view_profiles')
-                        <a href="{{ route('employee_profiles.index') }}" class="dropdown-link {{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}">👤 بروفايلات الموظفين</a>
+                        <a href="{{ route('employee_profiles.index') }}" class="dropdown-link {{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}">👤 ملفات الموظفين</a>
                         @endcan
                     @endif
 
@@ -797,6 +806,7 @@
                         <div class="nav-group-label">منطقة المطور</div>
                         <a href="{{ route('developer.settings.index') }}" class="dropdown-link {{ request()->routeIs('developer.settings.*') ? 'active' : '' }}">⚙️ إعدادات النظام</a>
                         <a href="{{ route('developer.roles.index') }}" class="dropdown-link {{ request()->routeIs('developer.roles.*') ? 'active' : '' }}">🛡️ الفئات والصلاحيات</a>
+                        <a href="{{ route('developer.shifts.index') }}" class="dropdown-link {{ request()->routeIs('developer.shifts.*') ? 'active' : '' }}">⏰ مجموعات الشيفتات</a>
                     @enddeveloper
                 </div>
             </div>
@@ -814,7 +824,7 @@
         @else
         <div class="nav-links">
             <a href="{{ route('login') }}" class="nav-link btn-login">🔑 دخول</a>
-            <span class="nav-link text-muted" style="cursor: not-allowed; opacity: 0.5;">✨ حساب جديد</span>
+            <!-- <span class="nav-link text-muted" style="cursor: not-allowed; opacity: 0.5;">✨ حساب جديد</span> -->
         </div>
         @endauth
         
@@ -860,6 +870,9 @@
             <a href="{{ route('view_check_in_out') }}" class="{{ request()->routeIs('view_check_in_out') ? 'active' : '' }}">📂 سجل الحضور</a>
             <a href="{{ route('view_penalties') }}" class="{{ request()->routeIs('view_penalties') ? 'active' : '' }}">📋 الجزاءات</a>
             <a href="{{ route('settlements.index') }}" class="{{ request()->routeIs('settlements.index') ? 'active' : '' }}">⚙️ التسويات</a>
+            @can('rosters.view')
+            <a href="{{ route('rosters.index') }}" class="{{ request()->routeIs('rosters.*') ? 'active' : '' }}">📅 جدول النوبتجيات والشيفتات</a>
+            @endcan
             @can('penalties.create')
             <div class="mobile-separator"></div>
             <a href="{{ route('admin.penalties') }}" class="{{ request()->routeIs('admin.penalties') ? 'active' : '' }}">⚠️ إضافة جزاء</a>
@@ -874,7 +887,7 @@
                 <a href="{{ route('full_report.index') }}" class="{{ request()->routeIs('full_report.index') ? 'active' : '' }}">📄 تقارير شاملة</a>
             @endcan
             @can('employees.view_profiles')
-                <a href="{{ route('employee_profiles.index') }}" class="{{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}">👤 بروفايلات الموظفين</a>
+                <a href="{{ route('employee_profiles.index') }}" class="{{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}">👤 ملفات الموظفين</a>
             @endcan
             @if(Auth::user()->can('incentives.create') || Auth::user()->can('admin_notes.create') || Auth::user()->can('incentives.view') || Auth::user()->can('admin_notes.view') || Auth::user()->can('instructions.view'))
                 <div class="mobile-separator"></div>
@@ -898,6 +911,7 @@
                 <div class="mobile-separator"></div>
                 <a href="{{ route('developer.settings.index') }}" class="{{ request()->routeIs('developer.settings.*') ? 'active' : '' }}">⚙️ إعدادات النظام</a>
                 <a href="{{ route('developer.roles.index') }}" class="{{ request()->routeIs('developer.roles.*') ? 'active' : '' }}">🛡️ الفئات والصلاحيات</a>
+                <a href="{{ route('developer.shifts.index') }}" class="{{ request()->routeIs('developer.shifts.*') ? 'active' : '' }}">⏰ مجموعات الشيفتات</a>
             @enddeveloper
             <div class="mobile-separator"></div>
             <form action="{{ route('logout') }}" method="POST">
@@ -956,11 +970,33 @@
         }
     }
 
-    // 1. Show loader on form submissions
+    // 1. Show loader on form submissions + prevent double submit
+    function unlockForms() {
+        document.querySelectorAll('form[data-submitting]').forEach((f) => {
+            delete f.dataset.submitting;
+            f.querySelectorAll('button[type=submit], input[type=submit]').forEach((b) => b.disabled = false);
+        });
+    }
+
     document.addEventListener('submit', (e) => {
-        if (!e.defaultPrevented) {
-            showLoader();
+        const form = e.target;
+        if (e.defaultPrevented) return;
+
+        if (form.dataset.submitting) {
+            e.preventDefault();
+            return;
         }
+        form.dataset.submitting = '1';
+
+        // نعطّل الأزرار بعد ما المتصفح يجمّع بيانات الفورم
+        setTimeout(() => {
+            form.querySelectorAll('button[type=submit], input[type=submit]').forEach((b) => b.disabled = true);
+        }, 0);
+
+        // أمان: لو الفورم تنزيل ملف (مفيش تنقل صفحة) نفك القفل بعد 10 ثواني
+        setTimeout(unlockForms, 10000);
+
+        showLoader();
     });
 
     // 2. Show loader on navigation link clicks
@@ -989,6 +1025,7 @@
         if (loader) {
             loader.classList.remove('show');
         }
+        unlockForms();
     });
 
     // --- Local Push Notification Polling ---

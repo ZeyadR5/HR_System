@@ -51,6 +51,21 @@
             الحد الأقصى للإضافي المسموح به هو 5 ساعات يومياً.
         </p>
     </div>
+
+    @if(isset($shiftGroup) && $shiftGroup)
+        <div class="mt-3 bg-gradient-to-l from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 shadow-xs flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">{{ $shiftGroup->icon }}</span>
+                <div>
+                    <span class="text-xs font-bold text-blue-700 block">شيفتك الأساسي المعتمد</span>
+                    <span class="text-sm font-black text-gray-800">{{ $shiftGroup->name }} ({{ $shiftGroup->formatted_hours }})</span>
+                </div>
+            </div>
+            <span class="text-[11px] bg-blue-100 text-blue-800 font-bold px-2.5 py-1 rounded-full border border-blue-200">
+                🔒 محظور الإضافي بداخله
+            </span>
+        </div>
+    @endif
 </div>
 
 <form class="max-w-md mx-auto mt-4" action="{{ route('overtime_post') }}" method="POST">

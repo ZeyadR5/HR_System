@@ -18,6 +18,8 @@ use App\Http\Controllers\EmployeeProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RoleManagementController;
 use App\Http\Controllers\DeveloperSettingsController;
+use App\Http\Controllers\DeveloperShiftGroupController;
+use App\Http\Controllers\ShiftRosterController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -64,6 +66,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/settlement', [SettlementController::class, 'create'])->name('settlements.create');
     Route::post('/settlement', [SettlementController::class, 'store'])->name('settlements.store');
     Route::get('/view_settlements', [SettlementController::class, 'index'])->name('settlements.index');
+
+    // 📅 جدول النوبتجيات وتوزيع الشيفتات
+    Route::prefix('rosters')->name('rosters.')->group(function () {
+        Route::get('/', [ShiftRosterController::class, 'index'])->name('index');
+        Route::get('/create', [ShiftRosterController::class, 'create'])->name('create');
+        Route::post('/store', [ShiftRosterController::class, 'store'])->name('store');
+        Route::get('/template/download', [ShiftRosterController::class, 'downloadTemplate'])->name('template.download');
+        Route::get('/{roster}', [ShiftRosterController::class, 'show'])->name('show');
+        Route::get('/{roster}/edit', [ShiftRosterController::class, 'edit'])->name('edit');
+        Route::post('/{roster}/update', [ShiftRosterController::class, 'update'])->name('update');
+        Route::post('/{roster}/update-cell', [ShiftRosterController::class, 'updateCell'])->name('update_cell');
+        Route::get('/{roster}/export', [ShiftRosterController::class, 'export'])->name('export');
+        Route::post('/{roster}/delete', [ShiftRosterController::class, 'destroy'])->name('destroy');
+    });
 
     // بروفايلي الشخصي
     Route::get('/my-profile', [EmployeeProfileController::class, 'myProfile'])->name('my_profile');
@@ -198,4 +214,13 @@ Route::middleware(['auth', 'developer'])->prefix('developer')->name('developer.'
     Route::post('/roles/{role}/members', [RoleManagementController::class, 'addMembers'])->name('roles.members.add');
     Route::post('/roles/{role}/members/{user}/remove', [RoleManagementController::class, 'removeMember'])->name('roles.members.remove');
     Route::post('/users/{user}/role', [RoleManagementController::class, 'changeUserRole'])->name('users.role');
+
+    // مجموعات الشيفتات
+    Route::get('/shifts', [DeveloperShiftGroupController::class, 'index'])->name('shifts.index');
+    Route::get('/shifts/create', [DeveloperShiftGroupController::class, 'create'])->name('shifts.create');
+    Route::post('/shifts', [DeveloperShiftGroupController::class, 'store'])->name('shifts.store');
+    Route::get('/shifts/{shift}/edit', [DeveloperShiftGroupController::class, 'edit'])->name('shifts.edit');
+    Route::post('/shifts/{shift}/update', [DeveloperShiftGroupController::class, 'update'])->name('shifts.update');
+    Route::post('/shifts/{shift}/delete', [DeveloperShiftGroupController::class, 'destroy'])->name('shifts.destroy');
+    Route::post('/shifts/users/{user}/assign', [DeveloperShiftGroupController::class, 'assignUser'])->name('shifts.assign_user');
 });
