@@ -18,7 +18,7 @@
         </div>
 
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <a href="{{ route('rosters.template.download', ['department' => request('department', 'تمريض')]) }}" class="btn" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #e2e8f0; padding: 0.65rem 1.1rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; transition: all 0.2s;">
+            <a href="{{ route('rosters.template.download', ['department' => request('department', 'تمريض')]) }}" class="btn no-loader" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #e2e8f0; padding: 0.65rem 1.1rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; transition: all 0.2s;">
                 📥 تحميل نموذج Excel فارغ
             </a>
 
@@ -157,7 +157,7 @@
                                     👁️ عرض وتعديل
                                 </a>
 
-                                <a href="{{ route('rosters.export', $roster->id) }}" title="تصدير Excel بنفس التنسيق" style="background: #f0fdf4; color: #15803d; padding: 0.45rem 0.75rem; border-radius: 8px; font-weight: 600; font-size: 0.82rem; text-decoration: none; border: 1px solid #bbf7d0;">
+                                <a href="{{ route('rosters.export', $roster->id) }}" class="no-loader" title="تصدير Excel بنفس التنسيق" style="background: #f0fdf4; color: #15803d; padding: 0.45rem 0.75rem; border-radius: 8px; font-weight: 600; font-size: 0.82rem; text-decoration: none; border: 1px solid #bbf7d0;">
                                     📥 إكسيل
                                 </a>
 

@@ -223,7 +223,7 @@
             </button>
 
             {{-- تصدير إكسيل مطابق --}}
-            <a href="{{ route('rosters.export', $roster->id) }}" style="background: #15803d; color: #fff; border: none; padding: 0.6rem 1.1rem; border-radius: 10px; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; box-shadow: 0 4px 12px rgba(21, 128, 61, 0.25);">
+            <a href="{{ route('rosters.export', $roster->id) }}" class="no-loader" style="background: #15803d; color: #fff; border: none; padding: 0.6rem 1.1rem; border-radius: 10px; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; box-shadow: 0 4px 12px rgba(21, 128, 61, 0.25);">
                 📥 تحميل Excel مطابق
             </a>
 

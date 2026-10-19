@@ -21,20 +21,38 @@
                     @endcan
                 </div>
 
-                <form action="{{ route('employee_profiles.index') }}" method="GET" class="d-flex gap-2 w-100 w-md-auto align-items-end">
-                    <div style="min-width: 250px;">
+                <form action="{{ route('employee_profiles.index') }}" method="GET" class="d-flex gap-2 w-100 w-md-auto align-items-end flex-wrap">
+                    @if(request('sort_by'))
+                        <input type="hidden" name="sort_by" value="{{ request('sort_by') }}">
+                        <input type="hidden" name="sort_dir" value="{{ request('sort_dir') }}">
+                    @endif
+
+                    <div style="min-width: 200px;">
+                        <label class="text-muted small mb-1 d-block">فلترة بالوظيفة:</label>
+                        <select name="job_title" id="job_title" class="form-select" style="border-radius: 8px; height: 38px; font-size: 0.88rem;" onchange="this.form.submit()">
+                            <option value="">جميع الوظائف (الكل)</option>
+                            @foreach($jobTitles as $jt)
+                                <option value="{{ $jt }}" {{ request('job_title') == $jt ? 'selected' : '' }}>
+                                    {{ $jt }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div style="min-width: 220px;">
                         <label class="text-muted small mb-1 d-block">بحث بموظف معين:</label>
                         <select name="user_id" id="user_id" class="user-search-select" onchange="this.form.submit()">
                             <option value="">كل الموظفين</option>
                             @foreach($allUsers as $u)
                                 <option value="{{ $u->id }}" {{ request('user_id') == $u->id ? 'selected' : '' }}>
-                                    {{ $u->name }}
+                                    {{ $u->name }} {{ $u->job_title ? '(' . $u->job_title . ')' : '' }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                    @if(request('user_id'))
-                        <a href="{{ route('employee_profiles.index') }}" class="btn btn-outline-secondary" style="border-radius: 8px; height: 38px; display: flex; align-items: center;">✖</a>
+
+                    @if(request('user_id') || request('job_title') || request('sort_by'))
+                        <a href="{{ route('employee_profiles.index') }}" class="btn btn-outline-secondary" title="إلغاء الفلتر والترتيب" style="border-radius: 8px; height: 38px; display: flex; align-items: center;">✖ إعادة ضبط</a>
                     @endif
                 </form>
             </div>
@@ -64,10 +82,33 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light text-slate-600">
                             <tr>
-                                <th class="px-4 py-3 text-end">الاسم</th>
+                                <th class="px-4 py-3 text-end">
+                                    @php
+                                        $nextDir = (request('sort_by') === 'name' && request('sort_dir', 'asc') === 'asc') ? 'desc' : 'asc';
+                                    @endphp
+                                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'name', 'sort_dir' => $nextDir]) }}" class="text-decoration-none text-dark d-inline-flex align-items-center gap-1 fw-bold">
+                                        الاسم
+                                        @if(request('sort_by') === 'name' || !request('sort_by'))
+                                            <span style="font-size: 0.8rem; color: #2563eb;">{{ request('sort_dir') === 'desc' ? '▼' : '▲' }}</span>
+                                        @else
+                                            <span class="text-muted" style="opacity: 0.4;">↕</span>
+                                        @endif
+                                    </a>
+                                </th>
                                 <th class="px-4 py-3 text-end">الايميل</th>
-                                <th class="px-4 py-3 text-end">الوظيفة</th>
-                                <!-- <th class="px-4 py-3 text-end">قيمة الساعة</th> -->
+                                <th class="px-4 py-3 text-end">
+                                    @php
+                                        $nextJobDir = (request('sort_by') === 'job_title' && request('sort_dir') === 'asc') ? 'desc' : 'asc';
+                                    @endphp
+                                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'job_title', 'sort_dir' => $nextJobDir]) }}" class="text-decoration-none text-dark d-inline-flex align-items-center gap-1 fw-bold">
+                                        الوظيفة / المسمى الوظيفي
+                                        @if(request('sort_by') === 'job_title')
+                                            <span style="font-size: 0.8rem; color: #2563eb;">{{ request('sort_dir') === 'desc' ? '▼' : '▲' }}</span>
+                                        @else
+                                            <span class="text-muted" style="opacity: 0.4;">↕</span>
+                                        @endif
+                                    </a>
+                                </th>
                                 <th class="px-4 py-3 text-center">الإجراءات</th>
                             </tr>
                         </thead>

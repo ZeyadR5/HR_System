@@ -24,12 +24,17 @@ class IncentiveExport implements FromCollection, WithHeadings, WithTitle, WithSt
 
     public function collection()
     {
-        $users = User::orderBy('name')->get();
+        $users = User::where(function ($q) {
+            $q->whereNull('job_title')
+              ->orWhereRaw('LOWER(job_title) NOT LIKE ?', ['%tec%']);
+        })->orderBy('name')->get();
+
         return $users->map(function ($user, $index) {
             $userIncentive = $this->incentives->where('user_id', $user->id)->first();
             return [
                 'N'             => $index + 1,
                 'Employee Name' => $user->name,
+                'Job Title'     => $user->job_title ?? '—',
                 'Evaluation'    => $userIncentive ? $userIncentive->evaluation : '',
                 'Notes'         => '',
             ];
@@ -38,7 +43,7 @@ class IncentiveExport implements FromCollection, WithHeadings, WithTitle, WithSt
 
     public function headings(): array
     {
-        return ['N', 'Employee Name', 'Evaluation', 'Notes'];
+        return ['N', 'Employee Name', 'Job Title', 'Evaluation', 'Notes'];
     }
 
     public function title(): string

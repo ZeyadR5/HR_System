@@ -16,7 +16,7 @@
             </p>
         </div>
 
-        <a href="{{ route('rosters.template.download', ['department' => 'تمريض']) }}" id="templateDownloadBtn" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 0.6rem 1rem; border-radius: 10px; font-weight: 700; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+        <a href="{{ route('rosters.template.download', ['department' => 'تمريض']) }}" id="templateDownloadBtn" class="no-loader" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 0.6rem 1rem; border-radius: 10px; font-weight: 700; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
             📥 تحميل نموذج Excel فارغ للقسم
         </a>
     </div>

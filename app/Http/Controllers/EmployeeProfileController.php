@@ -256,16 +256,32 @@ class EmployeeProfileController extends Controller
             abort(403, 'غير مصرح لك بالوصول ملفات الموظفين');
         }
 
-        $query = User::orderBy('name');
+        $query = User::query();
 
         if ($request->filled('user_id')) {
             $query->where('id', $request->user_id);
         }
 
+        if ($request->filled('job_title')) {
+            $query->where('job_title', $request->job_title);
+        }
+
+        $sortBy = $request->get('sort_by', 'name');
+        $sortDir = strtolower($request->get('sort_dir', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy === 'job_title') {
+            $query->orderByRaw('CASE WHEN job_title IS NULL OR job_title = "" THEN 1 ELSE 0 END')
+                  ->orderBy('job_title', $sortDir)
+                  ->orderBy('name', 'asc');
+        } else {
+            $query->orderBy('name', $sortDir);
+        }
+
         $users = $query->paginate(20)->withQueryString();
         $allUsers = User::orderBy('name')->get();
+        $jobTitles = User::whereNotNull('job_title')->where('job_title', '!=', '')->distinct()->pluck('job_title')->sort()->values();
 
-        return view('employee_profiles.index', compact('users', 'allUsers'));
+        return view('employee_profiles.index', compact('users', 'allUsers', 'jobTitles', 'sortBy', 'sortDir'));
     }
 
 

@@ -970,6 +970,15 @@
         }
     }
 
+    function hideLoader() {
+        if (loaderTimeout) {
+            clearTimeout(loaderTimeout);
+        }
+        if (loader) {
+            loader.classList.remove('show');
+        }
+    }
+
     // 1. Show loader on form submissions + prevent double submit
     function unlockForms() {
         document.querySelectorAll('form[data-submitting]').forEach((f) => {
@@ -993,26 +1002,43 @@
             form.querySelectorAll('button[type=submit], input[type=submit]').forEach((b) => b.disabled = true);
         }, 0);
 
-        // أمان: لو الفورم تنزيل ملف (مفيش تنقل صفحة) نفك القفل بعد 10 ثواني
-        setTimeout(unlockForms, 10000);
+        // أمان: لو الفورم تنزيل ملف (مفيش تنقل صفحة) نفك القفل بعد 8 ثواني ونخفي اللودر
+        setTimeout(() => {
+            unlockForms();
+            hideLoader();
+        }, 8000);
 
         showLoader();
     });
 
-    // 2. Show loader on navigation link clicks
+    // 2. Show loader on navigation link clicks (تجاهل روابط التنزيل والتصدير)
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a');
         
-        if (link && 
-            link.href && 
+        if (!link || !link.href) return;
+
+        const isDownload = link.hasAttribute('download') || 
+                           link.href.includes('download') || 
+                           link.href.includes('export') || 
+                           link.href.includes('template') || 
+                           /\.(xlsx|xls|csv|pdf|zip)$/i.test(link.href) ||
+                           link.classList.contains('no-loader');
+
+        if (isDownload) {
+            hideLoader();
+            return;
+        }
+
+        if (
             !link.href.includes('#') && 
-            !link.href.includes('export') && 
             !link.href.startsWith('javascript:') &&
             link.target !== '_blank' &&
             !e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0
         ) {
             if (link.origin === window.location.origin) {
                 showLoader();
+                // أمان: لو الصفحة لم تتنقل بعد 8 ثوانٍ نخفي اللودر تلقائياً
+                setTimeout(hideLoader, 8000);
             }
         }
     });
