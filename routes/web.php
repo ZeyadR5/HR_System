@@ -168,6 +168,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/employee-profiles/{id}/unlock-edit', [EmployeeProfileController::class, 'unlockEdit'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.unlock_edit');
     Route::get('/employee-profiles/{id}/edit', [EmployeeProfileController::class, 'edit'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.edit');
     Route::post('/employee-profiles/{id}/update', [EmployeeProfileController::class, 'update'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.update');
+    Route::post('/employee-profiles/{id}/delete', [EmployeeProfileController::class, 'destroy'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.destroy');
 
     // ---------- التقارير والسجلات ----------
     Route::get('/audit-log', [AuditController::class, 'index'])->middleware('permission:reports.audit_log')->name('audit_log');

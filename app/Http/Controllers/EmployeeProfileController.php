@@ -10,6 +10,8 @@ use App\Models\Permission;
 use App\Models\Overtime;
 use App\Models\Penalty;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Support\PayrollPeriod;
 use App\Support\Settings;
 use Carbon\Carbon;
@@ -500,6 +502,104 @@ class EmployeeProfileController extends Controller
         }
 
         return response()->json(['email' => $email]);
+    }
+
+    /**
+     * Delete an employee record and clean up related dependencies cleanly.
+     */
+    public function destroy(Request $request, $id)
+    {
+        if (!Auth::user()->can('employees.edit_profiles')) {
+            abort(403, 'غير مصرح لك بحذف موظف');
+        }
+
+        if (Auth::id() == $id) {
+            return back()->withErrors(['system_password' => 'لا يمكنك حذف حسابك الحالي المسجل به الدخول!']);
+        }
+
+        $user = User::findOrFail($id);
+
+        if ($user->isDeveloper()) {
+            return back()->withErrors(['system_password' => 'لا يمكن حذف حساب المطور (Developer)!']);
+        }
+
+        $request->validate([
+            'system_password' => 'required'
+        ], [
+            'system_password.required' => 'كلمة مرور النظام مطلوبة لتأكيد الحذف'
+        ]);
+
+        $correctPassword = Settings::get('system_edit_password', '123456');
+
+        if ($request->system_password !== $correctPassword) {
+            return back()->withErrors(['system_password' => 'كلمة مرور النظام غير صحيحة! لم يتم الحذف.']);
+        }
+
+        $userName = $user->name;
+        $userEmail = $user->email;
+        $userRole = $user->role;
+
+        DB::transaction(function () use ($user) {
+            // Keep shift roster entries intact but detach user_id so schedules don't break
+            if (class_exists(\App\Models\ShiftRosterEntry::class) && Schema::hasTable('shift_roster_entries')) {
+                \App\Models\ShiftRosterEntry::where('user_id', $user->id)->update(['user_id' => null]);
+            }
+            if (class_exists(\App\Models\ShiftRoster::class) && Schema::hasTable('shift_rosters')) {
+                \App\Models\ShiftRoster::where('created_by', $user->id)->update(['created_by' => null]);
+            }
+
+            // Reassign instructions created by user to current admin to prevent cascade loss
+            if (Schema::hasTable('instructions')) {
+                DB::table('instructions')->where('created_by', $user->id)->update(['created_by' => Auth::id()]);
+            }
+
+            // Clean related tables
+            if (Schema::hasTable('employee_devices')) {
+                DB::table('employee_devices')->where('user_id', $user->id)->delete();
+            }
+            if (Schema::hasTable('check_in_outs')) {
+                DB::table('check_in_outs')->where('user_id', $user->id)->delete();
+            }
+            if (Schema::hasTable('overtimes')) {
+                DB::table('overtimes')->where('user_id', $user->id)->delete();
+            }
+            if (Schema::hasTable('leaves')) {
+                DB::table('leaves')->where('user_id', $user->id)->delete();
+            }
+            if (Schema::hasTable('permissions')) {
+                DB::table('permissions')->where('user_id', $user->id)->delete();
+            }
+            if (Schema::hasTable('penalties')) {
+                DB::table('penalties')->where('user_id', $user->id)->delete();
+            }
+            if (Schema::hasTable('incentives')) {
+                DB::table('incentives')->where('user_id', $user->id)->delete();
+            }
+            if (Schema::hasTable('admin_notes')) {
+                DB::table('admin_notes')->where('user_id', $user->id)->delete();
+            }
+            if (Schema::hasTable('settlements')) {
+                DB::table('settlements')->where('user_id', $user->id)->delete();
+            }
+            if (Schema::hasTable('notifications')) {
+                DB::table('notifications')->where('notifiable_id', $user->id)->where('notifiable_type', User::class)->delete();
+            }
+            if (Schema::hasTable('personal_access_tokens')) {
+                DB::table('personal_access_tokens')->where('tokenable_id', $user->id)->where('tokenable_type', User::class)->delete();
+            }
+
+            $user->delete();
+        });
+
+        AuditLog::log(
+            Auth::user()->name,
+            'Deleted',
+            'Employee Profile',
+            $userName,
+            "Deleted user: {$userName} ({$userEmail}), Role: {$userRole}"
+        );
+
+        return redirect()->route('employee_profiles.index')->with('success', "🗑️ تم حذف حساب الموظف «{$userName}» بنجاح وإزالة كافة بياناته.");
     }
 }
 

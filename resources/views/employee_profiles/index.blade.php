@@ -130,12 +130,21 @@
                                         {{ number_format($user->hourly_rate, 2) }} ج.م
                                     </td> -->
                                     <td class="px-4 py-3 text-center">
-                                        <button type="button" class="btn btn-sm btn-outline-info px-3 me-1" style="border-radius: 8px;" onclick="openPasswordModal({{ $user->id }}, '{{ addslashes($user->name) }}', 'show')">
-                                            👁️ عرض
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-primary px-3" style="border-radius: 8px;" onclick="openPasswordModal({{ $user->id }}, '{{ addslashes($user->name) }}', 'edit')">
-                                            ✏️ تعديل
-                                        </button>
+                                        <div class="d-inline-flex align-items-center gap-1">
+                                            <button type="button" class="btn btn-sm btn-outline-info px-3" style="border-radius: 8px;" onclick="openPasswordModal({{ $user->id }}, '{{ addslashes($user->name) }}', 'show')">
+                                                👁️ عرض
+                                            </button>
+                                            @can('employees.edit_profiles')
+                                            <button type="button" class="btn btn-sm btn-outline-primary px-3" style="border-radius: 8px;" onclick="openPasswordModal({{ $user->id }}, '{{ addslashes($user->name) }}', 'edit')">
+                                                ✏️ تعديل
+                                            </button>
+                                            @if(auth()->id() !== $user->id && !$user->isDeveloper())
+                                            <button type="button" class="btn btn-sm btn-outline-danger px-3" style="border-radius: 8px;" onclick="openDeleteModal({{ $user->id }}, '{{ addslashes($user->name) }}')" title="حذف الموظف نهائياً">
+                                                🗑️ حذف
+                                            </button>
+                                            @endif
+                                            @endcan
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -143,7 +152,7 @@
                                     <td colspan="5" class="text-center py-5 text-muted">
                                         <div class="mb-2 fs-3">{{ request('user_id') ? '🔍' : 'Empty' }}</div>
                                         @if(request('user_id'))
-                                            لا توجد نتائج لهذا البحث
+                                             لا توجد نتائج لهذا البحث
                                         @else
                                             لا يوجد موظفين حالياً
                                         @endif
@@ -188,6 +197,38 @@
                 <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-center gap-2">
                     <button type="button" class="btn btn-light px-4 fw-semibold" onclick="closePasswordModal()" style="border-radius: 10px; min-width: 90px;">إلغاء</button>
                     <button type="submit" class="btn btn-primary px-5 fw-bold" style="border-radius: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border: 0; min-width: 140px;">تأكيد الدخول</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 18px; overflow: hidden; background: #ffffff;">
+            <div class="modal-header border-0 pb-0 pt-3 px-4 d-flex justify-content-between align-items-center w-100" style="direction: rtl;">
+                <h5 class="modal-title fw-bold text-danger mb-0 d-flex align-items-center gap-2" id="deleteModalLabel" style="font-size: 1.15rem;">
+                    <span>⚠️</span> <span>حذف حساب موظف نهائياً</span>
+                </h5>
+                <button type="button" class="modal-custom-close" onclick="closeDeleteModal()" aria-label="إغلاق">
+                    ✕
+                </button>
+            </div>
+            <form id="deleteForm" method="POST" action="">
+                @csrf
+                <div class="modal-body text-center pt-3 pb-4 px-4">
+                    <div class="alert alert-danger py-2 px-3 small border-0 mb-3" style="border-radius: 10px;">
+                        ⚠️ <strong>تنبيه هام:</strong> سيتم حذف حساب الموظف وكافة سجلاته وحركاته نهائياً من السيستم. لا يمكن التراجع عن هذه الخطوة!
+                    </div>
+                    <p class="text-muted mb-3 fs-6">أدخل كلمة مرور النظام لتأكيد حذف حساب الموظف <strong id="deleteEmployeeName" class="text-danger"></strong></p>
+                    <div class="form-group text-start">
+                        <input type="password" name="system_password" id="delete_system_password" class="form-control form-control-lg text-center fw-bold" required placeholder="كلمة مرور النظام" style="border-radius: 12px; letter-spacing: 3px; font-size: 1.2rem;">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-center gap-2">
+                    <button type="button" class="btn btn-light px-4 fw-semibold" onclick="closeDeleteModal()" style="border-radius: 10px; min-width: 90px;">إلغاء</button>
+                    <button type="submit" class="btn btn-danger px-4 fw-bold" style="border-radius: 10px; background: linear-gradient(135deg, #ef4444, #dc2626); border: 0; min-width: 140px;">🗑️ تأكيد الحذف</button>
                 </div>
             </form>
         </div>
@@ -252,6 +293,57 @@
         if (passInput) passInput.value = '';
     }
 
+    function openDeleteModal(userId, userName) {
+        document.getElementById('deleteEmployeeName').innerText = userName;
+        const passInput = document.getElementById('delete_system_password');
+        if (passInput) passInput.value = '';
+
+        document.getElementById('deleteForm').action = "/employee-profiles/" + userId + "/delete";
+
+        var modalEl = document.getElementById('deleteModal');
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            var myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+            myModal.show();
+        } else {
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+            modalEl.removeAttribute('aria-hidden');
+            modalEl.setAttribute('aria-modal', 'true');
+            if (!document.querySelector('.modal-backdrop')) {
+                const bd = document.createElement('div');
+                bd.className = 'modal-backdrop fade show';
+                document.body.appendChild(bd);
+            }
+            document.body.classList.add('modal-open');
+        }
+
+        setTimeout(() => { if (passInput) passInput.focus(); }, 300);
+    }
+
+    function closeDeleteModal() {
+        var modalEl = document.getElementById('deleteModal');
+        if (!modalEl) return;
+
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            var myModal = bootstrap.Modal.getInstance(modalEl);
+            if (myModal) {
+                myModal.hide();
+            }
+        }
+
+        modalEl.classList.remove('show');
+        modalEl.style.display = 'none';
+        modalEl.setAttribute('aria-hidden', 'true');
+        modalEl.removeAttribute('aria-modal');
+        document.body.classList.remove('modal-open');
+
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(b => b.remove());
+
+        const passInput = document.getElementById('delete_system_password');
+        if (passInput) passInput.value = '';
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         var modalEl = document.getElementById('passwordModal');
         if (modalEl) {
@@ -262,9 +354,19 @@
             });
         }
 
+        var delModalEl = document.getElementById('deleteModal');
+        if (delModalEl) {
+            delModalEl.addEventListener('click', function(e) {
+                if (e.target === delModalEl) {
+                    closeDeleteModal();
+                }
+            });
+        }
+
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' || e.key === 'Esc') {
                 closePasswordModal();
+                closeDeleteModal();
             }
         });
     });
