@@ -373,17 +373,22 @@
             max-width: 92vw;
             background: linear-gradient(180deg, #0b1120 0%, #0f172a 40%, #172554 100%);
             border-left: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: -20px 0 60px rgba(0, 0, 0, 0.7);
+            box-shadow: none;
             z-index: 2001;
             display: flex;
             flex-direction: column;
             transform: translateX(100%);
-            transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+            visibility: hidden;
+            pointer-events: none;
+            transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.32s;
             overflow: hidden;
         }
 
         .sidepanel-container.open {
             transform: translateX(0);
+            visibility: visible;
+            pointer-events: auto;
+            box-shadow: -8px 0 24px rgba(0, 0, 0, 0.3);
         }
 
         /* Side Panel Header */
