@@ -777,7 +777,7 @@
                         @endcan
                         
                         @can('employees.view_profiles')
-                        <a href="{{ route('employee_profiles.index') }}" class="dropdown-link {{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}" @if(!session('unlocked_employee_profiles')) onclick="event.preventDefault(); openUnlockProfilesModal();" @endif>👤 ملفات الموظفين</a>
+                        <a href="{{ route('employee_profiles.index') }}" class="dropdown-link {{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}">👤 ملفات الموظفين</a>
                         @endcan
                     @endif
 
@@ -887,7 +887,7 @@
                 <a href="{{ route('full_report.index') }}" class="{{ request()->routeIs('full_report.index') ? 'active' : '' }}">📄 تقارير شاملة</a>
             @endcan
             @can('employees.view_profiles')
-                <a href="{{ route('employee_profiles.index') }}" class="{{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}" @if(!session('unlocked_employee_profiles')) onclick="event.preventDefault(); openUnlockProfilesModal();" @endif>👤 ملفات الموظفين</a>
+                <a href="{{ route('employee_profiles.index') }}" class="{{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}">👤 ملفات الموظفين</a>
             @endcan
             @if(Auth::user()->can('incentives.create') || Auth::user()->can('admin_notes.create') || Auth::user()->can('incentives.view') || Auth::user()->can('admin_notes.view') || Auth::user()->can('instructions.view'))
                 <div class="mobile-separator"></div>
@@ -1013,8 +1013,9 @@
 
     // 2. Show loader on navigation link clicks (تجاهل روابط التنزيل والتصدير)
     document.addEventListener('click', (e) => {
+        if (e.defaultPrevented) return;
+
         const link = e.target.closest('a');
-        
         if (!link || !link.href) return;
 
         const isDownload = link.hasAttribute('download') || 
@@ -1033,6 +1034,7 @@
             !link.href.includes('#') && 
             !link.href.startsWith('javascript:') &&
             link.target !== '_blank' &&
+            !link.hasAttribute('data-bs-toggle') &&
             !e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0
         ) {
             if (link.origin === window.location.origin) {
@@ -1087,95 +1089,5 @@
         });
     </script>
     @endif
-@auth
-@can('employees.view_profiles')
-@if(!session('unlocked_employee_profiles'))
-<!-- Unlock Employee Profiles Modal -->
-<div class="modal fade" id="unlockProfilesModal" tabindex="-1" aria-labelledby="unlockProfilesModalLabel" aria-hidden="true" style="display: none;">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg border-0" style="border-radius: 18px; overflow: hidden; background: #ffffff;">
-            <div class="modal-header border-0 pb-0 pt-3 px-4 d-flex justify-content-between align-items-center w-100" style="direction: rtl;">
-                <h5 class="modal-title fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2" id="unlockProfilesModalLabel" style="font-size: 1.15rem;">
-                    <span>🔒</span> <span>حماية ملفات الموظفين</span>
-                </h5>
-                <button type="button" class="btn-close m-0" onclick="closeUnlockProfilesModal()" aria-label="إغلاق" style="font-size: 0.85rem;"></button>
-            </div>
-            <form method="POST" action="{{ route('employee_profiles.unlock_module') }}">
-                @csrf
-                <div class="modal-body text-center pt-3 pb-4 px-4">
-                    <p class="text-muted mb-4 fs-6">أدخل كلمة مرور النظام للوصول إلى <strong class="text-primary">ملفات وبيانات الموظفين</strong></p>
-                    <div class="form-group text-start">
-                        <input type="password" name="system_password" id="modal_unlock_profiles_password" class="form-control form-control-lg text-center fw-bold" required placeholder="••••••" style="border-radius: 12px; letter-spacing: 4px; font-size: 1.25rem;">
-                    </div>
-                </div>
-                <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-center gap-2">
-                    <button type="button" class="btn btn-light px-4 fw-semibold" onclick="closeUnlockProfilesModal()" style="border-radius: 10px; min-width: 90px;">إلغاء</button>
-                    <button type="submit" class="btn btn-primary px-5 fw-bold" style="border-radius: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border: 0; min-width: 140px;">دخول</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-function openUnlockProfilesModal() {
-    var modalEl = document.getElementById('unlockProfilesModal');
-    if (!modalEl) {
-        window.location.href = "{{ route('employee_profiles.index') }}";
-        return;
-    }
-    const passInput = document.getElementById('modal_unlock_profiles_password');
-    if (passInput) passInput.value = '';
-
-    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-        var myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
-        myModal.show();
-    } else {
-        modalEl.classList.add('show');
-        modalEl.style.display = 'block';
-        modalEl.removeAttribute('aria-hidden');
-        modalEl.setAttribute('aria-modal', 'true');
-        if (!document.querySelector('.modal-backdrop')) {
-            const bd = document.createElement('div');
-            bd.className = 'modal-backdrop fade show';
-            document.body.appendChild(bd);
-        }
-        document.body.classList.add('modal-open');
-    }
-    setTimeout(() => { if (passInput) passInput.focus(); }, 300);
-}
-
-function closeUnlockProfilesModal() {
-    var modalEl = document.getElementById('unlockProfilesModal');
-    if (!modalEl) return;
-    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-        var myModal = bootstrap.Modal.getInstance(modalEl);
-        if (myModal) myModal.hide();
-    }
-    modalEl.classList.remove('show');
-    modalEl.style.display = 'none';
-    modalEl.setAttribute('aria-hidden', 'true');
-    modalEl.removeAttribute('aria-modal');
-    document.body.classList.remove('modal-open');
-    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    var modalEl = document.getElementById('unlockProfilesModal');
-    if (modalEl) {
-        modalEl.addEventListener('click', function(e) {
-            if (e.target === modalEl) closeUnlockProfilesModal();
-        });
-    }
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' || e.key === 'Esc') {
-            closeUnlockProfilesModal();
-        }
-    });
-});
-</script>
-@endif
-@endcan
-@endauth
 </body>
 </html>
