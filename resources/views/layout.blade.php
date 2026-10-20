@@ -43,372 +43,644 @@
             max-width: 100%;
         }
 
-        /* --- Modern Premium Nav --- */
-        .main-nav {
-            background: #0f172a;
+        /* =========================================================
+           --- Creative Header & Slide-Out Side Panel Styles ---
+           ========================================================= */
+        .creative-header {
+            background: rgba(15, 23, 42, 0.96);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             color: #fff;
-            padding: 0 1.5rem;
+            padding: 0 1.25rem;
             position: sticky;
             top: 0;
             z-index: 1000;
             height: 64px;
             display: flex;
             align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
             width: 100%;
         }
 
-        .nav-inner {
+        .header-inner {
             width: 100%;
-            max-width: 1400px;
+            max-width: 1500px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
             height: 100%;
-            gap: 1rem;
+            gap: 0.85rem;
         }
 
-        .nav-logo {
-            font-size: 1.3rem;
+        .header-start, .header-end, .header-center {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Menu Trigger Button */
+        .menu-toggle-btn {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(30, 41, 59, 0.6));
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            color: #fff;
+            padding: 7px 14px;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            font-family: inherit;
+        }
+
+        .menu-toggle-btn:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border-color: #3b82f6;
+            box-shadow: 0 0 18px rgba(37, 99, 235, 0.45);
+            transform: translateY(-1px);
+        }
+
+        .menu-toggle-btn .hamburger-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 3.5px;
+            width: 16px;
+        }
+
+        .menu-toggle-btn .hamburger-bars span {
+            display: block;
+            height: 2px;
+            background: #fff;
+            border-radius: 2px;
+            transition: all 0.25s ease;
+        }
+
+        .menu-toggle-btn .hamburger-bars span:nth-child(1) { width: 100%; }
+        .menu-toggle-btn .hamburger-bars span:nth-child(2) { width: 65%; }
+        .menu-toggle-btn .hamburger-bars span:nth-child(3) { width: 90%; }
+
+        .menu-toggle-btn:hover .hamburger-bars span {
+            width: 100%;
+        }
+
+        /* Brand Logo */
+        .header-logo {
+            font-size: 1.25rem;
             font-weight: 800;
             color: #fff;
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 0.6rem;
+            gap: 0.55rem;
             flex-shrink: 0;
+            transition: opacity 0.2s ease;
         }
 
-        .nav-logo-img {
+        .header-logo:hover {
+            opacity: 0.95;
+            color: #fff;
+        }
+
+        .header-logo-img {
             height: 38px;
             width: auto;
             object-fit: contain;
-            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));
-            transition: transform 0.2s ease;
+            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+            transition: transform 0.25s ease;
         }
 
-        .nav-logo:hover .nav-logo-img {
-            transform: scale(1.06);
+        .header-logo:hover .header-logo-img {
+            transform: scale(1.05);
         }
 
-        .nav-logo span {
+        .header-logo span {
             background: #2563eb;
+            color: #fff;
             padding: 2px 8px;
             border-radius: 6px;
-            font-size: 0.85rem;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-            height: 100%;
-        }
-
-        .nav-item {
-            position: relative;
-            height: 100%;
-            display: flex;
-            align-items: center;
-        }
-
-        .nav-link {
-            color: #94a3b8;
-            padding: 0.5rem 0.7rem;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            white-space: nowrap;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            color: #fff;
-            background: rgba(255,255,255,0.05);
-        }
-
-        .nav-link.active {
-            color: #3b82f6;
-        }
-
-        /* Dropdown Logic */
-        .dropdown {
-            position: relative;
-        }
-
-        .dropdown-trigger {
-            cursor: pointer;
-        }
-
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: #1e293b;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 0.75rem;
-            min-width: 210px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(10px);
-            transition: all 0.2s;
-            z-index: 1001;
-            display: grid;
-            gap: 0.15rem;
-            max-height: calc(100vh - 80px);
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-
-        .dropdown:hover .dropdown-menu {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .dropdown-menu::-webkit-scrollbar {
-            width: 6px;
-        }
-        .dropdown-menu::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-        }
-        .dropdown-menu::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-        }
-        .dropdown-menu::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .dropdown-link {
-            color: #94a3b8;
-            padding: 0.55rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s;
-            text-align: right;
-        }
-
-        .dropdown-link:hover {
-            background: rgba(255,255,255,0.05);
-            color: #fff;
-        }
-
-        .dropdown-link.active {
-            background: rgba(59, 130, 246, 0.1);
-            color: #3b82f6;
-        }
-
-        .nav-group-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            color: #64748b;
-            letter-spacing: 0.05em;
-            padding: 0.4rem 0.75rem 0.2rem;
-            margin-top: 0.3rem;
-            border-top: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.8rem;
             font-weight: 800;
         }
 
-        .nav-group-label:first-child {
-            border-top: none;
-            margin-top: 0;
+        /* Active Page Pill */
+        .header-page-tag {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            white-space: nowrap;
         }
 
-        .btn-logout {
-            padding: 0.4rem 0.8rem;
+        .header-page-tag .live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        /* Desktop Shortcuts */
+        .header-shortcuts {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .shortcut-chip {
+            color: #94a3b8;
+            padding: 6px 11px;
+            border-radius: 9px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: transparent;
+            white-space: nowrap;
+        }
+
+        .shortcut-chip:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .shortcut-chip.active {
+            color: #60a5fa;
+            background: rgba(59, 130, 246, 0.14);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* Action Buttons on End */
+        .header-icon-btn {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .header-icon-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: bold;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            border: 2px solid #0f172a;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+        }
+
+        .header-user-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 4px 10px 4px 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .header-user-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .header-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+        }
+
+        .header-user-info {
+            display: flex;
+            flex-direction: column;
+            text-align: right;
+            line-height: 1.2;
+        }
+
+        .header-user-name {
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .header-user-role {
+            font-size: 0.68rem;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .btn-header-logout {
+            padding: 6px 12px;
             background: rgba(239, 68, 68, 0.1);
-            color: #ef4444 !important;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            border-radius: 8px;
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 10px;
             font-size: 0.8rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
             font-family: inherit;
-        }
-
-        .btn-logout:hover {
-            background: #ef4444;
-            color: #fff !important;
-        }
-
-        .nav-separator {
-            width: 1px;
-            height: 24px;
-            background: rgba(255,255,255,0.1);
-            margin: 0 0.4rem;
-        }
-
-        /* Mobile Adjustments */
-        .hamburger {
-            display: none;
-            flex-direction: column;
-            justify-content: center;
+            display: inline-flex;
             align-items: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            cursor: pointer;
-            gap: 4px;
+            gap: 5px;
         }
 
-        .hamburger span {
-            display: block;
-            width: 18px;
-            height: 2px;
-            background: #fff;
-            border-radius: 2px;
-            transition: 0.3s;
-            transform-origin: center;
-        }
-
-        .hamburger.open span:nth-child(1) {
-            transform: translateY(6px) rotate(45deg);
-        }
-
-        .hamburger.open span:nth-child(2) {
-            opacity: 0;
-        }
-
-        .hamburger.open span:nth-child(3) {
-            transform: translateY(-6px) rotate(-45deg);
-        }
-
-        .mobile-nav-right {
-            display: none;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .mobile-notification-btn {
-            font-size: 1.1rem;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            width: 40px;
-            height: 40px;
-            transition: 0.3s;
-        }
-
-        .mobile-notification-btn:active {
-            background: rgba(255,255,255,0.15);
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -4px;
-            right: -4px;
+        .btn-header-logout:hover {
             background: #ef4444;
             color: #fff;
-            font-size: 0.65rem;
-            font-weight: bold;
-            width: 18px;
-            height: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            border: 2px solid #0f172a;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
         }
 
-        .desktop-badge {
-            background: #ef4444;
-            color: #fff;
-            font-size: 0.7rem;
-            font-weight: bold;
-            padding: 0.1rem 0.4rem;
-            border-radius: 12px;
-            margin-right: 0.3rem;
-        }
-
-        .mobile-menu {
-            display: none;
-            flex-direction: column;
-            background: #0f172a;
+        /* =========================================================
+           --- Slide-Out Side Panel Styles ---
+           ========================================================= */
+        .sidepanel-backdrop {
             position: fixed;
-            top: 64px;
-            left: 0;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.72);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
+        }
+
+        .sidepanel-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidepanel-container {
+            position: fixed;
+            top: 0;
             right: 0;
             bottom: 0;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding: 1rem 1rem 5rem;
-            gap: 0.3rem;
-            z-index: 999;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .mobile-menu.open {
+            width: 375px;
+            max-width: 92vw;
+            background: linear-gradient(180deg, #0b1120 0%, #0f172a 40%, #172554 100%);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: -20px 0 60px rgba(0, 0, 0, 0.7);
+            z-index: 2001;
             display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
         }
 
-        .mobile-menu a, .mobile-menu button {
-            color: #94a3b8;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-align: right;
+        .sidepanel-container.open {
+            transform: translateX(0);
+        }
+
+        /* Side Panel Header */
+        .sidepanel-header {
+            padding: 1.25rem 1.25rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 23, 42, 0.75);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .sidepanel-header-top {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: space-between;
         }
 
-        .mobile-menu a.active {
+        .sidepanel-title {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidepanel-close-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .sidepanel-close-btn:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            transform: rotate(90deg);
+        }
+
+        /* User Profile Card inside Panel */
+        .sidepanel-user-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .sidepanel-user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            flex-shrink: 0;
+        }
+
+        .sidepanel-user-meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidepanel-user-meta h5 {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidepanel-user-meta span {
+            font-size: 0.76rem;
+            color: #94a3b8;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .sidepanel-my-profile-link {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .sidepanel-my-profile-link:hover {
             background: #2563eb;
             color: #fff;
         }
 
-        .mobile-separator {
-            height: 1px;
-            background: rgba(255,255,255,0.1);
-            margin: 0.5rem 0;
+        /* Search Input */
+        .sidepanel-search-box {
+            position: relative;
         }
 
-        @media (max-width: 1200px) {
-            .nav-link { padding: 0.5rem 0.5rem; font-size: 0.8rem; }
+        .sidepanel-search-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 8px 36px 8px 12px;
+            color: #fff;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s ease;
+            font-family: inherit;
         }
 
-        @media (max-width: 1024px) {
-            .nav-links { display: none; }
-            .hamburger { display: flex; }
-            .mobile-nav-right { display: flex; }
-            .mobile-current-page {
-                display: flex;
-                align-items: center;
-            }
-            .mobile-current-page-text {
-                background: rgba(255,255,255,0.05);
-                color: #fff;
-                padding: 4px 12px;
-                border-radius: 20px;
-                font-size: 0.75rem;
-                font-weight: 700;
-            }
+        .sidepanel-search-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .sidepanel-search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+
+        /* Side Panel Body (Scrollable) */
+        .sidepanel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 1rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .sidepanel-body::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidepanel-body::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+        }
+
+        .sidepanel-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Categorized Groups */
+        .nav-category {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .nav-category-title {
+            font-size: 0.73rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 0.5rem 0.2rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sidepanel-nav-link {
+            color: #cbd5e1;
+            padding: 9px 14px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            border-right: 3px solid transparent;
+        }
+
+        .sidepanel-nav-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateX(-3px);
+            border-right-color: #3b82f6;
+        }
+
+        .sidepanel-nav-link.active {
+            color: #60a5fa;
+            background: linear-gradient(270deg, rgba(59, 130, 246, 0.18), rgba(59, 130, 246, 0.05));
+            border-right-color: #3b82f6;
+            font-weight: 700;
+        }
+
+        .sidepanel-link-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidepanel-link-icon {
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+        }
+
+        .sidepanel-link-badge {
+            background: #ef4444;
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 1px 7px;
+            border-radius: 10px;
+        }
+
+        /* Side Panel Footer */
+        .sidepanel-footer {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(11, 17, 32, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .sidepanel-logout-btn {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #f87171;
+            padding: 9px 14px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .sidepanel-logout-btn:hover {
+            background: #ef4444;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
+        }
+
+        .sidepanel-empty-search {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #64748b;
+            font-size: 0.88rem;
+            display: none;
+        }
+
+        @media (max-width: 992px) {
+            .header-shortcuts { display: none; }
+        }
+
+        @media (max-width: 640px) {
+            .header-user-info { display: none; }
+            .header-page-tag { display: none; }
+            .creative-header { padding: 0 0.85rem; }
+            .header-logo span { display: none; }
         }
 
         .page-content {
@@ -451,90 +723,10 @@
             }
         }
 
-        @media (max-width: 900px) {
-            .nav-inner {
-                min-height: 56px;
-                padding: 0 0.85rem;
-                display: grid;
-                grid-template-columns: auto 1fr auto;
-                align-items: center;
-                gap: 0.5rem;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .hamburger {
-                display: flex;
-            }
-
-            .nav-logo {
-                font-size: 0.98rem;
-                gap: 0.4rem;
-            }
-
-            .nav-logo-img {
-                height: 30px;
-            }
-
-            .nav-logo span {
-                font-size: 0.72rem;
-                padding: 2px 8px;
-            }
-
-            .mobile-current-page {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 0;
-                flex: 1;
-            }
-
-            .mobile-current-page-text {
-                max-width: 100%;
-            }
-        }
-
         @media (max-width: 576px) {
-            .nav-inner {
-                min-height: 54px;
-                padding: 0 0.75rem;
-            }
-
-            .nav-logo {
-                font-size: 0.92rem;
-            }
-
-            .nav-logo-img {
-                height: 26px;
-            }
-
-            .nav-logo span {
-                font-size: 0.68rem;
-                padding: 2px 7px;
-            }
-
-            .mobile-menu {
-                padding: 0.55rem 0.7rem 0.8rem;
-            }
-
-            .mobile-menu a,
-            .mobile-menu button {
-                font-size: 0.9rem;
-                padding: 0.78rem 0.85rem;
-            }
-
-            .mobile-current-page-text {
-                font-size: 0.8rem;
-                padding: 0.32rem 0.65rem;
-                max-width: 135px;
-            }
-
             .page-content {
-                padding: 12px;
+                padding: 10px;
             }
-
             .footer-inner {
                 font-size: 0.84rem;
                 padding: 12px 14px;
@@ -690,240 +882,375 @@
     $unreadCount = Auth::check() ? Auth::user()->unreadNotifications->count() : 0;
 @endphp
 
-<nav class="main-nav">
-    <div class="nav-inner">
-        <a href="/" class="nav-logo">
-            <img src="{{ asset('assets/images/logo.png') }}" alt="Logo" class="nav-logo-img">
-            <span>HR</span> System
-        </a>
+<header class="creative-header">
+    <div class="header-inner">
+        {{-- Right Side (Start RTL) --}}
+        <div class="header-start">
+            @auth
+            <button class="menu-toggle-btn" id="sidePanelToggle" type="button" aria-label="فتح القائمة">
+                <div class="hamburger-bars">
+                    <span></span><span></span><span></span>
+                </div>
+                <span>القائمة</span>
+            </button>
+            @endauth
 
-        <div class="mobile-current-page">
-            <span class="mobile-current-page-text">{{ $currentPageLabel }}</span>
+            <a href="/" class="header-logo">
+                <img src="{{ asset('assets/images/logo.png') }}" alt="Logo" class="header-logo-img">
+                <span>HR</span> System
+            </a>
+
+            <div class="header-page-tag">
+                <span class="live-dot"></span>
+                <span>{{ $currentPageLabel }}</span>
+            </div>
         </div>
 
+        {{-- Center Shortcuts (Desktop) --}}
         @auth
-        <div class="nav-links">
-            <div class="nav-item"><a href="{{ route('my_profile') }}" class="nav-link {{ request()->routeIs('my_profile') ? 'active' : '' }}">👤 {{ Auth::user()->name }}</a></div>
-            <div class="nav-separator"></div>
-            {{-- طلبات --}}
-            <div class="nav-item"><a href="{{ route('leave') }}" class="nav-link {{ request()->routeIs('leave') ? 'active' : '' }}">🏝️ اجازات</a></div>
-            <div class="nav-item"><a href="{{ route('permission') }}" class="nav-link {{ request()->routeIs('permission') ? 'active' : '' }}">📋 اذونات</a></div>
-            <div class="nav-item"><a href="{{ route('Overtime') }}" class="nav-link {{ request()->routeIs('Overtime') ? 'active' : '' }}">⏱️ اضافي</a></div>
-            <div class="nav-item"><a href="{{ route('check_in_out') }}" class="nav-link {{ request()->routeIs('check_in_out') ? 'active' : '' }}">⏳ حضور وانصراف</a></div>
-            <div class="nav-item"><a href="{{ route('settlements.create') }}" class="nav-link {{ request()->routeIs('settlements.create') ? 'active' : '' }}">⚙️ تسوية</a></div>
-            
-            <!-- @can('rosters.view')
-            <div class="nav-item"><a href="{{ route('rosters.index') }}" class="nav-link {{ request()->routeIs('rosters.*') ? 'active' : '' }}">📅 الشيفتات</a></div>
-            @endcan -->
-
-            @can('instructions.view')
-            <div class="nav-item"><a href="{{ route('instructions.index') }}" class="nav-link {{ request()->routeIs('instructions.index') ? 'active' : '' }}">📢 التعليمات</a></div>
+        <div class="header-center header-shortcuts">
+            <a href="{{ route('leave') }}" class="shortcut-chip {{ request()->routeIs('leave') ? 'active' : '' }}">
+                <span>🏝️</span><span>إجازات</span>
+            </a>
+            <a href="{{ route('permission') }}" class="shortcut-chip {{ request()->routeIs('permission') ? 'active' : '' }}">
+                <span>📋</span><span>أذونات</span>
+            </a>
+            <a href="{{ route('Overtime') }}" class="shortcut-chip {{ request()->routeIs('Overtime') ? 'active' : '' }}">
+                <span>⏱️</span><span>إضافي</span>
+            </a>
+            @can('rosters.view')
+            <a href="{{ route('rosters.index') }}" class="shortcut-chip {{ request()->routeIs('rosters.*') ? 'active' : '' }}">
+                <span>📅</span><span>الشيفتات</span>
+            </a>
             @endcan
-
-            <div class="nav-item"><a href="{{ route('notifications.index') }}" class="nav-link {{ request()->routeIs('notifications.index') ? 'active' : '' }}">
-                🔔 الإشعارات
-                @if($unreadCount > 0)
-                    <span class="desktop-badge">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
-                @endif
-            </a></div>
-
-            <div class="nav-separator"></div>
-
-            {{-- تتبع السجلات (Dropdown) --}}
-            <div class="nav-item dropdown">
-                <div class="nav-link dropdown-trigger">
-                    📊 متابعة السجلات
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </div>
-                <div class="dropdown-menu">
-                    <a href="{{ route('view_Overtime') }}" class="dropdown-link {{ request()->routeIs('view_Overtime') ? 'active' : '' }}">📈 سجل الاضافي</a>
-                    <a href="{{ route('view_leave') }}" class="dropdown-link {{ request()->routeIs('view_leave') ? 'active' : '' }}">🏖️ سجل الاجازات</a>
-                    <a href="{{ route('view_permission') }}" class="dropdown-link {{ request()->routeIs('view_permission') ? 'active' : '' }}">📝 سجل الاذونات</a>
-                    <a href="{{ route('view_check_in_out') }}" class="dropdown-link {{ request()->routeIs('view_check_in_out') ? 'active' : '' }}">📂 سجل الحضور</a>
-                    <a href="{{ route('view_penalties') }}" class="dropdown-link {{ request()->routeIs('view_penalties') ? 'active' : '' }}">⚠️ سجل الجزاءات</a>
-                    <a href="{{ route('settlements.index') }}" class="dropdown-link {{ request()->routeIs('settlements.index') ? 'active' : '' }}">⚙️ سجل التسويات</a>
-                    @can('rosters.view')
-                    <a href="{{ route('rosters.index') }}" class="dropdown-link {{ request()->routeIs('rosters.*') ? 'active' : '' }}">📅 جدول الشيفتات </a>
-                    @endcan
-                </div>
-            </div>
-
-            {{-- أدوات الإدارة (Admin/Super Admin) --}}
-            @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
-            <div class="nav-item dropdown">
-                <div class="nav-link dropdown-trigger">
-                    🛠️ الإدارة
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </div>
-                <div class="dropdown-menu">
-                    @can('penalties.create')
-                    <div class="nav-group-label">إدارة الجزاءات</div>
-                    <a href="{{ route('admin.penalties') }}" class="dropdown-link {{ request()->routeIs('admin.penalties') ? 'active' : '' }}">⚠️ إضافة جزاء</a>
-                    @endcan
-                    
-                    @if(Auth::user()->can('employees.view_profiles') || Auth::user()->can('reports.full_report') || Auth::user()->can('employees.reset_password') || Auth::user()->can('employees.manual_entry'))
-                        <div class="nav-group-label">إدارة الموظفين والتقارير</div>
-                        
-                        @can('employees.reset_password')
-                        <a href="{{ route('admin.reset_password') }}" class="dropdown-link {{ request()->routeIs('admin.reset_password') ? 'active' : '' }}">🔑 استعادة كلمة السر</a>
-                        @endcan
-                        
-                        @can('employees.manual_entry')
-                        <a href="{{ route('super_admin.entry') }}" class="dropdown-link {{ request()->routeIs('super_admin.entry') ? 'active' : '' }}">➕ الإضافة اليدويه</a>
-                        @endcan
-
-                        @can('reports.full_report')
-                        <a href="{{ route('full_report.index') }}" class="dropdown-link {{ request()->routeIs('full_report.index') ? 'active' : '' }}">📄 التقرير الشامل</a>
-                        @endcan
-                        
-                        @can('employees.view_profiles')
-                        <a href="{{ route('employee_profiles.index') }}" class="dropdown-link {{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}">👤 ملفات الموظفين</a>
-                        @endcan
-                    @endif
-
-                    @if(Auth::user()->can('incentives.create') || Auth::user()->can('admin_notes.create') || Auth::user()->can('incentives.view') || Auth::user()->can('admin_notes.view') || Auth::user()->can('instructions.view'))
-                        <div class="nav-group-label">الحوافز والملاحظات</div>
-                        @can('incentives.create')
-                        <a href="{{ route('incentives.create') }}" class="dropdown-link {{ request()->routeIs('incentives.create') ? 'active' : '' }}">🌟 إضافة حافز</a>
-                        @endcan
-                        @can('incentives.view')
-                        <a href="{{ route('incentives.index') }}" class="dropdown-link {{ request()->routeIs('incentives.index') ? 'active' : '' }}">📈 عرض الحوافز</a>
-                        @endcan
-                        @can('admin_notes.create')
-                        <a href="{{ route('admin_notes.create') }}" class="dropdown-link {{ request()->routeIs('admin_notes.create') ? 'active' : '' }}">🗒️ إضافة ملاحظة</a>
-                        @endcan
-                        @can('admin_notes.view')
-                        <a href="{{ route('admin_notes.index') }}" class="dropdown-link {{ request()->routeIs('admin_notes.index') ? 'active' : '' }}">🗒️ ملاحظات الإدارة</a>
-                        @endcan
-                    @endif
-
-                    @if(Auth::user()->email === 'z@z.z' || Auth::user()->email === 'mtaha@gama.com')
-                        <div class="nav-group-label">Security Logs</div>
-                        <a href="{{ route('audit_log') }}" class="dropdown-link {{ request()->routeIs('audit_log') ? 'active' : '' }}">📜 Audit Log</a>
-                    @endif
-
-                    @developer
-                        <div class="nav-group-label">منطقة المطور</div>
-                        <a href="{{ route('developer.settings.index') }}" class="dropdown-link {{ request()->routeIs('developer.settings.*') ? 'active' : '' }}">⚙️ إعدادات النظام</a>
-                        <a href="{{ route('developer.roles.index') }}" class="dropdown-link {{ request()->routeIs('developer.roles.*') ? 'active' : '' }}">🛡️ الفئات والصلاحيات</a>
-                        <a href="{{ route('developer.shifts.index') }}" class="dropdown-link {{ request()->routeIs('developer.shifts.*') ? 'active' : '' }}">⏰ مجموعات الشيفتات</a>
-                    @enddeveloper
-                </div>
-            </div>
-            @endif
-
-            <div class="nav-separator"></div>
-
-            <div class="nav-item">
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-logout">🚪 خروج</button>
-                </form>
-            </div>
-        </div>
-        @else
-        <div class="nav-links">
-            <a href="{{ route('login') }}" class="nav-link btn-login">🔑 دخول</a>
-            <!-- <span class="nav-link text-muted" style="cursor: not-allowed; opacity: 0.5;">✨ حساب جديد</span> -->
         </div>
         @endauth
-        
-        <div class="mobile-nav-right">
+
+        {{-- Left Side (End RTL) --}}
+        <div class="header-end">
             @auth
-            <a href="{{ route('notifications.index') }}" class="mobile-notification-btn" aria-label="Notifications" style="position: relative;">
+            {{-- Notifications Bell --}}
+            <a href="{{ route('notifications.index') }}" class="header-icon-btn" title="الإشعارات" aria-label="الإشعارات">
                 🔔
                 @if($unreadCount > 0)
                     <span class="notification-badge">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
                 @endif
             </a>
-            @endauth
-            <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu" type="button">
-                <span></span><span></span><span></span>
+
+            {{-- User Pill (Click to open Side Panel) --}}
+            <button type="button" class="header-user-btn" id="headerUserBtn" title="ملفك الشخصي والقائمة">
+                <div class="header-avatar">
+                    {{ mb_substr(Auth::user()->name, 0, 1) }}
+                </div>
+                <div class="header-user-info">
+                    <span class="header-user-name">{{ Auth::user()->name }}</span>
+                    <span class="header-user-role">{{ Auth::user()->job_title ?? Auth::user()->roleDisplayName() }}</span>
+                </div>
             </button>
+
+            {{-- Quick Logout --}}
+            <form action="{{ route('logout') }}" method="POST" class="d-none d-sm-inline mb-0">
+                @csrf
+                <button type="submit" class="btn-header-logout" title="تسجيل الخروج">
+                    <span>🚪</span>
+                    <span>خروج</span>
+                </button>
+            </form>
+            @else
+            <a href="{{ route('login') }}" class="btn btn-primary btn-sm fw-bold px-3 py-1.5" style="border-radius: 10px;">
+                🔑 تسجيل دخول
+            </a>
+            @endauth
         </div>
     </div>
-    
-    <div class="mobile-menu" id="mobileMenu">
-        @auth
-            <a href="{{ route('my_profile') }}" class="{{ request()->routeIs('my_profile') ? 'active' : '' }}">👤 {{ Auth::user()->name }}</a>
-            <div class="mobile-separator"></div>
-            <a href="{{ route('leave') }}" class="{{ request()->routeIs('leave') ? 'active' : '' }}">🏖️ اجازات</a>
-            <a href="{{ route('permission') }}" class="{{ request()->routeIs('permission') ? 'active' : '' }}">📋 اذونات</a>
-            <a href="{{ route('Overtime') }}" class="{{ request()->routeIs('Overtime') ? 'active' : '' }}">⏱️ اضافي</a>
-            <a href="{{ route('check_in_out') }}" class="{{ request()->routeIs('check_in_out') ? 'active' : '' }}">⏳ حضور وانصراف</a>
-            <a href="{{ route('settlements.create') }}" class="{{ request()->routeIs('settlements.create') ? 'active' : '' }}">⚙️ طلب تسوية</a>
-            
-            @can('instructions.view')
-            <a href="{{ route('instructions.index') }}" class="{{ request()->routeIs('instructions.index') ? 'active' : '' }}">📢 التعليمات</a>
-            @endcan
+</header>
 
-            <a href="{{ route('notifications.index') }}" class="{{ request()->routeIs('notifications.index') ? 'active' : '' }}">
-                🔔 الإشعارات
+@auth
+{{-- Backdrop Overlay --}}
+<div class="sidepanel-backdrop" id="sidePanelBackdrop"></div>
+
+{{-- Slide-Out Side Panel --}}
+<aside class="sidepanel-container" id="sidePanel" aria-label="القائمة الجانبية">
+    {{-- Panel Header --}}
+    <div class="sidepanel-header">
+        <div class="sidepanel-header-top">
+            <div class="sidepanel-title">
+                <span>🎛️</span>
+                <span>لوحة التحكم والتنقل</span>
+            </div>
+            <button class="sidepanel-close-btn" id="sidePanelClose" type="button" title="إغلاق (Esc)" aria-label="إغلاق">
+                ✕
+            </button>
+        </div>
+
+        {{-- User Identity Card --}}
+        <div class="sidepanel-user-card">
+            <div class="sidepanel-user-avatar">
+                {{ mb_substr(Auth::user()->name, 0, 1) }}
+            </div>
+            <div class="sidepanel-user-meta">
+                <h5>{{ Auth::user()->name }}</h5>
+                <span>{{ Auth::user()->job_title ?? Auth::user()->roleDisplayName() }}</span>
+            </div>
+            <a href="{{ route('my_profile') }}" class="sidepanel-my-profile-link" title="عرض بروفايلي">
+                👤 بروفايلي
+            </a>
+        </div>
+
+        {{-- Real-time Quick Search Bar --}}
+        <div class="sidepanel-search-box">
+            <span class="sidepanel-search-icon">🔍</span>
+            <input type="text" id="sidepanelSearch" class="sidepanel-search-input" placeholder="ابحث في أقسام القائمة..." autocomplete="off">
+        </div>
+    </div>
+
+    {{-- Panel Body (Categorized Menu Links) --}}
+    <div class="sidepanel-body" id="sidepanelNav">
+        {{-- Section 1: Daily Requests --}}
+        <div class="nav-category" data-category="requests">
+            <div class="nav-category-title">
+                <span>🚀</span>
+                <span>الطلبات والإجراءات اليومية</span>
+            </div>
+            <a href="{{ route('leave') }}" class="sidepanel-nav-link {{ request()->routeIs('leave') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">🏖️</span>
+                    <span>طلب إجازة</span>
+                </div>
+            </a>
+            <a href="{{ route('permission') }}" class="sidepanel-nav-link {{ request()->routeIs('permission') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">📋</span>
+                    <span>طلب إذن</span>
+                </div>
+            </a>
+            <a href="{{ route('Overtime') }}" class="sidepanel-nav-link {{ request()->routeIs('Overtime') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">⏱️</span>
+                    <span>طلب إضافي</span>
+                </div>
+            </a>
+            <a href="{{ route('check_in_out') }}" class="sidepanel-nav-link {{ request()->routeIs('check_in_out') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">⏳</span>
+                    <span>حضور وانصراف</span>
+                </div>
+            </a>
+            <a href="{{ route('settlements.create') }}" class="sidepanel-nav-link {{ request()->routeIs('settlements.create') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">⚙️</span>
+                    <span>طلب تسوية</span>
+                </div>
+            </a>
+            @can('instructions.view')
+            <a href="{{ route('instructions.index') }}" class="sidepanel-nav-link {{ request()->routeIs('instructions.index') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">📢</span>
+                    <span>التعليمات والتنبيهات</span>
+                </div>
+            </a>
+            @endcan
+            <a href="{{ route('notifications.index') }}" class="sidepanel-nav-link {{ request()->routeIs('notifications.index') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">🔔</span>
+                    <span>الإشعارات</span>
+                </div>
                 @if($unreadCount > 0)
-                    <span class="desktop-badge" style="margin-right: auto; margin-left: 0;">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
+                    <span class="sidepanel-link-badge">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
                 @endif
             </a>
-            <div class="mobile-separator"></div>
-            <a href="{{ route('view_Overtime') }}" class="{{ request()->routeIs('view_Overtime') ? 'active' : '' }}">📊 عرض الاضافي</a>
-            <a href="{{ route('view_leave') }}" class="{{ request()->routeIs('view_leave') ? 'active' : '' }}">📅 عرض الاجازات</a>
-            <a href="{{ route('view_permission') }}" class="{{ request()->routeIs('view_permission') ? 'active' : '' }}">📝 عرض الاذونات</a>
-            <a href="{{ route('view_check_in_out') }}" class="{{ request()->routeIs('view_check_in_out') ? 'active' : '' }}">📂 سجل الحضور</a>
-            <a href="{{ route('view_penalties') }}" class="{{ request()->routeIs('view_penalties') ? 'active' : '' }}">📋 الجزاءات</a>
-            <a href="{{ route('settlements.index') }}" class="{{ request()->routeIs('settlements.index') ? 'active' : '' }}">⚙️ التسويات</a>
+        </div>
+
+        {{-- Section 2: Records & Shift Rosters --}}
+        <div class="nav-category" data-category="records">
+            <div class="nav-category-title">
+                <span>📊</span>
+                <span>متابعة السجلات والجداول</span>
+            </div>
             @can('rosters.view')
-            <a href="{{ route('rosters.index') }}" class="{{ request()->routeIs('rosters.*') ? 'active' : '' }}">📅 جدول الشيفتات </a>
+            <a href="{{ route('rosters.index') }}" class="sidepanel-nav-link {{ request()->routeIs('rosters.*') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">📅</span>
+                    <span>جدول الشيفتات</span>
+                </div>
+            </a>
             @endcan
-            @can('penalties.create')
-            <div class="mobile-separator"></div>
-            <a href="{{ route('admin.penalties') }}" class="{{ request()->routeIs('admin.penalties') ? 'active' : '' }}">⚠️ إضافة جزاء</a>
-            @endcan
-            @can('employees.reset_password')
-                <a href="{{ route('admin.reset_password') }}" class="{{ request()->routeIs('admin.reset_password') ? 'active' : '' }}">🔑 ريست باسورد</a>
-            @endcan
-            @can('employees.manual_entry')
-                <a href="{{ route('super_admin.entry') }}" class="{{ request()->routeIs('super_admin.entry') ? 'active' : '' }}">➕ الإضافة اليدويه</a>
+            <a href="{{ route('view_Overtime') }}" class="sidepanel-nav-link {{ request()->routeIs('view_Overtime') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">📈</span>
+                    <span>سجل الإضافي</span>
+                </div>
+            </a>
+            <a href="{{ route('view_leave') }}" class="sidepanel-nav-link {{ request()->routeIs('view_leave') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">🏖️</span>
+                    <span>سجل الإجازات</span>
+                </div>
+            </a>
+            <a href="{{ route('view_permission') }}" class="sidepanel-nav-link {{ request()->routeIs('view_permission') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">📝</span>
+                    <span>سجل الأذونات</span>
+                </div>
+            </a>
+            <a href="{{ route('view_check_in_out') }}" class="sidepanel-nav-link {{ request()->routeIs('view_check_in_out') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">📂</span>
+                    <span>سجل الحضور والانصراف</span>
+                </div>
+            </a>
+            <a href="{{ route('view_penalties') }}" class="sidepanel-nav-link {{ request()->routeIs('view_penalties') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">⚠️</span>
+                    <span>سجل الجزاءات</span>
+                </div>
+            </a>
+            <a href="{{ route('settlements.index') }}" class="sidepanel-nav-link {{ request()->routeIs('settlements.index') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">⚙️</span>
+                    <span>سجل التسويات</span>
+                </div>
+            </a>
+        </div>
+
+        {{-- Section 3: Management & HR Tools --}}
+        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+        <div class="nav-category" data-category="admin">
+            <div class="nav-category-title">
+                <span>🛠️</span>
+                <span>أدوات الإدارة والتقارير</span>
+            </div>
+            @can('employees.view_profiles')
+            <a href="{{ route('employee_profiles.index') }}" class="sidepanel-nav-link {{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">👤</span>
+                    <span>ملفات الموظفين</span>
+                </div>
+            </a>
             @endcan
             @can('reports.full_report')
-                <a href="{{ route('full_report.index') }}" class="{{ request()->routeIs('full_report.index') ? 'active' : '' }}">📄 تقارير شاملة</a>
+            <a href="{{ route('full_report.index') }}" class="sidepanel-nav-link {{ request()->routeIs('full_report.index') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">📄</span>
+                    <span>التقرير الشامل</span>
+                </div>
+            </a>
             @endcan
-            @can('employees.view_profiles')
-                <a href="{{ route('employee_profiles.index') }}" class="{{ request()->routeIs('employee_profiles.*') ? 'active' : '' }}">👤 ملفات الموظفين</a>
+            @can('employees.manual_entry')
+            <a href="{{ route('super_admin.entry') }}" class="sidepanel-nav-link {{ request()->routeIs('super_admin.entry') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">➕</span>
+                    <span>الإضافة اليدوية</span>
+                </div>
+            </a>
             @endcan
-            @if(Auth::user()->can('incentives.create') || Auth::user()->can('admin_notes.create') || Auth::user()->can('incentives.view') || Auth::user()->can('admin_notes.view') || Auth::user()->can('instructions.view'))
-                <div class="mobile-separator"></div>
-                @can('incentives.create')
-                <a href="{{ route('incentives.create') }}" class="{{ request()->routeIs('incentives.create') ? 'active' : '' }}">🌟 إضافة حافز</a>
-                @endcan
-                @can('incentives.view')
-                <a href="{{ route('incentives.index') }}" class="{{ request()->routeIs('incentives.index') ? 'active' : '' }}">📈 الحوافز</a>
-                @endcan
-                @can('admin_notes.create')
-                <a href="{{ route('admin_notes.create') }}" class="{{ request()->routeIs('admin_notes.create') ? 'active' : '' }}">📝 إضافة ملاحظة</a>
-                @endcan
-                @can('admin_notes.view')
-                <a href="{{ route('admin_notes.index') }}" class="{{ request()->routeIs('admin_notes.index') ? 'active' : '' }}">🗒️ ملاحظات الإدارة</a>
-                @endcan
-            @endif
-            @if(Auth::user()->email === 'z@z.z')
-                <a href="{{ route('audit_log') }}" class="{{ request()->routeIs('audit_log') ? 'active' : '' }}">📜 Audit Log</a>
+            @can('employees.reset_password')
+            <a href="{{ route('admin.reset_password') }}" class="sidepanel-nav-link {{ request()->routeIs('admin.reset_password') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">🔑</span>
+                    <span>استعادة كلمة السر</span>
+                </div>
+            </a>
+            @endcan
+            @can('penalties.create')
+            <a href="{{ route('admin.penalties') }}" class="sidepanel-nav-link {{ request()->routeIs('admin.penalties') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">⚠️</span>
+                    <span>إضافة جزاء</span>
+                </div>
+            </a>
+            @endcan
+            @can('incentives.create')
+            <a href="{{ route('incentives.create') }}" class="sidepanel-nav-link {{ request()->routeIs('incentives.create') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">🌟</span>
+                    <span>إضافة حافز</span>
+                </div>
+            </a>
+            @endcan
+            @can('incentives.view')
+            <a href="{{ route('incentives.index') }}" class="sidepanel-nav-link {{ request()->routeIs('incentives.index') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">📈</span>
+                    <span>عرض الحوافز</span>
+                </div>
+            </a>
+            @endcan
+            @can('admin_notes.create')
+            <a href="{{ route('admin_notes.create') }}" class="sidepanel-nav-link {{ request()->routeIs('admin_notes.create') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">📝</span>
+                    <span>إضافة ملاحظة</span>
+                </div>
+            </a>
+            @endcan
+            @can('admin_notes.view')
+            <a href="{{ route('admin_notes.index') }}" class="sidepanel-nav-link {{ request()->routeIs('admin_notes.index') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">🗒️</span>
+                    <span>ملاحظات الإدارة</span>
+                </div>
+            </a>
+            @endcan
+        </div>
+        @endif
+
+        {{-- Section 4: System & Developer --}}
+        @if(Auth::user()->email === 'z@z.z' || Auth::user()->email === 'mtaha@gama.com' || Auth::user()->role === 'developer')
+        <div class="nav-category" data-category="developer">
+            <div class="nav-category-title">
+                <span>🛡️</span>
+                <span>أمان وإعدادات النظام</span>
+            </div>
+            @if(Auth::user()->email === 'z@z.z' || Auth::user()->email === 'mtaha@gama.com')
+            <a href="{{ route('audit_log') }}" class="sidepanel-nav-link {{ request()->routeIs('audit_log') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">📜</span>
+                    <span>سجل العمليات (Audit Log)</span>
+                </div>
+            </a>
             @endif
             @developer
-                <div class="mobile-separator"></div>
-                <a href="{{ route('developer.settings.index') }}" class="{{ request()->routeIs('developer.settings.*') ? 'active' : '' }}">⚙️ إعدادات النظام</a>
-                <a href="{{ route('developer.roles.index') }}" class="{{ request()->routeIs('developer.roles.*') ? 'active' : '' }}">🛡️ الفئات والصلاحيات</a>
-                <a href="{{ route('developer.shifts.index') }}" class="{{ request()->routeIs('developer.shifts.*') ? 'active' : '' }}">⏰ مجموعات الشيفتات</a>
+            <a href="{{ route('developer.settings.index') }}" class="sidepanel-nav-link {{ request()->routeIs('developer.settings.*') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">⚙️</span>
+                    <span>إعدادات النظام العامة</span>
+                </div>
+            </a>
+            <a href="{{ route('developer.roles.index') }}" class="sidepanel-nav-link {{ request()->routeIs('developer.roles.*') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">🛡️</span>
+                    <span>الفئات والصلاحيات</span>
+                </div>
+            </a>
+            <a href="{{ route('developer.shifts.index') }}" class="sidepanel-nav-link {{ request()->routeIs('developer.shifts.*') ? 'active' : '' }}">
+                <div class="sidepanel-link-left">
+                    <span class="sidepanel-link-icon">⏰</span>
+                    <span>مجموعات الشيفتات</span>
+                </div>
+            </a>
             @enddeveloper
-            <div class="mobile-separator"></div>
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="btn-logout">🚪 تسجيل خروج</button>
-            </form>
-        @else
-            <a href="{{ route('login') }}" class="{{ request()->routeIs('login') ? 'active' : '' }}">🔑 تسجيل دخول</a>
-            <span class="px-4 py-2 text-muted" style="cursor: not-allowed; opacity: 0.5;">✨ انشاء حساب (قريباً)</span>
-        @endauth
+        </div>
+        @endif
+
+        {{-- No Search Results Message --}}
+        <div class="sidepanel-empty-search" id="sidepanelEmptySearch">
+            <span>🔍 لم يتم العثور على أي رابط مطابق لبحثك</span>
+        </div>
     </div>
-</nav>
+
+    {{-- Panel Footer --}}
+    <div class="sidepanel-footer">
+        <form action="{{ route('logout') }}" method="POST" class="w-100 mb-0">
+            @csrf
+            <button type="submit" class="sidepanel-logout-btn">
+                <span>🚪</span>
+                <span>تسجيل خروج من النظام</span>
+            </button>
+        </form>
+    </div>
+</aside>
+@endauth
 
 <div class="page-content">
     @yield('content')
@@ -940,19 +1267,84 @@
 <script src="{{ asset('assets/js/flowbite.min.js') }}"></script>
 <script src="{{ asset('assets/js/tom-select.complete.min.js') }}"></script>
 <script>
-    const btn = document.getElementById('hamburgerBtn');
-    const menu = document.getElementById('mobileMenu');
+    // --- Creative Slide-Out Side Panel Controller ---
+    const sidePanelToggle = document.getElementById('sidePanelToggle');
+    const headerUserBtn   = document.getElementById('headerUserBtn');
+    const sidePanelClose  = document.getElementById('sidePanelClose');
+    const sidePanel       = document.getElementById('sidePanel');
+    const sidePanelBackdrop = document.getElementById('sidePanelBackdrop');
+    const sidepanelSearch = document.getElementById('sidepanelSearch');
+    const emptySearchMsg  = document.getElementById('sidepanelEmptySearch');
 
-    if (btn && menu) {
-        btn.addEventListener('click', () => {
-            btn.classList.toggle('open');
-            menu.classList.toggle('open');
-        });
+    function openSidePanel() {
+        if (sidePanel && sidePanelBackdrop) {
+            sidePanelBackdrop.classList.add('active');
+            sidePanel.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            if (sidepanelSearch) {
+                setTimeout(() => sidepanelSearch.focus(), 300);
+            }
+        }
+    }
 
-        document.addEventListener('click', (e) => {
-            if (!btn.contains(e.target) && !menu.contains(e.target)) {
-                btn.classList.remove('open');
-                menu.classList.remove('open');
+    function closeSidePanel() {
+        if (sidePanel && sidePanelBackdrop) {
+            sidePanel.classList.remove('open');
+            sidePanelBackdrop.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    if (sidePanelToggle) sidePanelToggle.addEventListener('click', openSidePanel);
+    if (headerUserBtn) headerUserBtn.addEventListener('click', openSidePanel);
+    if (sidePanelClose) sidePanelClose.addEventListener('click', closeSidePanel);
+    if (sidePanelBackdrop) sidePanelBackdrop.addEventListener('click', closeSidePanel);
+
+    // Keyboard Shortcuts: Esc to close, Ctrl+K / Cmd+K to open
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeSidePanel();
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            if (sidePanel && sidePanel.classList.contains('open')) {
+                closeSidePanel();
+            } else {
+                openSidePanel();
+            }
+        }
+    });
+
+    // Real-Time Menu Search inside Side Panel
+    if (sidepanelSearch) {
+        sidepanelSearch.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            const categories = document.querySelectorAll('.nav-category');
+            let totalVisible = 0;
+
+            categories.forEach(cat => {
+                const links = cat.querySelectorAll('.sidepanel-nav-link');
+                let catVisible = 0;
+
+                links.forEach(link => {
+                    const text = link.innerText.toLowerCase();
+                    if (!query || text.includes(query)) {
+                        link.style.display = 'flex';
+                        catVisible++;
+                        totalVisible++;
+                    } else {
+                        link.style.display = 'none';
+                    }
+                });
+
+                if (catVisible > 0) {
+                    cat.style.display = 'flex';
+                } else {
+                    cat.style.display = 'none';
+                }
+            });
+
+            if (emptySearchMsg) {
+                emptySearchMsg.style.display = (totalVisible === 0 && query) ? 'block' : 'none';
             }
         });
     }
