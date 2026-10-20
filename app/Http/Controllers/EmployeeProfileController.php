@@ -559,46 +559,36 @@ class EmployeeProfileController extends Controller
 
         DB::transaction(function () use ($user) {
             // Keep shift roster entries intact but detach user_id so schedules don't break
-            if (class_exists(\App\Models\ShiftRosterEntry::class) && Schema::hasTable('shift_roster_entries')) {
+            if (class_exists(\App\Models\ShiftRosterEntry::class) && Schema::hasTable('shift_roster_entries') && Schema::hasColumn('shift_roster_entries', 'user_id')) {
                 \App\Models\ShiftRosterEntry::where('user_id', $user->id)->update(['user_id' => null]);
             }
-            if (class_exists(\App\Models\ShiftRoster::class) && Schema::hasTable('shift_rosters')) {
+            if (class_exists(\App\Models\ShiftRoster::class) && Schema::hasTable('shift_rosters') && Schema::hasColumn('shift_rosters', 'created_by')) {
                 \App\Models\ShiftRoster::where('created_by', $user->id)->update(['created_by' => null]);
             }
 
             // Reassign instructions created by user to current admin to prevent cascade loss
-            if (Schema::hasTable('instructions')) {
+            if (Schema::hasTable('instructions') && Schema::hasColumn('instructions', 'created_by')) {
                 DB::table('instructions')->where('created_by', $user->id)->update(['created_by' => Auth::id()]);
             }
 
-            // Clean related tables
-            if (Schema::hasTable('employee_devices')) {
-                DB::table('employee_devices')->where('user_id', $user->id)->delete();
+            // Clean related tables that have user_id
+            $tablesToClean = [
+                'employee_devices',
+                'check_in_outs',
+                'overtimes',
+                'leaves',
+                'permissions',
+                'penalties',
+                'incentives',
+                'settlements',
+            ];
+
+            foreach ($tablesToClean as $tableName) {
+                if (Schema::hasTable($tableName) && Schema::hasColumn($tableName, 'user_id')) {
+                    DB::table($tableName)->where('user_id', $user->id)->delete();
+                }
             }
-            if (Schema::hasTable('check_in_outs')) {
-                DB::table('check_in_outs')->where('user_id', $user->id)->delete();
-            }
-            if (Schema::hasTable('overtimes')) {
-                DB::table('overtimes')->where('user_id', $user->id)->delete();
-            }
-            if (Schema::hasTable('leaves')) {
-                DB::table('leaves')->where('user_id', $user->id)->delete();
-            }
-            if (Schema::hasTable('permissions')) {
-                DB::table('permissions')->where('user_id', $user->id)->delete();
-            }
-            if (Schema::hasTable('penalties')) {
-                DB::table('penalties')->where('user_id', $user->id)->delete();
-            }
-            if (Schema::hasTable('incentives')) {
-                DB::table('incentives')->where('user_id', $user->id)->delete();
-            }
-            if (Schema::hasTable('admin_notes')) {
-                DB::table('admin_notes')->where('user_id', $user->id)->delete();
-            }
-            if (Schema::hasTable('settlements')) {
-                DB::table('settlements')->where('user_id', $user->id)->delete();
-            }
+
             if (Schema::hasTable('notifications')) {
                 DB::table('notifications')->where('notifiable_id', $user->id)->where('notifiable_type', User::class)->delete();
             }
@@ -617,7 +607,15 @@ class EmployeeProfileController extends Controller
             "Deleted user: {$userName} ({$userEmail}), Role: {$userRole}"
         );
 
-        return redirect()->route('employee_profiles.index')->with('success', "🗑️ تم حذف حساب الموظف «{$userName}» بنجاح وإزالة كافة بياناته.");
+        $redirectParams = array_filter([
+            'page'      => $request->input('return_page'),
+            'job_title' => $request->input('return_job_title'),
+            'user_id'   => $request->input('return_user_id'),
+            'sort_by'   => $request->input('return_sort_by'),
+            'sort_dir'  => $request->input('return_sort_dir'),
+        ]);
+
+        return redirect()->route('employee_profiles.index', $redirectParams)->with('success', "🗑️ تم حذف حساب الموظف «{$userName}» بنجاح وإزالة كافة بياناته.");
     }
 }
 

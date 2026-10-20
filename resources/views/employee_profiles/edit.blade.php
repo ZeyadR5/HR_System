@@ -79,7 +79,8 @@
                                 <option value="Tec" {{ old('job_title', $user->job_title) == 'Tec' ? 'selected' : '' }}>فني</option>
                                 <option value="Acc" {{ old('job_title', $user->job_title) == 'Acc' ? 'selected' : '' }}>حسابات</option>
                                 <option value="Super_V" {{ old('job_title', $user->job_title) == 'Super_V' ? 'selected' : '' }}>اداري</option>
-                                <option value="IT" {{ old('job_title', $user->job_title) == 'IT' ? 'selected' : '' }}>IT</option>
+                                <option value="IT Tecnicall Support" {{ old('job_title', $user->job_title) == 'IT Tecnicall Support' ? 'selected' : '' }}>(IT Tecnicall Support)</option>
+                                <option hidden value="IT Manager" {{ old('job_title', $user->job_title) == 'IT Manager' ? 'selected' : '' }}>(IT Manager)</option>
                                 <option value="Call_Center" {{ old('job_title', $user->job_title) == 'Call_Center' ? 'selected' : '' }}>كول سنتر</option>
                             </select>
                             @error('job_title')

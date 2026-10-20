@@ -128,7 +128,7 @@
                                     <td class="px-4 py-3 fw-semibold text-slate-700">
                                         {{ $user->name }}
                                         @if($isHighlighted)
-                                            <span class="badge bg-warning text-dark ms-2 small">✨ تم تعديله للتو</span>
+                                            <span class="badge bg-warning text-dark ms-2 small">✔</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-muted small">{{ $user->email }}</td>
@@ -203,6 +203,11 @@
             </div>
             <form id="deleteForm" method="POST" action="">
                 @csrf
+                <input type="hidden" name="return_page" value="{{ request('page') }}">
+                <input type="hidden" name="return_job_title" value="{{ request('job_title') }}">
+                <input type="hidden" name="return_user_id" value="{{ request('user_id') }}">
+                <input type="hidden" name="return_sort_by" value="{{ request('sort_by') }}">
+                <input type="hidden" name="return_sort_dir" value="{{ request('sort_dir') }}">
                 <div class="modal-body text-center pt-3 pb-4 px-4">
                     <div class="alert alert-danger py-2 px-3 small border-0 mb-3" style="border-radius: 10px;">
                         ⚠️ <strong>تنبيه هام:</strong> سيتم حذف حساب الموظف وكافة سجلاته وحركاته نهائياً من السيستم. لا يمكن التراجع عن هذه الخطوة!

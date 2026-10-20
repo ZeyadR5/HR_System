@@ -110,7 +110,8 @@
                                     <option value="Tec" {{ old('job_title') == 'Tec' ? 'selected' : '' }}>فني اشعة (Tec)</option>
                                     <option value="Acc" {{ old('job_title') == 'Acc' ? 'selected' : '' }}>حسابات (Acc)</option>
                                     <option value="Super_V" {{ old('job_title') == 'Super_V' ? 'selected' : '' }}>مشرف (Super_V)</option>
-                                    <option value="IT" {{ old('job_title') == 'IT' ? 'selected' : '' }}>تكنولوجيا معلومات (IT)</option>
+                                    <option value="IT" {{ old('job_title') == 'IT' ? 'selected' : '' }}>(IT Tecnicall Support)</option>
+                                    <option value="IT Manager" hidden {{ old('job_title') == 'IT' ? 'selected' : '' }}>(IT Manager)</option>
                                     <option value="Call_Center" {{ old('job_title') == 'Call_Center' ? 'selected' : '' }}>كول سنتر (Call_Center)</option>
                                     <option value="آخر" {{ old('job_title') == 'آخر' ? 'selected' : '' }}>آخر</option>
                                 </select>
