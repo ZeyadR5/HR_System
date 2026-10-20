@@ -55,6 +55,7 @@
                                 'Login' => 'bg-purple-100 text-purple-700',
                                 'Failed Login' => 'bg-red-100 text-red-800 font-bold',
                                 'Logout' => 'bg-gray-100 text-gray-700',
+                                'System Error' => 'bg-red-100 text-red-800 font-bold border border-red-200',
                             ];
                             $color = $actionColors[$log->action] ?? 'bg-gray-100 text-gray-700';
                         @endphp
