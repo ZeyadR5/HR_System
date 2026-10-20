@@ -105,15 +105,15 @@
                                 </label>
                                 <select name="job_title" id="job_title" class="form-select form-select-lg" style="border-radius: 12px; font-size: .95rem;">
                                     <option value="">— اختر المسمى الوظيفي —</option>
-                                    <option value="Rec" {{ old('job_title') == 'Rec' ? 'selected' : '' }}>استقبال (Rec)</option>
+                                    <option value="Res" {{ old('job_title') == 'Res' ? 'selected' : '' }}>استقبال (Res)</option>
                                     <option value="Nur" {{ old('job_title') == 'Nur' ? 'selected' : '' }}>تمريض (Nur)</option>
                                     <option value="Tec" {{ old('job_title') == 'Tec' ? 'selected' : '' }}>فني اشعة (Tec)</option>
                                     <option value="Acc" {{ old('job_title') == 'Acc' ? 'selected' : '' }}>حسابات (Acc)</option>
+                                    <option value="Reporting" {{ old('job_title') == 'Reporting' ? 'selected' : '' }}>Reporting</option>
                                     <option value="Super_V" {{ old('job_title') == 'Super_V' ? 'selected' : '' }}>مشرف (Super_V)</option>
-                                    <option value="IT" {{ old('job_title') == 'IT' ? 'selected' : '' }}>(IT Tecnicall Support)</option>
-                                    <option value="IT Manager" hidden {{ old('job_title') == 'IT' ? 'selected' : '' }}>(IT Manager)</option>
+                                    <option value="IT" {{ old('job_title') == 'IT' ? 'selected' : '' }}>IT Tecnicall Support</option>
+                                    <option hidden value="IT Manager" {{ old('job_title') == 'IT' ? 'selected' : '' }}>(IT Manager)</option>
                                     <option value="Call_Center" {{ old('job_title') == 'Call_Center' ? 'selected' : '' }}>كول سنتر (Call_Center)</option>
-                                    <option value="آخر" {{ old('job_title') == 'آخر' ? 'selected' : '' }}>آخر</option>
                                 </select>
                             </div>
 

@@ -74,13 +74,14 @@
                                     class="form-select form-select-lg @error('job_title') is-invalid @enderror" 
                                     style="border-radius: 10px; font-size: 1rem;">
                                 <option value="" {{ old('job_title', $user->job_title) == '' ? 'selected' : '' }}>اختر الوظيفة...</option>
-                                <option value="Rec" {{ old('job_title', $user->job_title) == 'Rec' ? 'selected' : '' }}>استقبال</option>
+                                <option value="Res" {{ old('job_title', $user->job_title) == 'Res' ? 'selected' : '' }}>استقبال (Res)</option>
                                 <option value="Nur" {{ old('job_title', $user->job_title) == 'Nur' ? 'selected' : '' }}>تمريض</option>
                                 <option value="Tec" {{ old('job_title', $user->job_title) == 'Tec' ? 'selected' : '' }}>فني</option>
                                 <option value="Acc" {{ old('job_title', $user->job_title) == 'Acc' ? 'selected' : '' }}>حسابات</option>
+                                <option value="Reporting" {{ old('job_title', $user->job_title) == 'Reporting' ? 'selected' : '' }}>Reporting</option>
                                 <option value="Super_V" {{ old('job_title', $user->job_title) == 'Super_V' ? 'selected' : '' }}>اداري</option>
-                                <option value="IT Tecnicall Support" {{ old('job_title', $user->job_title) == 'IT Tecnicall Support' ? 'selected' : '' }}>(IT Tecnicall Support)</option>
-                                <option hidden value="IT Manager" {{ old('job_title', $user->job_title) == 'IT Manager' ? 'selected' : '' }}>(IT Manager)</option>
+                                <option value="IT Tecnicall Support" {{ old('job_title', $user->job_title) == 'IT Tecnicall Support' ? 'selected' : '' }}>IT Tecnicall Support</option>
+                                <option hidden value="IT Manager" {{ old('job_title', $user->job_title) == 'IT Manager' ? 'selected' : '' }}>IT Manager</option>
                                 <option value="Call_Center" {{ old('job_title', $user->job_title) == 'Call_Center' ? 'selected' : '' }}>كول سنتر</option>
                             </select>
                             @error('job_title')
