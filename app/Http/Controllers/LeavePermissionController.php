@@ -189,7 +189,7 @@ public function view_leave(Request $request)
     $selectedPeriodStart = $periodStart->format('Y-m-d');
 
     $users = [];
-    if (in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
+    if (Auth::user()->can('leave.view_all')) {
         $users = User::orderBy('name')->get();
         $query = Leave::whereBetween('date', [$periodStart, $periodEnd]);
         if ($request->has('user_id') && $request->user_id) {
@@ -220,7 +220,7 @@ public function view_permission(Request $request)
     $selectedPeriodStart = $periodStart->format('Y-m-d');
 
     $users = [];
-    if (in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
+    if (Auth::user()->can('permission.view_all')) {
         $users = User::orderBy('name')->get();
         $query = Permission::whereBetween('date', [$periodStart, $periodEnd]);
         if ($request->has('user_id') && $request->user_id) {

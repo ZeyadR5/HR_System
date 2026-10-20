@@ -44,7 +44,7 @@
             </div>
         </div>
 
-        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+        @can('overtime.view_all')
         <hr class="my-4 border-default">
         <form action="{{ route('view_Overtime') }}" method="GET" class="flex flex-wrap items-end gap-3">
             <input type="hidden" name="period_start" value="{{ $selectedPeriodStart }}">
@@ -68,9 +68,9 @@
                 </a>
             @endif
         </form>
-        @endif
+        @endcan
 
-        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']) && $olderPendingCount > 0)
+        @if($olderPendingCount > 0)
             <div class="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
                 يوجد {{ $olderPendingCount }} طلب إضافي Pending من فترات أقدم.
                 يمكنك مراجعتها من خلال زر <span class="font-semibold">الدورة السابقة</span>.
@@ -108,13 +108,13 @@
                     <th scope="col" class="px-2 py-2 font-medium">To</th>
                     <th scope="col" class="px-2 py-2 font-medium">Duration</th>
                     <th scope="col" class="px-2 py-2 font-medium">Status</th>
-                    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+                    @can('overtime.approve')
                         <th scope="col" class="px-2 py-2 font-medium">Actions</th>
-                    @endif
+                    @endcan
                     <th class="px-2 py-2 font-medium">Created At</th>
-                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+                    @can('system.view_ip')
                         <th class="px-2 py-2 font-medium">IP Address</th>
-                    @endif
+                    @endcan
                     <th class="px-2 py-2 font-medium">بواسطة</th>
                 </tr>
             </thead>
@@ -169,7 +169,7 @@
                             @endif
                         </td>
                         
-                        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+                        @can('overtime.approve')
                         <td class="px-2 py-2">
                                 @if($item->status === 'pending')
                                     <div class="flex gap-2">
@@ -213,17 +213,17 @@
                                     <span class="text-gray-400 text-xs">Done</span>
                                     @endif
                                 </td>
-                                @endif
+                                @endcan
                                 
                                 <td class="px-2 py-2">
                                     {{ $item->created_at->toDateString() }}
-                                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+                                    @can('system.view_ip')
                                         <br><span class="text-xs text-gray-500">{{ $item->created_at->format('H:i:s') }}</span>
-                                    @endif
+                                    @endcan
                                 </td>
-                                @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+                                @can('system.view_ip')
                                     <td class="px-6 py-4 text-xs text-gray-500" dir="ltr" style="text-align: left;">{{ $item->created_ip ?? '-' }}</td>
-                                @endif
+                                @endcan
                 <td class="px-6 py-4">
                         <span class="inline-flex items-center gap-1 text-xs text-gray-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -258,13 +258,17 @@
                         </span>
                     </td>
                     <td class="px-2 py-2 text-heading">
-                        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+                        @can('overtime.view_totals')
                             @php $sumHours = $monthlyTotals->sum('total'); @endphp
                             {{ (int) round($sumHours * 60) }} دقيقة ({{ round($sumHours, 2) }} ساعة)
                         @else
-                            @php $userTotalHours = $monthlyTotals->first()->total ?? 0; @endphp
-                            {{ (int) round($userTotalHours * 60) }} دقيقة ({{ round($userTotalHours, 2) }} ساعة)
-                        @endif
+                            @if(request('user_id') || !Auth::user()->can('overtime.view_all'))
+                                @php $userTotalHours = $monthlyTotals->first()->total ?? 0; @endphp
+                                {{ (int) round($userTotalHours * 60) }} دقيقة ({{ round($userTotalHours, 2) }} ساعة)
+                            @else
+                                —
+                            @endif
+                        @endcan
                     </td>
                     <td colspan="15"></td>
                 </tr>
@@ -272,7 +276,7 @@
         </table>
     </div>
 
-    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+    @can('overtime.view_totals')
         <div class="relative overflow-x-auto bg-neutral-primary-soft shadow-xs rounded-base border border-default mt-6">
             <div class="px-2 py-2 bg-neutral-secondary-soft border-b border-default flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <h6 class="font-semibold text-heading">
@@ -314,14 +318,15 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="2" class="px-6 py-6 text-center text-body">No accepted overtime in this cycle.</td>
+                            <td colspan="3" class="px-6 py-6 text-center text-body">No accepted overtime in this cycle.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+    @endcan
 
-        @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+    @can('overtime.export')
         <div class="flex justify-end mt-4 mb-8">
             <a href="{{ route('overtime.export', ['period_start' => $selectedPeriodStart]) }}"
                class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg">
@@ -332,8 +337,7 @@
                 Export displayed cycle
             </a>
         </div>
-        @endif
-    @endif
+    @endcan
 </div>
 
 @endsection

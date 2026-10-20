@@ -35,7 +35,7 @@
             </div>
         </div>
 
-        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+        @can('leave.view_all')
         <hr class="my-4 border-default">
         <form action="{{ route('view_leave') }}" method="GET" class="flex flex-wrap items-end gap-3">
             <input type="hidden" name="period_start" value="{{ $selectedPeriodStart }}">
@@ -59,7 +59,7 @@
                 </a>
             @endif
         </form>
-        @endif
+        @endcan
     </div>
 
     <script>
@@ -90,13 +90,13 @@
                     <th class="px-2 py-2 font-medium">Reason</th>
                     <th class="px-2 py-2 font-medium">Substitute</th>
                     <th class="px-2 py-2 font-medium">Status</th>
-                    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+                    @can('leave.approve')
                     <th class="px-2 py-2 font-medium">Actions</th>
-                    @endif
+                    @endcan
                     <th class="px-2 py-2 font-medium">Created At</th>
-                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+                    @can('system.view_ip')
                         <th class="px-2 py-2 font-medium">IP Address</th>
-                    @endif
+                    @endcan
                     <th class="px-2 py-2 font-medium">بواسطة</th>
                 </tr>
             </thead>
@@ -119,7 +119,7 @@
                             <span class="bg-yellow-100 text-yellow-700 text-xs font-medium px-2.5 py-1 rounded-full">قيد المراجعة</span>
                         @endif
                     </td>
-                    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+                    @can('leave.approve')
                     <td class="px-2 py-2">
                         @if($item->status === 'pending')
                         <div class="flex gap-2">
@@ -153,16 +153,16 @@
                     <span class="text-gray-400 text-xs">Done</span>
                     @endif
                 </td>
-                @endif
+                @endcan
                 <td class="px-6 py-4">
                     {{ $item->created_at->toDateString() }}
-                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+                    @can('system.view_ip')
                         <br><span class="text-xs text-gray-500">{{ $item->created_at->format('H:i:s') }}</span>
-                    @endif
+                    @endcan
                 </td>
-                @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+                @can('system.view_ip')
                     <td class="px-6 py-4 text-xs text-gray-500" dir="ltr" style="text-align: left;">{{ $item->created_ip ?? '-' }}</td>
-                @endif
+                @endcan
                     <td class="px-2 py-2">
                         <span class="inline-flex items-center gap-1 text-xs text-gray-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -193,7 +193,15 @@
                         </span>
                     </td>
                     <td colspan="2" class="px-2 py-2 text-heading">
-                        {{ $leaves->where('status', 'accepted')->sum('days_count') }} days
+                        @can('leave.view_totals')
+                            {{ $leaves->where('status', 'accepted')->sum('days_count') }} days
+                        @else
+                            @if(request('user_id') || !Auth::user()->can('leave.view_all'))
+                                {{ $leaves->where('status', 'accepted')->sum('days_count') }} days
+                            @else
+                                —
+                            @endif
+                        @endcan
                     </td>
                     <td colspan="6"></td>
                 </tr>
@@ -201,7 +209,7 @@
         </table>
     </div>
 
-    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+    @can('leave.view_totals')
     <div class="relative overflow-x-auto bg-neutral-primary-soft shadow-xs rounded-base border border-default mt-6">
         <div class="px-2 py-2 bg-neutral-secondary-soft border-b border-default">
             <h6 class="font-semibold text-heading">
@@ -242,8 +250,9 @@
             </tbody>
         </table>
     </div>
+    @endcan
 
-    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+    @can('leave.export')
     <div class="flex justify-end mt-4 mb-8">
         <a href="{{ route('leave.export', ['period_start' => $selectedPeriodStart]) }}"
            class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg">
@@ -253,8 +262,7 @@
             Export displayed cycle
         </a>
     </div>
-    @endif
-    @endif
+    @endcan
 </div>
 
 @endsection

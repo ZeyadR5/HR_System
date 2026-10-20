@@ -25,7 +25,7 @@ class view_Overtime extends Controller
             ->orderByDesc('created_at');
 
         $users = [];
-        if (in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
+        if (Auth::user()->can('overtime.view_all')) {
             $users = User::orderBy('name')->get();
             if ($request->has('user_id') && $request->user_id) {
                 $overtimeQuery->where('user_id', $request->user_id);
@@ -43,7 +43,7 @@ class view_Overtime extends Controller
             ])
             ->where('status', 'accepted');
 
-        if (in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
+        if (Auth::user()->can('overtime.view_all')) {
             if ($request->has('user_id') && $request->user_id) {
                 $monthlyTotalsQuery->where('user_id', $request->user_id);
             }
@@ -57,7 +57,7 @@ class view_Overtime extends Controller
             ->orderByDesc('total')
             ->get();
 
-        $olderPendingCount = in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])
+        $olderPendingCount = Auth::user()->can('overtime.approve')
             ? Overtime::where('status', 'pending')
                 ->whereDate('date', '<', $periodStart->toDateString())
                 ->count()
