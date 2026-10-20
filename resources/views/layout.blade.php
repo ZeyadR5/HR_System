@@ -52,8 +52,10 @@
             -webkit-backdrop-filter: blur(16px);
             color: #fff;
             padding: 0 1.25rem;
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
             z-index: 1000;
             height: 64px;
             display: flex;
@@ -692,30 +694,41 @@
             width: 100%;
             max-width: 100%;
             padding: 14px;
+            padding-top: 80px;
+            padding-bottom: 75px;
             overflow-x: hidden;
-            min-height: calc(100vh - 165px);
+            min-height: 100vh;
         }
 
         .footer-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 990;
             width: 100%;
-            background: #1e3a5f;
-            color: #e2e8f0;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            margin-top: 18px;
+            background: rgba(15, 23, 42, 0.94);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            color: #cbd5e1;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25);
+            margin-top: 0;
         }
 
         .footer-inner {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 14px 16px;
+            padding: 9px 16px;
             text-align: center;
-            font-size: 0.92rem;
-            line-height: 1.8;
+            font-size: 0.85rem;
+            line-height: 1.5;
         }
 
         .footer-inner a {
-            color: #93c5fd;
+            color: #60a5fa;
             text-decoration: none;
+            font-weight: 500;
         }
 
         .footer-inner a:hover {
@@ -725,16 +738,21 @@
         @media (min-width: 768px) {
             .page-content {
                 padding: 20px;
+                padding-top: 84px;
+                padding-bottom: 80px;
             }
         }
 
         @media (max-width: 576px) {
             .page-content {
                 padding: 10px;
+                padding-top: 74px;
+                padding-bottom: 74px;
             }
             .footer-inner {
-                font-size: 0.84rem;
-                padding: 12px 14px;
+                font-size: 0.78rem;
+                padding: 7px 12px;
+                line-height: 1.4;
             }
         }
 
