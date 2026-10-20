@@ -1054,6 +1054,11 @@
             loader.classList.remove('show');
         }
         unlockForms();
+        @if(request()->routeIs('employee_profiles.*'))
+        if (event.persisted) {
+            window.location.reload();
+        }
+        @endif
     });
 
     // --- Local Push Notification Polling ---

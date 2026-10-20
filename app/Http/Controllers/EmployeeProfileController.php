@@ -434,6 +434,10 @@ class EmployeeProfileController extends Controller
             abort(403, 'غير مصرح لك بإضافة موظف');
         }
 
+        if (!session('unlocked_employee_profiles')) {
+            return redirect()->route('employee_profiles.index')->withErrors(['system_password' => 'يُرجى إدخال كلمة مرور النظام أولاً.']);
+        }
+
         // 1. Ensure email is unique by appending a number if it exists
         $email = mb_strtolower(trim($request->email));
         $originalEmail = $email;

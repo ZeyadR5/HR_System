@@ -112,7 +112,7 @@
                                     <option value="Reporting" {{ old('job_title') == 'Reporting' ? 'selected' : '' }}>Reporting</option>
                                     <option value="Super_V" {{ old('job_title') == 'Super_V' ? 'selected' : '' }}>مشرف (Super_V)</option>
                                     <option value="IT" {{ old('job_title') == 'IT' ? 'selected' : '' }}>IT Tecnicall Support</option>
-                                    <option hidden value="IT Manager" {{ old('job_title') == 'IT' ? 'selected' : '' }}>(IT Manager)</option>
+                                    <option hidden value="IT Manager" {{ old('job_title') == 'IT' ? 'selected' : '' }}>IT Manager</option>
                                     <option value="Call_Center" {{ old('job_title') == 'Call_Center' ? 'selected' : '' }}>كول سنتر (Call_Center)</option>
                                 </select>
                             </div>
