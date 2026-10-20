@@ -110,7 +110,7 @@
                                         <div class="input-group">
                                             <input type="number" step="any" min="0" id="salary_amount" name="salary_amount" 
                                                    class="form-control text-center fw-semibold" 
-                                                   value="{{ old('salary_amount') }}" 
+                                                   value="{{ old('salary_amount', $user->salary_amount ? (float)$user->salary_amount : '') }}" 
                                                    placeholder="مثال: 6000"
                                                    style="border-radius: 10px; font-size: 0.95rem;">
                                         </div>
@@ -125,7 +125,7 @@
                                         <div class="input-group">
                                             <input type="number" step="any" min="0" id="working_hours" name="working_hours" 
                                                    class="form-control text-center fw-semibold" 
-                                                   value="{{ old('working_hours') }}" 
+                                                   value="{{ old('working_hours', $user->working_hours ? (float)$user->working_hours : '') }}" 
                                                    placeholder="مثال: 240"
                                                    style="border-radius: 10px; font-size: 0.95rem;">
                                         </div>

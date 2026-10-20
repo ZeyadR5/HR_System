@@ -19,6 +19,12 @@
                         ⚡ إضافة موظف جديد
                     </a>
                     @endcan
+                    <form action="{{ route('employee_profiles.lock_module') }}" method="POST" class="d-inline mb-0">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-secondary px-3 py-2 fw-semibold" style="border-radius: 10px;" title="إعادة قفل ملفات الموظفين">
+                            🔒 قفل
+                        </button>
+                    </form>
                 </div>
 
                 <form action="{{ route('employee_profiles.index') }}" method="GET" class="d-flex gap-2 w-100 w-md-auto align-items-end flex-wrap">
@@ -131,13 +137,13 @@
                                     </td> -->
                                     <td class="px-4 py-3 text-center">
                                         <div class="d-inline-flex align-items-center gap-1">
-                                            <button type="button" class="btn btn-sm btn-outline-info px-3" style="border-radius: 8px;" onclick="openPasswordModal({{ $user->id }}, '{{ addslashes($user->name) }}', 'show')">
+                                            <a href="{{ route('employee_profiles.show', $user->id) }}" class="btn btn-sm btn-outline-info px-3" style="border-radius: 8px;">
                                                 👁️ عرض
-                                            </button>
+                                            </a>
                                             @can('employees.edit_profiles')
-                                            <button type="button" class="btn btn-sm btn-outline-primary px-3" style="border-radius: 8px;" onclick="openPasswordModal({{ $user->id }}, '{{ addslashes($user->name) }}', 'edit')">
+                                            <a href="{{ route('employee_profiles.edit', $user->id) }}" class="btn btn-sm btn-outline-primary px-3" style="border-radius: 8px;">
                                                 ✏️ تعديل
-                                            </button>
+                                            </a>
                                             @if(auth()->id() !== $user->id && !$user->isDeveloper())
                                             <button type="button" class="btn btn-sm btn-outline-danger px-3" style="border-radius: 8px;" onclick="openDeleteModal({{ $user->id }}, '{{ addslashes($user->name) }}')" title="حذف الموظف نهائياً">
                                                 🗑️ حذف
@@ -170,35 +176,6 @@
                 @endif
             </div>
 
-        </div>
-    </div>
-</div>
-
-<!-- Password Modal -->
-<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true" style="display: none;">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg border-0" style="border-radius: 18px; overflow: hidden; background: #ffffff;">
-            <div class="modal-header border-0 pb-0 pt-3 px-4 d-flex justify-content-between align-items-center w-100" style="direction: rtl;">
-                <h5 class="modal-title fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2" id="passwordModalLabel" style="font-size: 1.15rem;">
-                    <span>🔒</span> <span>أمان النظام</span>
-                </h5>
-                <button type="button" class="modal-custom-close" onclick="closePasswordModal()" aria-label="إغلاق">
-                    ✕
-                </button>
-            </div>
-            <form id="passwordForm" method="POST" action="">
-                @csrf
-                <div class="modal-body text-center pt-3 pb-4 px-4">
-                    <p class="text-muted mb-4 fs-6">أدخل كلمة مرور النظام ل<span id="modalActionText">تعديل</span> بروفايل <strong id="modalEmployeeName" class="text-primary"></strong></p>
-                    <div class="form-group text-start">
-                        <input type="password" name="system_password" id="modal_system_password" class="form-control form-control-lg text-center fw-bold" required placeholder="كلمة المرور" style="border-radius: 12px; letter-spacing: 3px; font-size: 1.2rem;">
-                    </div>
-                </div>
-                <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-center gap-2">
-                    <button type="button" class="btn btn-light px-4 fw-semibold" onclick="closePasswordModal()" style="border-radius: 10px; min-width: 90px;">إلغاء</button>
-                    <button type="submit" class="btn btn-primary px-5 fw-bold" style="border-radius: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border: 0; min-width: 140px;">تأكيد الدخول</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
@@ -236,63 +213,6 @@
 </div>
 
 <script>
-    function openPasswordModal(userId, userName, actionType = 'edit') {
-        document.getElementById('modalEmployeeName').innerText = userName;
-        const passInput = document.getElementById('modal_system_password');
-        if (passInput) passInput.value = '';
-
-        if (actionType === 'show') {
-            document.getElementById('modalActionText').innerText = 'عرض';
-            document.getElementById('passwordForm').action = "/employee-profiles/" + userId + "/unlock-show";
-        } else {
-            document.getElementById('modalActionText').innerText = 'تعديل';
-            document.getElementById('passwordForm').action = "/employee-profiles/" + userId + "/unlock-edit";
-        }
-
-        var modalEl = document.getElementById('passwordModal');
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            var myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
-            myModal.show();
-        } else {
-            modalEl.classList.add('show');
-            modalEl.style.display = 'block';
-            modalEl.removeAttribute('aria-hidden');
-            modalEl.setAttribute('aria-modal', 'true');
-            if (!document.querySelector('.modal-backdrop')) {
-                const bd = document.createElement('div');
-                bd.className = 'modal-backdrop fade show';
-                document.body.appendChild(bd);
-            }
-            document.body.classList.add('modal-open');
-        }
-
-        setTimeout(() => { if (passInput) passInput.focus(); }, 300);
-    }
-
-    function closePasswordModal() {
-        var modalEl = document.getElementById('passwordModal');
-        if (!modalEl) return;
-
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            var myModal = bootstrap.Modal.getInstance(modalEl);
-            if (myModal) {
-                myModal.hide();
-            }
-        }
-
-        modalEl.classList.remove('show');
-        modalEl.style.display = 'none';
-        modalEl.setAttribute('aria-hidden', 'true');
-        modalEl.removeAttribute('aria-modal');
-        document.body.classList.remove('modal-open');
-
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(b => b.remove());
-
-        const passInput = document.getElementById('modal_system_password');
-        if (passInput) passInput.value = '';
-    }
-
     function openDeleteModal(userId, userName) {
         document.getElementById('deleteEmployeeName').innerText = userName;
         const passInput = document.getElementById('delete_system_password');
@@ -345,15 +265,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        var modalEl = document.getElementById('passwordModal');
-        if (modalEl) {
-            modalEl.addEventListener('click', function(e) {
-                if (e.target === modalEl) {
-                    closePasswordModal();
-                }
-            });
-        }
-
         var delModalEl = document.getElementById('deleteModal');
         if (delModalEl) {
             delModalEl.addEventListener('click', function(e) {
@@ -365,7 +276,6 @@
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' || e.key === 'Esc') {
-                closePasswordModal();
                 closeDeleteModal();
             }
         });

@@ -160,6 +160,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/super-admin/entry', [SuperAdminEntryController::class, 'store'])->middleware('permission:employees.manual_entry')->name('super_admin.entry.store');
 
     Route::get('/employee-profiles', [EmployeeProfileController::class, 'index'])->middleware('permission:employees.view_profiles')->name('employee_profiles.index');
+    Route::post('/employee-profiles/unlock-module', [EmployeeProfileController::class, 'unlockModule'])->middleware('permission:employees.view_profiles')->name('employee_profiles.unlock_module');
+    Route::post('/employee-profiles/lock-module', [EmployeeProfileController::class, 'lockModule'])->name('employee_profiles.lock_module');
     Route::get('/employee-profiles/create', [EmployeeProfileController::class, 'create'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.create');
     Route::post('/employee-profiles/check-email', [EmployeeProfileController::class, 'checkEmail'])->name('employee_profiles.check_email');
     Route::post('/employee-profiles/store', [EmployeeProfileController::class, 'store'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.store');

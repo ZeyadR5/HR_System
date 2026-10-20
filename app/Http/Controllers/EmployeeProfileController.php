@@ -37,7 +37,7 @@ class EmployeeProfileController extends Controller
         }
 
         // Require system password unlock when viewing other employees' profiles
-        if (Auth::id() != $id && !session('unlocked_show_user_id_' . $id) && session('unlocked_edit_user_id') != $id) {
+        if (Auth::id() != $id && !session('unlocked_employee_profiles')) {
             return redirect()->route('employee_profiles.index')->withErrors(['system_password' => 'يُرجى إدخال كلمة مرور النظام أولاً لعرض بروفايل الموظف.']);
         }
 
@@ -255,7 +255,11 @@ class EmployeeProfileController extends Controller
     public function index(Request $request)
     {
         if (!Auth::user()->can('employees.view_profiles')) {
-            abort(403, 'غير مصرح لك بالوصول ملفات الموظفين');
+            abort(403, 'غير مصرح لك بالوصول لملفات الموظفين');
+        }
+
+        if (!session('unlocked_employee_profiles')) {
+            return view('employee_profiles.unlock');
         }
 
         $query = User::query();
@@ -286,17 +290,16 @@ class EmployeeProfileController extends Controller
         return view('employee_profiles.index', compact('users', 'allUsers', 'jobTitles', 'sortBy', 'sortDir'));
     }
 
-
-    public function unlockShow(Request $request, $id)
+    public function unlockModule(Request $request)
     {
-        if (!Auth::user()->can('employees.view_profiles') && Auth::id() != $id) {
-            abort(403, 'غير مصرح لك باستعراض هذا البروفايل');
+        if (!Auth::user()->can('employees.view_profiles')) {
+            abort(403, 'غير مصرح لك باستعراض ملفات الموظفين');
         }
 
         $request->validate([
             'system_password' => 'required'
         ], [
-            'system_password.required' => 'كلمة مرور النظام مطلوبة'
+            'system_password.required' => 'كلمة مرور النظام مطلوبة للدخول'
         ]);
 
         $correctPassword = Settings::get('system_edit_password', '123456');
@@ -305,33 +308,26 @@ class EmployeeProfileController extends Controller
             return back()->withErrors(['system_password' => 'كلمة مرور النظام غير صحيحة!']);
         }
 
-        // Set session valid for viewing this user ID
-        session(['unlocked_show_user_id_' . $id => true]);
+        session(['unlocked_employee_profiles' => true]);
 
+        return redirect()->route('employee_profiles.index');
+    }
+
+    public function lockModule(Request $request)
+    {
+        session()->forget('unlocked_employee_profiles');
+        return redirect()->route('employee_profiles.index');
+    }
+
+    public function unlockShow(Request $request, $id)
+    {
+        session(['unlocked_employee_profiles' => true]);
         return redirect()->route('employee_profiles.show', $id);
     }
 
     public function unlockEdit(Request $request, $id)
     {
-        if (!Auth::user()->can('employees.edit_profiles')) {
-            abort(403, 'غير مصرح لك بتعديل بروفايل الموظف');
-        }
-
-        $request->validate([
-            'system_password' => 'required'
-        ], [
-            'system_password.required' => 'كلمة مرور النظام مطلوبة'
-        ]);
-
-        $correctPassword = Settings::get('system_edit_password', '123456');
-
-        if ($request->system_password !== $correctPassword) {
-            return back()->withErrors(['system_password' => 'كلمة مرور النظام غير صحيحة!']);
-        }
-
-        // Set session valid for this user ID
-        session(['unlocked_edit_user_id' => $id]);
-
+        session(['unlocked_employee_profiles' => true]);
         return redirect()->route('employee_profiles.edit', $id);
     }
 
@@ -341,8 +337,8 @@ class EmployeeProfileController extends Controller
             abort(403, 'غير مصرح لك بتعديل بروفايل الموظف');
         }
 
-        if (session('unlocked_edit_user_id') != $id) {
-            return redirect()->route('employee_profiles.index')->withErrors(['system_password' => 'يُرجى فك القفل أولاً بالضغط على زر التعديل.']);
+        if (!session('unlocked_employee_profiles')) {
+            return redirect()->route('employee_profiles.index')->withErrors(['system_password' => 'يُرجى إدخال كلمة مرور النظام أولاً للوصول لملفات الموظفين.']);
         }
 
         $user = User::findOrFail($id);
@@ -357,23 +353,27 @@ class EmployeeProfileController extends Controller
             abort(403, 'غير مصرح لك بتعديل بروفايل الموظف');
         }
 
-        if (session('unlocked_edit_user_id') != $id) {
-            return redirect()->route('employee_profiles.index')->withErrors(['system_password' => 'يُرجى فك القفل أولاً بالضغط على زر التعديل.']);
+        if (!session('unlocked_employee_profiles')) {
+            return redirect()->route('employee_profiles.index')->withErrors(['system_password' => 'يُرجى إدخال كلمة مرور النظام أولاً.']);
         }
 
         $user = User::findOrFail($id);
 
         $request->validate([
-            'job_title' => 'nullable|string|max:255',
-            'hourly_rate' => 'required|numeric|min:0',
-            'role' => 'nullable|exists:roles,name'
+            'job_title'     => 'nullable|string|max:255',
+            'hourly_rate'   => 'required|numeric|min:0',
+            'salary_amount' => 'nullable|numeric|min:0',
+            'working_hours' => 'nullable|numeric|min:0',
+            'role'          => 'nullable|exists:roles,name'
         ], [
             'hourly_rate.required' => 'قيمة الساعة مطلوبة',
         ]);
 
         $updateData = [
-            'job_title' => $request->job_title,
-            'hourly_rate' => $request->hourly_rate,
+            'job_title'     => $request->job_title,
+            'hourly_rate'   => $request->hourly_rate,
+            'salary_amount' => $request->filled('salary_amount') ? $request->salary_amount : null,
+            'working_hours' => $request->filled('working_hours') ? $request->working_hours : null,
         ];
 
         if ($request->filled('role') && Auth::user()->role === 'developer') {
@@ -407,6 +407,10 @@ class EmployeeProfileController extends Controller
             abort(403, 'غير مصرح لك بإضافة موظف');
         }
 
+        if (!session('unlocked_employee_profiles')) {
+            return redirect()->route('employee_profiles.index')->withErrors(['system_password' => 'يُرجى إدخال كلمة مرور النظام أولاً.']);
+        }
+
         $roles = \App\Models\Role::orderBy('id')->get();
         return view('employee_profiles.create', compact('roles'));
     }
@@ -436,12 +440,14 @@ class EmployeeProfileController extends Controller
         $request->merge(['email' => $email]);
 
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => 'required|email|unique:users,email',
-            'password'    => 'required|string|min:4',
-            'job_title'   => 'nullable|string|max:255',
-            'hourly_rate' => 'nullable|numeric|min:0',
-            'role'        => 'required|exists:roles,name',
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|unique:users,email',
+            'password'      => 'required|string|min:4',
+            'job_title'     => 'nullable|string|max:255',
+            'hourly_rate'   => 'nullable|numeric|min:0',
+            'salary_amount' => 'nullable|numeric|min:0',
+            'working_hours' => 'nullable|numeric|min:0',
+            'role'          => 'required|exists:roles,name',
         ], [
             'name.required'     => 'اسم الموظف مطلوب.',
             'email.required'    => 'البريد الإلكتروني مطلوب.',
@@ -451,12 +457,14 @@ class EmployeeProfileController extends Controller
         ]);
 
         $user = User::create([
-            'name'        => trim($request->name),
-            'email'       => $email,
-            'password'    => \Illuminate\Support\Facades\Hash::make($request->password),
-            'job_title'   => $request->job_title ?: null,
-            'hourly_rate' => $request->hourly_rate ?: 0,
-            'role'        => $request->role,
+            'name'          => trim($request->name),
+            'email'         => $email,
+            'password'      => \Illuminate\Support\Facades\Hash::make($request->password),
+            'job_title'     => $request->job_title ?: null,
+            'hourly_rate'   => $request->hourly_rate ?: 0,
+            'salary_amount' => $request->filled('salary_amount') ? $request->salary_amount : null,
+            'working_hours' => $request->filled('working_hours') ? $request->working_hours : null,
+            'role'          => $request->role,
         ]);
 
         AuditLog::log(

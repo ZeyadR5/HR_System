@@ -25,6 +25,8 @@ class User extends Authenticatable
         'role',
         'job_title',
         'hourly_rate',
+        'salary_amount',
+        'working_hours',
         'onesignal_id',
         'shift_group_id',
     ];
@@ -49,6 +51,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'salary_amount' => 'decimal:2',
+            'working_hours' => 'decimal:2',
+            'hourly_rate' => 'decimal:2',
         ];
     }
 
