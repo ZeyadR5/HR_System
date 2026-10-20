@@ -105,7 +105,7 @@
                                 </label>
                                 <select name="job_title" id="job_title" class="form-select form-select-lg" style="border-radius: 12px; font-size: .95rem;">
                                     <option value="">— اختر المسمى الوظيفي —</option>
-                                    <option value="Res" {{ old('job_title') == 'Res' ? 'selected' : '' }}>استقبال (Res)</option>
+                                    <option value="Rec" {{ old('job_title') == 'Rec' ? 'selected' : '' }}>استقبال (Rec)</option>
                                     <option value="Nur" {{ old('job_title') == 'Nur' ? 'selected' : '' }}>تمريض (Nur)</option>
                                     <option value="Tec" {{ old('job_title') == 'Tec' ? 'selected' : '' }}>فني اشعة (Tec)</option>
                                     <option value="Acc" {{ old('job_title') == 'Acc' ? 'selected' : '' }}>حسابات (Acc)</option>

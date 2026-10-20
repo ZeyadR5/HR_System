@@ -74,7 +74,7 @@
                                     class="form-select form-select-lg @error('job_title') is-invalid @enderror" 
                                     style="border-radius: 10px; font-size: 1rem;">
                                 <option value="" {{ old('job_title', $user->job_title) == '' ? 'selected' : '' }}>اختر الوظيفة...</option>
-                                <option value="Res" {{ old('job_title', $user->job_title) == 'Res' ? 'selected' : '' }}>استقبال (Res)</option>
+                                <option value="Rec" {{ old('job_title', $user->job_title) == 'Rec' ? 'selected' : '' }}>استقبال (Rec)</option>
                                 <option value="Nur" {{ old('job_title', $user->job_title) == 'Nur' ? 'selected' : '' }}>تمريض</option>
                                 <option value="Tec" {{ old('job_title', $user->job_title) == 'Tec' ? 'selected' : '' }}>فني</option>
                                 <option value="Acc" {{ old('job_title', $user->job_title) == 'Acc' ? 'selected' : '' }}>حسابات</option>

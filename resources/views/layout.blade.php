@@ -902,7 +902,7 @@
 
             <a href="/" class="header-logo">
                 <img src="{{ asset('assets/images/logo.png') }}" alt="Logo" class="header-logo-img">
-                <span>HR</span> System
+                <!-- <span>HR</span> System -->
             </a>
 
             <div class="header-page-tag">
