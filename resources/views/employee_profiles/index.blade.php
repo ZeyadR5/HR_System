@@ -120,8 +120,17 @@
                         </thead>
                         <tbody>
                             @forelse($users as $user)
-                                <tr>
-                                    <td class="px-4 py-3 fw-semibold text-slate-700">{{ $user->name }}</td>
+                                @php
+                                    $queryParams = request()->only(['page', 'job_title', 'user_id', 'sort_by', 'sort_dir']);
+                                    $isHighlighted = session('highlight_user_id') == $user->id;
+                                @endphp
+                                <tr id="user-row-{{ $user->id }}" class="{{ $isHighlighted ? 'table-warning' : '' }}" style="{{ $isHighlighted ? 'background-color: #fef9c3 !important; box-shadow: inset 0 0 0 2px #f59e0b; transition: all 0.5s;' : '' }}">
+                                    <td class="px-4 py-3 fw-semibold text-slate-700">
+                                        {{ $user->name }}
+                                        @if($isHighlighted)
+                                            <span class="badge bg-warning text-dark ms-2 small">✨ تم تعديله للتو</span>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-3 text-muted small">{{ $user->email }}</td>
                                     <td class="px-4 py-3">
                                         @if($user->job_title)
@@ -137,11 +146,11 @@
                                     </td> -->
                                     <td class="px-4 py-3 text-center">
                                         <div class="d-inline-flex align-items-center gap-1">
-                                            <a href="{{ route('employee_profiles.show', $user->id) }}" class="btn btn-sm btn-outline-info px-3" style="border-radius: 8px;">
+                                            <a href="{{ route('employee_profiles.show', array_merge(['id' => $user->id], $queryParams)) }}" class="btn btn-sm btn-outline-info px-3" style="border-radius: 8px;">
                                                 👁️ عرض
                                             </a>
                                             @can('employees.edit_profiles')
-                                            <a href="{{ route('employee_profiles.edit', $user->id) }}" class="btn btn-sm btn-outline-primary px-3" style="border-radius: 8px;">
+                                            <a href="{{ route('employee_profiles.edit', array_merge(['id' => $user->id], $queryParams)) }}" class="btn btn-sm {{ $isHighlighted ? 'btn-primary' : 'btn-outline-primary' }} px-3" style="border-radius: 8px;">
                                                 ✏️ تعديل
                                             </a>
                                             @if(auth()->id() !== $user->id && !$user->isDeveloper())
@@ -279,6 +288,15 @@
                 closeDeleteModal();
             }
         });
+
+        @if(session('highlight_user_id'))
+        setTimeout(function() {
+            var el = document.getElementById('user-row-{{ session('highlight_user_id') }}');
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 150);
+        @endif
     });
 </script>
 

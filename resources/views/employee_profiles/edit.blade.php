@@ -7,8 +7,18 @@
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-6">
             
+            @php
+                $backParams = array_filter([
+                    'page'      => request('page') ?: request('return_page'),
+                    'job_title' => request('job_title') ?: request('return_job_title'),
+                    'user_id'   => request('user_id') ?: request('return_user_id'),
+                    'sort_by'   => request('sort_by') ?: request('return_sort_by'),
+                    'sort_dir'  => request('sort_dir') ?: request('return_sort_dir'),
+                ]);
+                $backUrl = route('employee_profiles.index', $backParams);
+            @endphp
             <div class="mb-4">
-                <a href="{{ route('employee_profiles.index') }}" class="text-decoration-none text-muted small d-flex align-items-center gap-1">
+                <a href="{{ $backUrl }}" class="text-decoration-none text-muted small d-flex align-items-center gap-1">
                     <span>🔙</span> العودة للقائمة
                 </a>
                 <h2 class="fw-bold text-slate-800 mt-2" style="color: #1e293b;">✏️ تعديل بروفايل</h2>
@@ -52,6 +62,11 @@
                 <div class="card-body p-4">
                     <form action="{{ route('employee_profiles.update', $user->id) }}" method="POST">
                         @csrf
+                        <input type="hidden" name="return_page" value="{{ request('page') ?: request('return_page') }}">
+                        <input type="hidden" name="return_job_title" value="{{ request('job_title') ?: request('return_job_title') }}">
+                        <input type="hidden" name="return_user_id" value="{{ request('user_id') ?: request('return_user_id') }}">
+                        <input type="hidden" name="return_sort_by" value="{{ request('sort_by') ?: request('return_sort_by') }}">
+                        <input type="hidden" name="return_sort_dir" value="{{ request('sort_dir') ?: request('return_sort_dir') }}">
                         
                         <div class="mb-4">
                             <label for="job_title" class="form-label fw-bold text-slate-700">الوظيفة (المسمى الوظيفي)</label>
@@ -169,7 +184,7 @@
                             <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm" style="border-radius: 12px; background: #2563eb; border: none; padding: 12px;">
                                 ✅ حفظ التعديلات
                             </button>
-                            <a href="{{ route('employee_profiles.index') }}" class="btn btn-light btn-lg fw-semibold" style="border-radius: 12px; padding: 12px;">
+                            <a href="{{ $backUrl }}" class="btn btn-light btn-lg fw-semibold" style="border-radius: 12px; padding: 12px;">
                                 إلغاء
                             </a>
                         </div>

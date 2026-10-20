@@ -8,8 +8,18 @@
         <div class="col-12 col-lg-10">
 
             @if(in_array(Auth::user()->role, ['super_admin', 'developer']) || Auth::user()->role === 'admin')
+                @php
+                    $backParams = array_filter([
+                        'page'      => request('page') ?: request('return_page'),
+                        'job_title' => request('job_title') ?: request('return_job_title'),
+                        'user_id'   => request('user_id') ?: request('return_user_id'),
+                        'sort_by'   => request('sort_by') ?: request('return_sort_by'),
+                        'sort_dir'  => request('sort_dir') ?: request('return_sort_dir'),
+                    ]);
+                    $backUrl = route('employee_profiles.index', $backParams);
+                @endphp
                 <div class="mb-3">
-                    <a href="{{ route('employee_profiles.index') }}" class="btn btn-light btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 fw-semibold border shadow-xs" style="background: #ffffff; color: #1e293b; border-color: #cbd5e1 !important;">
+                    <a href="{{ $backUrl }}" class="btn btn-light btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 fw-semibold border shadow-xs" style="background: #ffffff; color: #1e293b; border-color: #cbd5e1 !important;">
                         <span>⬅️</span>
                         <span>العودة لصفحة الموظفين</span>
                     </a>

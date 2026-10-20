@@ -395,7 +395,17 @@ class EmployeeProfileController extends Controller
             "Job: {$request->job_title}, Rate: {$request->hourly_rate}{$calcDetails}" . (isset($updateData['role']) ? ", Role: {$updateData['role']}" : "")
         );
 
-        return redirect()->route('employee_profiles.index')->with('success', "✅ تم تحديث بروفايل {$user->name} بنجاح!");
+        $redirectParams = array_filter([
+            'page'      => $request->input('return_page'),
+            'job_title' => $request->input('return_job_title'),
+            'user_id'   => $request->input('return_user_id'),
+            'sort_by'   => $request->input('return_sort_by'),
+            'sort_dir'  => $request->input('return_sort_dir'),
+        ]);
+
+        return redirect()->route('employee_profiles.index', $redirectParams)
+            ->with('success', "✅ تم تحديث بروفايل {$user->name} بنجاح!")
+            ->with('highlight_user_id', $user->id);
     }
 
     /**
