@@ -154,10 +154,15 @@ class User extends Authenticatable
      */
     public function documentFilesOf(string $type)
     {
-        return $this->documentFiles
-            ->where('type', $type)
-            ->filter(fn ($doc) => $doc->exists())
-            ->values();
+        try {
+            return $this->documentFiles
+                ->where('type', $type)
+                ->filter(fn ($doc) => $doc->exists())
+                ->values();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('documentFilesOf fallback: ' . $e->getMessage());
+            return collect();
+        }
     }
 
     /**
