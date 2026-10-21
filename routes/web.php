@@ -83,6 +83,7 @@ Route::middleware(['auth'])->group(function () {
 
     // بروفايلي الشخصي
     Route::get('/my-profile', [EmployeeProfileController::class, 'myProfile'])->name('my_profile');
+    Route::post('/my-profile/update-picture', [EmployeeProfileController::class, 'updateMyProfilePicture'])->name('my_profile.update_picture');
 
     // صفحة الإشعارات
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -171,6 +172,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/employee-profiles/{id}/edit', [EmployeeProfileController::class, 'edit'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.edit');
     Route::post('/employee-profiles/{id}/update', [EmployeeProfileController::class, 'update'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.update');
     Route::post('/employee-profiles/{id}/delete', [EmployeeProfileController::class, 'destroy'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.destroy');
+    Route::get('/employee-profiles/{id}/document/{type}', [EmployeeProfileController::class, 'viewDocument'])->name('employee_profiles.document');
 
     // ---------- التقارير والسجلات ----------
     Route::get('/audit-log', [AuditController::class, 'index'])->middleware('permission:reports.audit_log')->name('audit_log');

@@ -26,13 +26,57 @@
                 </div>
             @endif
 
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-xs mb-3 border-0 d-flex align-items-center justify-content-between" role="alert" style="background: #dcfce7; color: #166534;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span>✅</span>
+                        <span class="fw-semibold">{{ session('success') }}</span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-xs mb-3 border-0 d-flex align-items-center justify-content-between" role="alert" style="background: #fee2e2; color: #991b1b;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span>⚠️</span>
+                        <span class="fw-semibold">{{ session('error') }}</span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-xs mb-3 border-0" role="alert" style="background: #fee2e2; color: #991b1b;">
+                    <ul class="mb-0 ps-3">
+                        @foreach($errors->all() as $err)
+                            <li class="fw-semibold">{{ $err }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
             {{-- 1. Employee Header & Annual Leave Balance Banner --}}
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff;">
                 <div class="card-body p-4">
                     <div class="row align-items-center g-4">
                         <div class="col-12 col-md-6 d-flex align-items-center gap-3">
-                            <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-25 rounded-circle p-3 text-primary border border-primary border-opacity-25" style="width: 75px; height: 75px; flex-shrink: 0;">
-                                <span style="font-size: 2.5rem;">👤</span>
+                            <div class="position-relative d-inline-block" style="width: 80px; height: 80px; flex-shrink: 0;">
+                                <div class="rounded-circle overflow-hidden border border-2 border-white shadow-sm d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                                    @if($user->profile_picture)
+                                        <img src="{{ $user->profile_picture_url }}" alt="{{ $user->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    @else
+                                        <span class="text-white fw-bold" style="font-size: 2rem;">{{ mb_substr($user->name, 0, 1) }}</span>
+                                    @endif
+                                </div>
+
+                                @if(Auth::id() === $user->id)
+                                    {{-- Employee self-update picture button --}}
+                                    <button type="button" class="btn btn-primary btn-sm rounded-circle position-absolute bottom-0 end-0 p-0 d-flex align-items-center justify-content-center shadow" style="width: 28px; height: 28px; border: 2px solid #1e293b;" title="تحديث صورتي الشخصية" data-bs-toggle="modal" data-bs-target="#updatePictureModal">
+                                        <span style="font-size: 0.8rem;">📷</span>
+                                    </button>
+                                @endif
                             </div>
                             <div>
                                 <h3 class="fw-bold mb-1 text-white">{{ $user->name }}</h3>
@@ -71,6 +115,134 @@
                     </div>
                 </div>
             </div>
+
+            {{-- 1.5. Official Employee Documents Section (الوثائق والأوراق الرسمية) --}}
+            @if(Auth::id() === $user->id || Auth::user()->can('employees.view_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px; background: #ffffff;">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4">📁</span>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark">الأوراق والوثائق الرسمية</h5>
+                            <small class="text-muted">مستندات الموظف الرسمية والمرفوعة والمعتمدة من قِبل إدارة الموارد البشرية (HR)</small>
+                        </div>
+                    </div>
+                    @if(Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
+                        <a href="{{ route('employee_profiles.edit', $user->id) }}#documents-section" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1.5 d-inline-flex align-items-center gap-2 fw-semibold">
+                            <span>✏️</span>
+                            <span>إدارة / رفع الوثائق</span>
+                        </a>
+                    @endif
+                </div>
+                <div class="card-body p-4">
+                    @php
+                        $docsList = [
+                            'national_id_card' => [
+                                'title' => 'بطاقة الرقم القومي',
+                                'icon'  => '🪪',
+                                'desc'  => 'صورة بطاقة الرقم القومي (سارية)',
+                                'color' => '#3b82f6',
+                                'bg'    => '#eff6ff',
+                            ],
+                            'qualification_certificate' => [
+                                'title' => 'صورة المؤهل الدراسي',
+                                'icon'  => '🎓',
+                                'desc'  => 'شهادة التخرج أو المؤهل الدراسي',
+                                'color' => '#10b981',
+                                'bg'    => '#ecfdf5',
+                            ],
+                            'other_document' => [
+                                'title' => 'وثائق ومستندات أخرى',
+                                'icon'  => '📑',
+                                'desc'  => 'عقد العمل، شهادات خبرة أو أوراق إضافية',
+                                'color' => '#8b5cf6',
+                                'bg'    => '#f5f3ff',
+                            ],
+                        ];
+                    @endphp
+
+                    <div class="row g-3">
+                        @foreach($docsList as $docKey => $docMeta)
+                            @php
+                                $isUploaded = $user->hasDocument($docKey);
+                                $ext = $isUploaded ? $user->documentExtension($docKey) : null;
+                                $isImg = $isUploaded ? $user->isDocumentImage($docKey) : false;
+                                $isPdf = $isUploaded ? $user->isDocumentPdf($docKey) : false;
+                            @endphp
+                            <div class="col-12 col-md-4">
+                                <div class="card h-100 border transition-all" style="border-radius: 16px; border-color: {{ $isUploaded ? '#e2e8f0' : '#f1f5f9' }} !important; background: {{ $isUploaded ? '#ffffff' : '#fafafa' }};">
+                                    <div class="card-body p-3 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                                <div class="d-inline-flex align-items-center justify-content-center rounded-3 p-2" style="background: {{ $docMeta['bg'] }}; color: {{ $docMeta['color'] }}; font-size: 1.5rem; width: 45px; height: 45px;">
+                                                    {{ $docMeta['icon'] }}
+                                                </div>
+                                                @if($isUploaded)
+                                                    <span class="badge bg-success-subtle text-success px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;">
+                                                        ✅ مرفوع ({{ strtoupper($ext) }})
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-light text-muted border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;">
+                                                        ⏳ غير متوفر
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <h6 class="fw-bold text-dark mb-1">{{ $docMeta['title'] }}</h6>
+                                            <p class="text-muted small mb-3" style="font-size: 0.82rem; min-height: 38px;">{{ $docMeta['desc'] }}</p>
+
+                                            @if($isUploaded && $isImg)
+                                                <div class="mb-3 text-center rounded-3 overflow-hidden border bg-light position-relative" style="height: 120px;">
+                                                    <a href="{{ route('employee_profiles.document', [$user->id, $docKey]) }}" target="_blank" title="اضغط للمعاينة الكاملة">
+                                                        <img src="{{ route('employee_profiles.document', [$user->id, $docKey]) }}" alt="{{ $docMeta['title'] }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                                    </a>
+                                                </div>
+                                            @elseif($isUploaded && $isPdf)
+                                                <div class="mb-3 text-center rounded-3 p-3 border bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center gap-2" style="height: 120px;">
+                                                    <span style="font-size: 2.5rem;">📕</span>
+                                                    <span class="fw-bold small">مستند بصيغة PDF</span>
+                                                </div>
+                                            @elseif(!$isUploaded)
+                                                <div class="mb-3 text-center rounded-3 p-3 border border-dashed text-muted d-flex flex-column align-items-center justify-content-center" style="height: 120px; background: #f8fafc;">
+                                                    <span class="fs-4 opacity-50">📭</span>
+                                                    <span class="extra-small text-muted mt-1" style="font-size: 0.75rem;">لم يتم رفع هذا الملف</span>
+                                                    <span class="extra-small text-muted opacity-75" style="font-size: 0.7rem;">(يُرفع حصراً بواسطة HR)</span>
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        @if($isUploaded)
+                                            <div class="d-flex gap-2 mt-2 pt-2 border-top">
+                                                <a href="{{ route('employee_profiles.document', [$user->id, $docKey]) }}" target="_blank" class="btn btn-light btn-sm flex-fill rounded-pill d-inline-flex align-items-center justify-content-center gap-1 text-primary fw-semibold border shadow-xs" style="font-size: 0.8rem;">
+                                                    <span>👁️</span>
+                                                    <span>معاينة</span>
+                                                </a>
+                                                <a href="{{ route('employee_profiles.document', [$user->id, $docKey]) }}?download=1" class="btn btn-primary btn-sm flex-fill rounded-pill d-inline-flex align-items-center justify-content-center gap-1 fw-semibold shadow-xs" style="font-size: 0.8rem;">
+                                                    <span>📥</span>
+                                                    <span>تحميل</span>
+                                                </a>
+                                            </div>
+                                        @else
+                                            <div class="mt-2 pt-2 border-top text-center">
+                                                @if(Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
+                                                    <a href="{{ route('employee_profiles.edit', $user->id) }}#documents-section" class="btn btn-outline-secondary btn-sm w-100 rounded-pill d-inline-flex align-items-center justify-content-center gap-1" style="font-size: 0.8rem;">
+                                                        <span>📤</span>
+                                                        <span>رفع الملف الآن</span>
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted extra-small d-block py-1" style="font-size: 0.78rem;">
+                                                        🔒 متاح الرفع للإدارة فقط
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
 
             {{-- 2. Calendar / Month Navigation Control --}}
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; background: #ffffff;">
@@ -474,4 +646,61 @@
         });
     });
 </script>
+
+@if(Auth::id() === $user->id)
+{{-- Modal: Update My Profile Picture --}}
+<div class="modal fade" id="updatePictureModal" tabindex="-1" aria-labelledby="updatePictureModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-header border-0 text-white" style="background: linear-gradient(135deg, #1e293b, #0f172a);">
+                <h5 class="modal-title fw-bold" id="updatePictureModalLabel">
+                    <span>📷</span>
+                    <span>تحديث صورتي الشخصية</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('my_profile.update_picture') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body p-4 text-center">
+                    <p class="text-muted small mb-3">يمكنك اختيار صورة شخصية جديدة لبروفايلك (JPG, PNG, WEBP - بحد أقصى 5 ميجابايت).</p>
+
+                    <div class="mb-4 d-flex justify-content-center">
+                        <div class="position-relative" style="width: 120px; height: 120px;">
+                            <img id="myAvatarPreviewImg" src="{{ $user->profile_picture_url }}" alt="معاينة الصورة" class="rounded-circle border border-3 border-primary shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">
+                        </div>
+                    </div>
+
+                    <div class="mb-3 text-start">
+                        <label for="myProfilePictureInput" class="form-label fw-bold small text-dark">اختر الصورة الجديدة:</label>
+                        <input type="file" name="profile_picture" id="myProfilePictureInput" class="form-control" accept="image/png, image/jpeg, image/jpg, image/webp" required onchange="previewMyAvatar(this)">
+                        <small class="text-muted d-block mt-1">يُفضل استخدام صورة مربعة واضحة الملامح.</small>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 px-4 py-3 d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
+                        <span>💾</span>
+                        <span>حفظ وتحديث الصورة</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewMyAvatar(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('myAvatarPreviewImg');
+                if (img) {
+                    img.src = e.target.result;
+                }
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+@endif
 @endsection

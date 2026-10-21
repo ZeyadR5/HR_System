@@ -27,6 +27,10 @@ class User extends Authenticatable
         'hourly_rate',
         'salary_amount',
         'working_hours',
+        'profile_picture',
+        'national_id_card',
+        'qualification_certificate',
+        'other_document',
         'onesignal_id',
         'shift_group_id',
     ];
@@ -124,5 +128,65 @@ class User extends Authenticatable
             \Illuminate\Support\Facades\Log::error('Notification Error: ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Get user's avatar image URL or fallback to initial avatar.
+     */
+    public function getProfilePictureUrlAttribute(): string
+    {
+        if ($this->profile_picture && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->profile_picture)) {
+            return asset('storage/' . $this->profile_picture);
+        }
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=0284c7&color=ffffff&bold=true';
+    }
+
+    /**
+     * Get document path for a specific type.
+     */
+    public function documentPath(string $type): ?string
+    {
+        return match($type) {
+            'national_id_card' => $this->national_id_card,
+            'qualification_certificate' => $this->qualification_certificate,
+            'other_document' => $this->other_document,
+            default => null,
+        };
+    }
+
+    /**
+     * Check if document exists on disk.
+     */
+    public function hasDocument(string $type): bool
+    {
+        $path = $this->documentPath($type);
+        return !empty($path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($path);
+    }
+
+    /**
+     * Get document file extension or type (pdf/image).
+     */
+    public function documentExtension(string $type): ?string
+    {
+        $path = $this->documentPath($type);
+        if (!$path) return null;
+        return strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    }
+
+    /**
+     * Check if document is an image.
+     */
+    public function isDocumentImage(string $type): bool
+    {
+        $ext = $this->documentExtension($type);
+        return in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif']);
+    }
+
+    /**
+     * Check if document is a PDF.
+     */
+    public function isDocumentPdf(string $type): bool
+    {
+        return $this->documentExtension($type) === 'pdf';
     }
 }

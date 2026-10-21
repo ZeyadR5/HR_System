@@ -54,7 +54,7 @@
             <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 20px; background: #fff;">
                 <div class="card-body p-4 p-md-5">
                     
-                    <form action="{{ route('employee_profiles.store') }}" method="POST" id="create-user-form">
+                    <form action="{{ route('employee_profiles.store') }}" method="POST" id="create-user-form" enctype="multipart/form-data">
                         @csrf
 
                         {{-- 1. اسم الموظف --}}
@@ -139,6 +139,37 @@
                                     </option>
                                 @endforeach
                             </select>
+                        </div>
+
+                        {{-- 5. صورة البروفايل ووثائق الموظف (اختياري عند الإنشاء) --}}
+                        <div class="card border-0 mb-4" style="border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
+                            <div class="card-body p-3">
+                                <label class="form-label fw-bold text-slate-800 mb-2" style="font-size: .95rem;">
+                                    📁 صورة البروفايل وأوراق الموظف (اختياري)
+                                </label>
+                                <p class="text-muted extra-small mb-3" style="font-size: 0.78rem;">
+                                    يمكنك رفع صورة البروفايل والوثائق الرسمية الآن أو إضافتها لاحقاً من صفحة التعديل.
+                                </p>
+
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label small fw-semibold text-slate-700 mb-1">👤 صورة البروفايل:</label>
+                                        <input type="file" name="profile_picture" accept="image/*" class="form-control form-control-sm" style="border-radius: 8px;">
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label small fw-semibold text-slate-700 mb-1">🪪 صورة البطاقة:</label>
+                                        <input type="file" name="national_id_card" accept="image/*,.pdf" class="form-control form-control-sm" style="border-radius: 8px;">
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label small fw-semibold text-slate-700 mb-1">🎓 صورة المؤهل:</label>
+                                        <input type="file" name="qualification_certificate" accept="image/*,.pdf" class="form-control form-control-sm" style="border-radius: 8px;">
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label small fw-semibold text-slate-700 mb-1">📑 وثيقة أخرى:</label>
+                                        <input type="file" name="other_document" accept="image/*,.pdf" class="form-control form-control-sm" style="border-radius: 8px;">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- 5. كارت المعاينة الفورية --}}

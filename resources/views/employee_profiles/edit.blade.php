@@ -60,7 +60,7 @@
 
             <div class="card border-0 shadow-sm" style="border-radius: 16px;">
                 <div class="card-body p-4">
-                    <form action="{{ route('employee_profiles.update', $user->id) }}" method="POST">
+                    <form action="{{ route('employee_profiles.update', $user->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="return_page" value="{{ request('page') ?: request('return_page') }}">
                         <input type="hidden" name="return_job_title" value="{{ request('job_title') ?: request('return_job_title') }}">
@@ -177,6 +177,211 @@
                                         الحاسبة جاهزة
                                     </span>
                                 </div>
+                            </div>
+                        </div>
+
+                        {{-- قسم صورة البروفايل --}}
+                        <div class="card border-0 mb-4" style="border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
+                            <div class="card-body p-3">
+                                <label class="form-label fw-bold text-slate-800 d-flex align-items-center justify-content-between mb-3" style="font-size: 0.95rem;">
+                                    <span class="d-flex align-items-center gap-2">
+                                        <span>👤</span> صورة البروفايل الشخصية للموظف
+                                    </span>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" style="font-size: 0.72rem;">
+                                        الظهور في النظام
+                                    </span>
+                                </label>
+
+                                <div class="d-flex align-items-center gap-3 mb-3 p-2 bg-white rounded-3 border">
+                                    <div style="width: 60px; height: 60px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 2px solid #e2e8f0;">
+                                        <img src="{{ $user->profile_picture_url }}" alt="{{ $user->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        @if($user->profile_picture && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->profile_picture))
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                    ✅ صورة مخصصة مرفوعة
+                                                </span>
+                                                <a href="{{ route('employee_profiles.document', [$user->id, 'profile_picture']) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.8rem;">
+                                                    👁️ عرض
+                                                </a>
+                                            </div>
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" name="delete_profile_picture" value="1" id="delete_profile_picture">
+                                                <label class="form-check-label text-danger small" for="delete_profile_picture">
+                                                    🗑️ حذف الصورة الحالية والعودة للأيقونة الافتراضية
+                                                </label>
+                                            </div>
+                                        @else
+                                            <span class="badge bg-light text-muted border">
+                                                الأيقونة الافتراضية بالحرف الأول
+                                            </span>
+                                            <div class="text-muted extra-small mt-1" style="font-size: 0.75rem;">لم يتم رفع صورة شخصية حتى الآن.</div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="profile_picture" class="form-label small fw-semibold text-slate-700 mb-1">
+                                        {{ $user->profile_picture ? 'استبدال الصورة الحالية:' : 'رفع صورة البروفايل:' }}
+                                    </label>
+                                    <input type="file" name="profile_picture" id="profile_picture" accept="image/png,image/jpeg,image/webp,image/jpg"
+                                           class="form-control @error('profile_picture') is-invalid @enderror" style="border-radius: 10px; font-size: 0.9rem;">
+                                    <div class="form-text extra-small text-muted" style="font-size: 0.75rem;">الامتدادات المدعومة: JPG, PNG, WEBP (الحد الأقصى 5 ميجابايت). يمكن للموظف أيضاً تعديل صورته بنفسه من بروفايله.</div>
+                                    @error('profile_picture')
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- قسم أوراق وملفات الموظف (وثائق الـ HR الرسمية) --}}
+                        <div class="card border-0 mb-4" id="documents-section" style="border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <label class="form-label fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2" style="font-size: 0.95rem;">
+                                        <span>📁</span> أوراق وملفات الموظف الرسمية (خاص بالـ HR)
+                                    </label>
+                                    <span class="badge bg-secondary-subtle text-secondary border px-2 py-1" style="font-size: 0.72rem;">
+                                        🔒 للموظف حق العرض فقط
+                                    </span>
+                                </div>
+                                <p class="text-muted extra-small mb-3" style="font-size: 0.78rem;">
+                                    هذه الملفات يرفعها ويتحكم فيها مسؤولو الموارد البشرية فقط، وتظهر للموظف في بروفايله الشخصي للاطلاع والتحميل فقط دون إمكانية التعديل.
+                                </p>
+
+                                {{-- 1. بطاقة الرقم القومي --}}
+                                <div class="p-3 bg-white rounded-3 border mb-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="fw-bold text-slate-700 small d-flex align-items-center gap-2">
+                                            <span>🪪</span> صورة بطاقة الرقم القومي
+                                        </span>
+                                        @if($user->hasDocument('national_id_card'))
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
+                                                ✅ مرفوعة ({{ strtoupper($user->documentExtension('national_id_card')) }})
+                                            </span>
+                                        @else
+                                            <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.75rem;">
+                                                لم تُرفع بعد
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    @if($user->hasDocument('national_id_card'))
+                                        <div class="d-flex align-items-center gap-2 mb-2 p-2 bg-light rounded-2 flex-wrap">
+                                            <a href="{{ route('employee_profiles.document', [$user->id, 'national_id_card']) }}" target="_blank" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
+                                                <span>👁️</span> معاينة البطاقة
+                                            </a>
+                                            <a href="{{ route('employee_profiles.document', [$user->id, 'national_id_card']) }}?download=1" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
+                                                <span>📥</span> تحميل
+                                            </a>
+                                            <div class="form-check ms-auto mb-0">
+                                                <input class="form-check-input" type="checkbox" name="delete_national_id_card" value="1" id="del_id_card">
+                                                <label class="form-check-label text-danger small" for="del_id_card" style="font-size: 0.78rem;">
+                                                    🗑️ حذف
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <label class="form-label extra-small text-muted mb-1" style="font-size: 0.75rem;">
+                                        {{ $user->hasDocument('national_id_card') ? 'استبدال بملف جديد:' : 'اختيار ملف البطاقة:' }}
+                                    </label>
+                                    <input type="file" name="national_id_card" accept="image/*,.pdf" class="form-control form-control-sm @error('national_id_card') is-invalid @enderror" style="border-radius: 8px;">
+                                    <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 10 ميجا).</div>
+                                    @error('national_id_card')
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                {{-- 2. صورة المؤهل الدراسي --}}
+                                <div class="p-3 bg-white rounded-3 border mb-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="fw-bold text-slate-700 small d-flex align-items-center gap-2">
+                                            <span>🎓</span> صورة المؤهل الدراسي / الشهادة
+                                        </span>
+                                        @if($user->hasDocument('qualification_certificate'))
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
+                                                ✅ مرفوعة ({{ strtoupper($user->documentExtension('qualification_certificate')) }})
+                                            </span>
+                                        @else
+                                            <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.75rem;">
+                                                لم تُرفع بعد
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    @if($user->hasDocument('qualification_certificate'))
+                                        <div class="d-flex align-items-center gap-2 mb-2 p-2 bg-light rounded-2 flex-wrap">
+                                            <a href="{{ route('employee_profiles.document', [$user->id, 'qualification_certificate']) }}" target="_blank" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
+                                                <span>👁️</span> معاينة المؤهل
+                                            </a>
+                                            <a href="{{ route('employee_profiles.document', [$user->id, 'qualification_certificate']) }}?download=1" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
+                                                <span>📥</span> تحميل
+                                            </a>
+                                            <div class="form-check ms-auto mb-0">
+                                                <input class="form-check-input" type="checkbox" name="delete_qualification_certificate" value="1" id="del_qual">
+                                                <label class="form-check-label text-danger small" for="del_qual" style="font-size: 0.78rem;">
+                                                    🗑️ حذف
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <label class="form-label extra-small text-muted mb-1" style="font-size: 0.75rem;">
+                                        {{ $user->hasDocument('qualification_certificate') ? 'استبدال بملف جديد:' : 'اختيار ملف المؤهل:' }}
+                                    </label>
+                                    <input type="file" name="qualification_certificate" accept="image/*,.pdf" class="form-control form-control-sm @error('qualification_certificate') is-invalid @enderror" style="border-radius: 8px;">
+                                    <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 10 ميجا).</div>
+                                    @error('qualification_certificate')
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                {{-- 3. وثائق أخرى --}}
+                                <div class="p-3 bg-white rounded-3 border">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="fw-bold text-slate-700 small d-flex align-items-center gap-2">
+                                            <span>📑</span> وثائق وملفات أخرى (عقد العمل / شهادات / إلخ)
+                                        </span>
+                                        @if($user->hasDocument('other_document'))
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
+                                                ✅ مرفوعة ({{ strtoupper($user->documentExtension('other_document')) }})
+                                            </span>
+                                        @else
+                                            <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.75rem;">
+                                                لم تُرفع بعد
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    @if($user->hasDocument('other_document'))
+                                        <div class="d-flex align-items-center gap-2 mb-2 p-2 bg-light rounded-2 flex-wrap">
+                                            <a href="{{ route('employee_profiles.document', [$user->id, 'other_document']) }}" target="_blank" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
+                                                <span>👁️</span> معاينة الوثيقة
+                                            </a>
+                                            <a href="{{ route('employee_profiles.document', [$user->id, 'other_document']) }}?download=1" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
+                                                <span>📥</span> تحميل
+                                            </a>
+                                            <div class="form-check ms-auto mb-0">
+                                                <input class="form-check-input" type="checkbox" name="delete_other_document" value="1" id="del_other">
+                                                <label class="form-check-label text-danger small" for="del_other" style="font-size: 0.78rem;">
+                                                    🗑️ حذف
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <label class="form-label extra-small text-muted mb-1" style="font-size: 0.75rem;">
+                                        {{ $user->hasDocument('other_document') ? 'استبدال بملف جديد:' : 'اختيار ملف آخر:' }}
+                                    </label>
+                                    <input type="file" name="other_document" accept="image/*,.pdf" class="form-control form-control-sm @error('other_document') is-invalid @enderror" style="border-radius: 8px;">
+                                    <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 10 ميجا).</div>
+                                    @error('other_document')
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
                             </div>
                         </div>
 

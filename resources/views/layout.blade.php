@@ -299,6 +299,7 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+            overflow: hidden;
         }
 
         .header-user-info {
@@ -467,6 +468,7 @@
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
             border: 2px solid rgba(255, 255, 255, 0.15);
             flex-shrink: 0;
+            overflow: hidden;
         }
 
         .sidepanel-user-meta {
@@ -952,7 +954,11 @@
             {{-- User Pill (Click to open Side Panel) --}}
             <button type="button" class="header-user-btn" id="headerUserBtn" title="ملفك الشخصي والقائمة">
                 <div class="header-avatar">
-                    {{ mb_substr(Auth::user()->name, 0, 1) }}
+                    @if(Auth::user()->profile_picture)
+                        <img src="{{ Auth::user()->profile_picture_url }}" alt="{{ Auth::user()->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    @else
+                        {{ mb_substr(Auth::user()->name, 0, 1) }}
+                    @endif
                 </div>
                 <div class="header-user-info">
                     <span class="header-user-name">{{ Auth::user()->name }}</span>
@@ -998,7 +1004,11 @@
         {{-- User Identity Card --}}
         <div class="sidepanel-user-card">
             <div class="sidepanel-user-avatar">
-                {{ mb_substr(Auth::user()->name, 0, 1) }}
+                @if(Auth::user()->profile_picture)
+                    <img src="{{ Auth::user()->profile_picture_url }}" alt="{{ Auth::user()->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                @else
+                    {{ mb_substr(Auth::user()->name, 0, 1) }}
+                @endif
             </div>
             <div class="sidepanel-user-meta">
                 <h5>{{ Auth::user()->name }}</h5>
@@ -1009,11 +1019,11 @@
             </a>
         </div>
 
-        {{-- Real-time Quick Search Bar --}}
+        <!-- {{-- Real-time Quick Search Bar --}}
         <div class="sidepanel-search-box">
             <span class="sidepanel-search-icon">🔍</span>
             <input type="text" id="sidepanelSearch" class="sidepanel-search-input" placeholder="ابحث في أقسام القائمة..." autocomplete="off">
-        </div>
+        </div> -->
     </div>
 
     {{-- Panel Body (Categorized Menu Links) --}}

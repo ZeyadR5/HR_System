@@ -12,6 +12,7 @@ use App\Models\Penalty;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use App\Support\PayrollPeriod;
 use App\Support\Settings;
 use Carbon\Carbon;
@@ -360,13 +361,25 @@ class EmployeeProfileController extends Controller
         $user = User::findOrFail($id);
 
         $request->validate([
-            'job_title'     => 'nullable|string|max:255',
-            'hourly_rate'   => 'required|numeric|min:0',
-            'salary_amount' => 'nullable|numeric|min:0',
-            'working_hours' => 'nullable|numeric|min:0',
-            'role'          => 'nullable|exists:roles,name'
+            'job_title'                  => 'nullable|string|max:255',
+            'hourly_rate'                => 'required|numeric|min:0',
+            'salary_amount'              => 'nullable|numeric|min:0',
+            'working_hours'              => 'nullable|numeric|min:0',
+            'role'                       => 'nullable|exists:roles,name',
+            'profile_picture'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'national_id_card'           => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
+            'qualification_certificate'  => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
+            'other_document'             => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
         ], [
-            'hourly_rate.required' => 'قيمة الساعة مطلوبة',
+            'hourly_rate.required'               => 'قيمة الساعة مطلوبة',
+            'profile_picture.image'              => 'صورة البروفايل يجب أن تكون ملف صورة صالح.',
+            'profile_picture.max'                => 'صورة البروفايل لا تتجاوز 5 ميجابايت.',
+            'national_id_card.mimes'             => 'صورة البطاقة تقبل صور أو ملفات PDF فقط.',
+            'national_id_card.max'               => 'صورة البطاقة لا تتجاوز 10 ميجابايت.',
+            'qualification_certificate.mimes'    => 'صورة المؤهل تقبل صور أو ملفات PDF فقط.',
+            'qualification_certificate.max'      => 'صورة المؤهل لا تتجاوز 10 ميجابايت.',
+            'other_document.mimes'               => 'الوثائق الأخرى تقبل صور أو ملفات PDF فقط.',
+            'other_document.max'                 => 'الوثائق الأخرى لا تتجاوز 10 ميجابايت.',
         ]);
 
         $updateData = [
@@ -378,6 +391,41 @@ class EmployeeProfileController extends Controller
 
         if ($request->filled('role') && Auth::user()->role === 'developer') {
             $updateData['role'] = $request->role;
+        }
+
+        // معالجة حذف الملفات في حال طلب الـ HR حذفها
+        $docKeys = [
+            'profile_picture'           => 'delete_profile_picture',
+            'national_id_card'          => 'delete_national_id_card',
+            'qualification_certificate' => 'delete_qualification_certificate',
+            'other_document'            => 'delete_other_document',
+        ];
+
+        foreach ($docKeys as $column => $deleteParam) {
+            if ($request->boolean($deleteParam) && !empty($user->{$column})) {
+                if (Storage::disk('public')->exists($user->{$column})) {
+                    Storage::disk('public')->delete($user->{$column});
+                }
+                $updateData[$column] = null;
+            }
+        }
+
+        // رفع صورة البروفايل
+        if ($request->hasFile('profile_picture')) {
+            if (!empty($user->profile_picture) && Storage::disk('public')->exists($user->profile_picture)) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+            $updateData['profile_picture'] = $request->file('profile_picture')->store('profile_pictures', 'public');
+        }
+
+        // رفع ملفات ووثائق الموظف (بطاقة، مؤهل، أخرى)
+        foreach (['national_id_card', 'qualification_certificate', 'other_document'] as $docCol) {
+            if ($request->hasFile($docCol)) {
+                if (!empty($user->{$docCol}) && Storage::disk('public')->exists($user->{$docCol})) {
+                    Storage::disk('public')->delete($user->{$docCol});
+                }
+                $updateData[$docCol] = $request->file($docCol)->store("employee_documents/{$user->id}", 'public');
+            }
         }
 
         $user->update($updateData);
@@ -480,6 +528,19 @@ class EmployeeProfileController extends Controller
             'working_hours' => $request->filled('working_hours') ? $request->working_hours : null,
             'role'          => $request->role,
         ]);
+
+        $fileUpdates = [];
+        if ($request->hasFile('profile_picture')) {
+            $fileUpdates['profile_picture'] = $request->file('profile_picture')->store('profile_pictures', 'public');
+        }
+        foreach (['national_id_card', 'qualification_certificate', 'other_document'] as $docCol) {
+            if ($request->hasFile($docCol)) {
+                $fileUpdates[$docCol] = $request->file($docCol)->store("employee_documents/{$user->id}", 'public');
+            }
+        }
+        if (!empty($fileUpdates)) {
+            $user->update($fileUpdates);
+        }
 
         AuditLog::log(
             Auth::user()->name,
@@ -600,6 +661,11 @@ class EmployeeProfileController extends Controller
                 DB::table('personal_access_tokens')->where('tokenable_id', $user->id)->where('tokenable_type', User::class)->delete();
             }
 
+            if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+            Storage::disk('public')->deleteDirectory("employee_documents/{$user->id}");
+
             $user->delete();
         });
 
@@ -620,6 +686,77 @@ class EmployeeProfileController extends Controller
         ]);
 
         return redirect()->route('employee_profiles.index', $redirectParams)->with('success', "🗑️ تم حذف حساب الموظف «{$userName}» بنجاح وإزالة كافة بياناته.");
+    }
+
+    /**
+     * تحديث الموظف لصورته الشخصية بنفسه من صفحته.
+     */
+    public function updateMyProfilePicture(Request $request)
+    {
+        $request->validate([
+            'profile_picture' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ], [
+            'profile_picture.required' => 'يُرجى اختيار صورة أولاً.',
+            'profile_picture.image'    => 'الملف المختار يجب أن يكون صورة صالحة.',
+            'profile_picture.mimes'    => 'صيغ الصور المسموح بها: JPG, PNG, WEBP.',
+            'profile_picture.max'      => 'أقصى حجم للصورة هو 5 ميجابايت.',
+        ]);
+
+        $user = Auth::user();
+
+        if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+            Storage::disk('public')->delete($user->profile_picture);
+        }
+
+        $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+        $user->update(['profile_picture' => $path]);
+
+        AuditLog::log(
+            $user->name,
+            'Updated',
+            'Profile Picture',
+            $user->name,
+            'قام الموظف بتحديث صورته الشخصية'
+        );
+
+        return back()->with('success', '✅ تم تحديث صورتك الشخصية بنجاح!');
+    }
+
+    /**
+     * استعراض أو تحميل وثيقة موظف بشكل آمن.
+     */
+    public function viewDocument(Request $request, $id, $type)
+    {
+        $user = User::findOrFail($id);
+
+        // الصلاحية: الموظف نفسه أو مسؤول مع صلاحية view_profiles
+        if (Auth::id() != $user->id && !Auth::user()->can('employees.view_profiles')) {
+            abort(403, 'غير مصرح لك باستعراض هذه الوثيقة.');
+        }
+
+        $allowedTypes = ['national_id_card', 'qualification_certificate', 'other_document', 'profile_picture'];
+        if (!in_array($type, $allowedTypes, true)) {
+            abort(404, 'نوع الوثيقة غير معروف.');
+        }
+
+        $path = $type === 'profile_picture' ? $user->profile_picture : $user->documentPath($type);
+
+        if (!$path || !Storage::disk('public')->exists($path)) {
+            abort(404, 'الملف المطلوب غير موجود أو لم يتم رفعه بعد.');
+        }
+
+        $fullPath = Storage::disk('public')->path($path);
+        $mimeType = Storage::disk('public')->mimeType($path);
+        $filename = basename($path);
+
+        if ($request->query('download') == 1) {
+            return Storage::disk('public')->download($path, $filename);
+        }
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ]);
     }
 }
 
