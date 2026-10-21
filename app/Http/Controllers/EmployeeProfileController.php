@@ -797,17 +797,26 @@ class EmployeeProfileController extends Controller
         // صورة البروفايل: يمكن للموظف نفسه رفعها أو للـ HR/Admin
         // الوثائق الرسمية الـ 3: للـ HR/Admin فقط حصراً
         if ($type === 'profile_picture') {
-            if (Auth::id() != $user->id && !Auth::user()->can('employees.edit_profiles') && !in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
+            $canAvatar = Auth::id() == $user->id 
+                || Auth::user()->can('employees.avatar_manage') 
+                || Auth::user()->can('employees.edit_profiles') 
+                || in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']);
+
+            if (!$canAvatar) {
                 return response()->json([
                     'success' => false,
                     'message' => 'غير مصرح لك بتحديث صورة هذا الموظف.'
                 ], 403);
             }
         } else {
-            if (!Auth::user()->can('employees.edit_profiles') && !in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
+            $canUploadDocs = Auth::user()->can('employees.documents_upload') 
+                || Auth::user()->can('employees.edit_profiles') 
+                || in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']);
+
+            if (!$canUploadDocs) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'الوثائق الرسمية يرفعها مسؤولو الموارد البشرية (HR) فقط.'
+                    'message' => 'غير مصرح لك برفع وثائق الموظفين (يلزم تفعيل صلاحية رفع الوثائق في لوحة التحكم).'
                 ], 403);
             }
         }
@@ -934,12 +943,21 @@ class EmployeeProfileController extends Controller
         }
 
         if ($type === 'profile_picture') {
-            if (Auth::id() != $user->id && !Auth::user()->can('employees.edit_profiles') && !in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
+            $canAvatar = Auth::id() == $user->id 
+                || Auth::user()->can('employees.avatar_manage') 
+                || Auth::user()->can('employees.edit_profiles') 
+                || in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']);
+
+            if (!$canAvatar) {
                 return response()->json(['success' => false, 'message' => 'غير مصرح لك بحذف الصورة.'], 403);
             }
         } else {
-            if (!Auth::user()->can('employees.edit_profiles') && !in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح لك بحذف هذه الوثيقة.'], 403);
+            $canDeleteDocs = Auth::user()->can('employees.documents_delete') 
+                || Auth::user()->can('employees.edit_profiles') 
+                || in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']);
+
+            if (!$canDeleteDocs) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح لك بحذف وثائق الموظفين (يلزم تفعيل صلاحية حذف الوثائق في لوحة التحكم).'], 403);
             }
         }
 

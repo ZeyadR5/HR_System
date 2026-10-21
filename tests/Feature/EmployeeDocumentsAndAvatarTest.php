@@ -331,4 +331,48 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
         $this->assertSame(3, EmployeeDocument::where('user_id', $employee->id)->where('type', 'national_id_card')->count());
         $this->assertCount(3, $employee->fresh()->documentFilesOf('national_id_card'));
     }
+
+    public function test_custom_role_with_only_upload_permission_cannot_delete(): void
+    {
+        Storage::fake('public');
+
+        Role::firstOrCreate(['name' => 'uploader_only'], [
+            'display_name' => 'رافع ملفات فقط',
+            'permissions'  => ['employees.documents_upload'],
+        ]);
+
+        $uploader = User::create([
+            'name'     => 'مستخدم رافع فقط',
+            'email'    => 'uploader@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'uploader_only',
+        ]);
+
+        $targetEmp = User::create([
+            'name'     => 'موظف هدف',
+            'email'    => 'target@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'user',
+        ]);
+
+        // Upload should succeed
+        $pdf = UploadedFile::fake()->create('contract.pdf', 100, 'application/pdf');
+        $uploadRes = $this->actingAs($uploader)
+            ->post(route('employee_profiles.upload_document_ajax', $targetEmp->id), [
+                'type' => 'other_document',
+                'file' => $pdf,
+            ]);
+        $uploadRes->assertStatus(200);
+
+        $doc = EmployeeDocument::where('user_id', $targetEmp->id)->first();
+        $this->assertNotNull($doc);
+
+        // Delete should fail (403 forbidden)
+        $delRes = $this->actingAs($uploader)
+            ->post(route('employee_profiles.delete_document_ajax', $targetEmp->id), [
+                'type'    => 'other_document',
+                'file_id' => $doc->id,
+            ]);
+        $delRes->assertStatus(403);
+    }
 }

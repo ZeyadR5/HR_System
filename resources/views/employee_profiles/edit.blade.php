@@ -206,9 +206,14 @@
                                                     👁️ عرض
                                                 </a>
                                             </div>
-                                            <button type="button" class="btn btn-sm btn-outline-danger mt-2 d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('profile_picture', this)">
-                                                <span>🗑️</span> حذف الصورة الحالية والعودة للأيقونة الافتراضية
-                                            </button>
+                                            @php
+                                                $canManageAvatar = Auth::id() === $user->id || Auth::user()->can('employees.avatar_manage') || Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']);
+                                            @endphp
+                                            @if($canManageAvatar)
+                                                <button type="button" class="btn btn-sm btn-outline-danger mt-2 d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('profile_picture', this)">
+                                                    <span>🗑️</span> حذف الصورة الحالية والعودة للأيقونة الافتراضية
+                                                </button>
+                                            @endif
                                         @else
                                             <span class="badge bg-light text-muted border">
                                                 الأيقونة الافتراضية بالحرف الأول
@@ -218,20 +223,22 @@
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label for="profile_picture" class="form-label small fw-semibold text-slate-700 mb-1">
-                                        {{ $user->profile_picture ? 'استبدال الصورة الحالية:' : 'رفع صورة البروفايل:' }}
-                                    </label>
-                                    <input type="file" name="profile_picture" id="profile_picture" accept="image/png,image/jpeg,image/webp,image/jpg"
-                                           class="form-control @error('profile_picture') is-invalid @enderror" style="border-radius: 10px; font-size: 0.9rem;" onchange="handleFileSelect('profile_picture', this)">
-                                    <div id="bar_profile_picture" class="mt-2 p-2 rounded-2 bg-light border d-none align-items-center justify-content-between flex-wrap gap-2">
-                                        <span class="small text-primary fw-semibold" id="text_profile_picture"></span>
+                                @if($canManageAvatar)
+                                    <div>
+                                        <label for="profile_picture" class="form-label small fw-semibold text-slate-700 mb-1">
+                                            {{ $user->profile_picture ? 'استبدال الصورة الحالية:' : 'رفع صورة البروفايل:' }}
+                                        </label>
+                                        <input type="file" name="profile_picture" id="profile_picture" accept="image/png,image/jpeg,image/webp,image/jpg"
+                                               class="form-control @error('profile_picture') is-invalid @enderror" style="border-radius: 10px; font-size: 0.9rem;" onchange="handleFileSelect('profile_picture', this)">
+                                        <div id="bar_profile_picture" class="mt-2 p-2 rounded-2 bg-light border d-none align-items-center justify-content-between flex-wrap gap-2">
+                                            <span class="small text-primary fw-semibold" id="text_profile_picture"></span>
+                                        </div>
+                                        <div class="form-text extra-small text-muted" style="font-size: 0.75rem;">الامتدادات المدعومة: JPG, PNG, WEBP (الحد الأقصى 5 ميجابايت). يمكن للموظف أيضاً تعديل صورته بنفسه من بروفايله.</div>
+                                        @error('profile_picture')
+                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                        @enderror
                                     </div>
-                                    <div class="form-text extra-small text-muted" style="font-size: 0.75rem;">الامتدادات المدعومة: JPG, PNG, WEBP (الحد الأقصى 5 ميجابايت). يمكن للموظف أيضاً تعديل صورته بنفسه من بروفايله.</div>
-                                    @error('profile_picture')
-                                        <div class="text-danger small mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                                @endif
                             </div>
                         </div>
 
@@ -256,6 +263,11 @@
                                         'qualification_certificate' => ['icon' => '🎓', 'title' => 'صورة المؤهل الدراسي / الشهادة', 'pick' => 'اختيار ملفات المؤهل'],
                                         'other_document' => ['icon' => '📑', 'title' => 'وثائق وملفات أخرى', 'pick' => 'اختيار ملفات أخرى'],
                                     ];
+                                @endphp
+
+                                @php
+                                    $canUploadDocs = Auth::user()->can('employees.documents_upload') || Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']);
+                                    $canDeleteDocs = Auth::user()->can('employees.documents_delete') || Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']);
                                 @endphp
 
                                 @foreach($editDocs as $docKey => $meta)
@@ -287,20 +299,26 @@
                                                 <a href="{{ $docFile->downloadUrl() }}" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
                                                     <span>📥</span> تحميل
                                                 </a>
-                                                <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('{{ $docKey }}', this, {{ $docFile->id }})">
-                                                    <span>🗑️</span> حذف
-                                                </button>
+                                                @if($canDeleteDocs)
+                                                    <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('{{ $docKey }}', this, {{ $docFile->id }})">
+                                                        <span>🗑️</span> حذف
+                                                    </button>
+                                                @endif
                                             </div>
                                         @endforeach
 
-                                        <label class="form-label extra-small text-muted mb-1" style="font-size: 0.75rem;">
-                                            {{ $docFiles->isNotEmpty() ? 'إضافة ملفات أخرى (يمكن اختيار أكثر من ملف):' : $meta['pick'] . ' (يمكن اختيار أكثر من ملف):' }}
-                                        </label>
-                                        <input type="file" id="{{ $docKey }}" multiple accept="image/*,.pdf" class="form-control form-control-sm" style="border-radius: 8px;" onchange="uploadDocsFromEdit('{{ $docKey }}', this)">
-                                        <div id="bar_{{ $docKey }}" class="mt-2 p-2 rounded-2 bg-light border d-none align-items-center justify-content-between flex-wrap gap-2">
-                                            <span class="small text-primary fw-semibold" id="text_{{ $docKey }}"></span>
-                                        </div>
-                                        <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 5 ميجا لكل ملف). يترفع الملف أول ما تختاره.</div>
+                                        @if($canUploadDocs)
+                                            <label class="form-label extra-small text-muted mb-1" style="font-size: 0.75rem;">
+                                                {{ $docFiles->isNotEmpty() ? 'إضافة ملفات أخرى (يمكن اختيار أكثر من ملف):' : $meta['pick'] . ' (يمكن اختيار أكثر من ملف):' }}
+                                            </label>
+                                            <input type="file" id="{{ $docKey }}" multiple accept="image/*,.pdf" class="form-control form-control-sm" style="border-radius: 8px;" onchange="uploadDocsFromEdit('{{ $docKey }}', this)">
+                                            <div id="bar_{{ $docKey }}" class="mt-2 p-2 rounded-2 bg-light border d-none align-items-center justify-content-between flex-wrap gap-2">
+                                                <span class="small text-primary fw-semibold" id="text_{{ $docKey }}"></span>
+                                            </div>
+                                            <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 5 ميجا لكل ملف). يترفع الملف أول ما تختاره.</div>
+                                        @else
+                                            <div class="text-muted extra-small mt-2" style="font-size: 0.75rem;">🔒 رفع الملفات متاح للمصرح لهم فقط من لوحة التحكم.</div>
+                                        @endif
                                     </div>
                                 @endforeach
 

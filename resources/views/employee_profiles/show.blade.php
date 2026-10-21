@@ -170,10 +170,11 @@
                             @php
                                 $files = $user->documentFilesOf($docKey);
                                 $isUploaded = $files->isNotEmpty();
-                                $canManageDocs = Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']);
+                                $canUploadDocs = Auth::user()->can('employees.documents_upload') || Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']);
+                                $canDeleteDocs = Auth::user()->can('employees.documents_delete') || Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']);
                             @endphp
                             <div class="col-12 col-md-4" id="card_col_{{ $docKey }}">
-                                @if($canManageDocs)
+                                @if($canUploadDocs)
                                     <input type="file" id="input_{{ $docKey }}" multiple accept="image/png, image/jpeg, image/jpg, image/webp, application/pdf" style="display: none;" onchange="uploadDocDirect('{{ $docKey }}', this)">
                                 @endif
 
@@ -220,7 +221,7 @@
                                                     </div>
                                                     <a href="{{ $file->url() }}" target="_blank" class="btn btn-light btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center border" style="width: 30px; height: 30px;" title="معاينة">👁️</a>
                                                     <a href="{{ $file->downloadUrl() }}" class="btn btn-primary btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" title="تحميل">📥</a>
-                                                    @if($canManageDocs)
+                                                    @if($canDeleteDocs)
                                                         <button type="button" class="btn btn-outline-danger btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" title="حذف الملف" onclick="deleteDocDirect('{{ $docKey }}', {{ $file->id }})">🗑️</button>
                                                     @endif
                                                 </div>
@@ -234,7 +235,7 @@
                                         </div>
 
                                         <div class="mt-2 pt-2 border-top">
-                                            @if($canManageDocs)
+                                            @if($canUploadDocs)
                                                 <button type="button" class="btn btn-primary btn-sm w-100 rounded-pill d-inline-flex align-items-center justify-content-center gap-2 fw-semibold shadow-xs" style="font-size: 0.85rem; padding: 7px 12px;" onclick="document.getElementById('input_{{ $docKey }}').click()">
                                                     <span>📤</span>
                                                     <span>{{ $isUploaded ? 'إضافة ملفات أخرى' : 'اختيار ورفع الملفات الآن' }}</span>

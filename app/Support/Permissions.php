@@ -96,14 +96,17 @@ class Permissions
                 ],
             ],
             'employees' => [
-                'label' => 'الموظفين',
+                'label' => 'الموظفين والملفات',
                 'icon'  => '👥',
                 'permissions' => [
-                    'employees.view_profiles'  => 'عرض ملفات الموظفين',
-                    'employees.edit_profiles'  => 'تعديل ملفات الموظفين',
-                    'employees.reset_password' => 'إعادة ضبط كلمة السر',
-                    'employees.create'         => 'إضافة موظفين',
-                    'employees.manual_entry'   => 'الإضافة اليدوية (إجازات، أذونات، إضافي للموظفين)',
+                    'employees.view_profiles'    => 'عرض ملفات وبيانات الموظفين',
+                    'employees.edit_profiles'    => 'تعديل بيانات الموظفين (المسمى، الراتب، ساعات العمل)',
+                    'employees.documents_upload' => 'رفع وإضافة وثائق الموظفين (البطاقة، المؤهل، أخرى)',
+                    'employees.documents_delete' => 'حذف وثائق وأوراق الموظفين الرسمية',
+                    'employees.avatar_manage'    => 'تعديل وحذف الصورة الشخصية للموظفين (كـ HR)',
+                    'employees.reset_password'   => 'إعادة ضبط كلمة السر للموظفين',
+                    'employees.create'           => 'إضافة موظفين جدد',
+                    'employees.manual_entry'     => 'الإضافة اليدوية (إجازات، أذونات، إضافي للموظفين)',
                 ],
             ],
             'reports' => [
