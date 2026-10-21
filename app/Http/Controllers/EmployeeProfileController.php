@@ -415,7 +415,7 @@ class EmployeeProfileController extends Controller
             if (!empty($user->profile_picture) && Storage::disk('public')->exists($user->profile_picture)) {
                 Storage::disk('public')->delete($user->profile_picture);
             }
-            $updateData['profile_picture'] = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $updateData['profile_picture'] = $this->storeUploadedFile($request->file('profile_picture'), 'profile_pictures');
         }
 
         // رفع ملفات ووثائق الموظف (بطاقة، مؤهل، أخرى)
@@ -424,7 +424,7 @@ class EmployeeProfileController extends Controller
                 if (!empty($user->{$docCol}) && Storage::disk('public')->exists($user->{$docCol})) {
                     Storage::disk('public')->delete($user->{$docCol});
                 }
-                $updateData[$docCol] = $request->file($docCol)->store("employee_documents/{$user->id}", 'public');
+                $updateData[$docCol] = $this->storeUploadedFile($request->file($docCol), "employee_documents/{$user->id}");
             }
         }
 
@@ -531,11 +531,11 @@ class EmployeeProfileController extends Controller
 
         $fileUpdates = [];
         if ($request->hasFile('profile_picture')) {
-            $fileUpdates['profile_picture'] = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $fileUpdates['profile_picture'] = $this->storeUploadedFile($request->file('profile_picture'), 'profile_pictures');
         }
         foreach (['national_id_card', 'qualification_certificate', 'other_document'] as $docCol) {
             if ($request->hasFile($docCol)) {
-                $fileUpdates[$docCol] = $request->file($docCol)->store("employee_documents/{$user->id}", 'public');
+                $fileUpdates[$docCol] = $this->storeUploadedFile($request->file($docCol), "employee_documents/{$user->id}");
             }
         }
         if (!empty($fileUpdates)) {
@@ -708,7 +708,7 @@ class EmployeeProfileController extends Controller
             Storage::disk('public')->delete($user->profile_picture);
         }
 
-        $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+        $path = $this->storeUploadedFile($request->file('profile_picture'), 'profile_pictures');
         $user->update(['profile_picture' => $path]);
 
         AuditLog::log(
@@ -757,6 +757,23 @@ class EmployeeProfileController extends Controller
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline; filename="' . $filename . '"',
         ]);
+    }
+
+    /**
+     * حفظ ملف مرفوع بطريقة موثوقة (لا تعتمد على getRealPath الذي قد يفشل مع open_basedir أو الملفات المؤقتة).
+     */
+    private function storeUploadedFile($file, string $dir): string
+    {
+        $contents = @file_get_contents($file->getPathname());
+        if ($contents === false) {
+            throw new \RuntimeException('تعذّر قراءة الملف المؤقت المرفوع (' . $file->getPathname() . ').');
+        }
+
+        $ext = strtolower($file->guessExtension() ?: $file->getClientOriginalExtension() ?: 'bin');
+        $path = trim($dir, '/') . '/' . \Illuminate\Support\Str::random(40) . '.' . $ext;
+        Storage::disk('public')->put($path, $contents);
+
+        return $path;
     }
 
     /**
@@ -826,7 +843,7 @@ class EmployeeProfileController extends Controller
                     Storage::disk('public')->delete($user->profile_picture);
                 }
 
-                $path = $file->store('profile_pictures', 'public');
+                $path = $this->storeUploadedFile($file, 'profile_pictures');
                 $user->update(['profile_picture' => $path]);
             } else {
                 $request->validate([
@@ -840,7 +857,7 @@ class EmployeeProfileController extends Controller
                     Storage::disk('public')->delete($user->{$type});
                 }
 
-                $path = $file->store("employee_documents/{$user->id}", 'public');
+                $path = $this->storeUploadedFile($file, "employee_documents/{$user->id}");
                 $user->update([$type => $path]);
             }
 
