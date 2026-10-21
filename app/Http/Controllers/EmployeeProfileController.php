@@ -758,6 +758,161 @@ class EmployeeProfileController extends Controller
             'Content-Disposition' => 'inline; filename="' . $filename . '"',
         ]);
     }
+
+    /**
+     * رفع ملف أو صورة بروفايل عبر AJAX بشكل فوري مع استجابة JSON.
+     */
+    public function uploadDocumentAjax(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $allowedTypes = ['profile_picture', 'national_id_card', 'qualification_certificate', 'other_document'];
+        $type = $request->input('type');
+
+        if (!in_array($type, $allowedTypes, true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'نوع الملف غير صالح.'
+            ], 422);
+        }
+
+        // التحقق من الصلاحيات:
+        // صورة البروفايل: يمكن للموظف نفسه رفعها أو للـ HR/Admin
+        // الوثائق الرسمية الـ 3: للـ HR/Admin فقط حصراً
+        if ($type === 'profile_picture') {
+            if (Auth::id() != $user->id && !Auth::user()->can('employees.edit_profiles') && !in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'غير مصرح لك بتحديث صورة هذا الموظف.'
+                ], 403);
+            }
+        } else {
+            if (!Auth::user()->can('employees.edit_profiles') && !in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'الوثائق الرسمية يرفعها مسؤولو الموارد البشرية (HR) فقط.'
+                ], 403);
+            }
+        }
+
+        if (!$request->hasFile('file')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'يُرجى اختيار ملف للرفع.'
+            ], 422);
+        }
+
+        $file = $request->file('file');
+
+        try {
+            if ($type === 'profile_picture') {
+                $request->validate([
+                    'file' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+                ], [
+                    'file.image' => 'صورة البروفايل يجب أن تكون ملف صورة صالح.',
+                    'file.mimes' => 'الصيغ المسموحة: JPG, PNG, WEBP.',
+                    'file.max'   => 'أقصى حجم للصورة 5 ميجابايت.',
+                ]);
+
+                if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+                    Storage::disk('public')->delete($user->profile_picture);
+                }
+
+                $path = $file->store('profile_pictures', 'public');
+                $user->update(['profile_picture' => $path]);
+            } else {
+                $request->validate([
+                    'file' => 'file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
+                ], [
+                    'file.mimes' => 'الصيغ المسموحة للوثائق: صور (JPG, PNG, WEBP) أو ملفات PDF.',
+                    'file.max'   => 'أقصى حجم للوثيقة 10 ميجابايت.',
+                ]);
+
+                if (!empty($user->{$type}) && Storage::disk('public')->exists($user->{$type})) {
+                    Storage::disk('public')->delete($user->{$type});
+                }
+
+                $path = $file->store("employee_documents/{$user->id}", 'public');
+                $user->update([$type => $path]);
+            }
+
+            $typeLabels = [
+                'profile_picture'           => 'الصورة الشخصية',
+                'national_id_card'          => 'بطاقة الرقم القومي',
+                'qualification_certificate' => 'المؤهل الدراسي',
+                'other_document'            => 'الوثائق الأخرى',
+            ];
+
+            AuditLog::log(
+                Auth::user()->name,
+                'Uploaded',
+                'Employee Document',
+                $user->name,
+                "تم رفع {$typeLabels[$type]} للموظف {$user->name}"
+            );
+
+            $user->refresh();
+            $ext = strtoupper(pathinfo($path, PATHINFO_EXTENSION));
+            $isImg = in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'webp']);
+            $url = route('employee_profiles.document', [$user->id, $type]);
+
+            return response()->json([
+                'success'    => true,
+                'message'    => "✅ تم رفع {$typeLabels[$type]} بنجاح!",
+                'type'       => $type,
+                'url'        => $url,
+                'avatar_url' => $user->profile_picture_url,
+                'extension'  => $ext,
+                'is_image'   => $isImg,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json([
+                'success' => false,
+                'message' => collect($ve->errors())->flatten()->first() ?? 'الملف المختار غير صالح.',
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء رفع الملف: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * حذف وثيقة معينة عبر AJAX بشكل فوري.
+     */
+    public function deleteDocumentAjax(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $type = $request->input('type');
+
+        if (!in_array($type, ['profile_picture', 'national_id_card', 'qualification_certificate', 'other_document'], true)) {
+            return response()->json(['success' => false, 'message' => 'نوع غير صالح.'], 422);
+        }
+
+        if ($type === 'profile_picture') {
+            if (Auth::id() != $user->id && !Auth::user()->can('employees.edit_profiles') && !in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح لك بحذف الصورة.'], 403);
+            }
+        } else {
+            if (!Auth::user()->can('employees.edit_profiles') && !in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح لك بحذف هذه الوثيقة.'], 403);
+            }
+        }
+
+        if (!empty($user->{$type}) && Storage::disk('public')->exists($user->{$type})) {
+            Storage::disk('public')->delete($user->{$type});
+        }
+        $user->update([$type => null]);
+        $user->refresh();
+
+        return response()->json([
+            'success'    => true,
+            'message'    => '🗑️ تم حذف الملف بنجاح!',
+            'type'       => $type,
+            'avatar_url' => $user->profile_picture_url,
+        ]);
+    }
 }
 
 

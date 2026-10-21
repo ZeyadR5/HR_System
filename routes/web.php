@@ -173,6 +173,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/employee-profiles/{id}/update', [EmployeeProfileController::class, 'update'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.update');
     Route::post('/employee-profiles/{id}/delete', [EmployeeProfileController::class, 'destroy'])->middleware('permission:employees.edit_profiles')->name('employee_profiles.destroy');
     Route::get('/employee-profiles/{id}/document/{type}', [EmployeeProfileController::class, 'viewDocument'])->name('employee_profiles.document');
+    Route::post('/employee-profiles/{id}/upload-document-ajax', [EmployeeProfileController::class, 'uploadDocumentAjax'])->name('employee_profiles.upload_document_ajax');
+    Route::post('/employee-profiles/{id}/delete-document-ajax', [EmployeeProfileController::class, 'deleteDocumentAjax'])->name('employee_profiles.delete_document_ajax');
 
     // ---------- التقارير والسجلات ----------
     Route::get('/audit-log', [AuditController::class, 'index'])->middleware('permission:reports.audit_log')->name('audit_log');

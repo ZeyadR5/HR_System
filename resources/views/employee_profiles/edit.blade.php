@@ -226,7 +226,13 @@
                                         {{ $user->profile_picture ? 'استبدال الصورة الحالية:' : 'رفع صورة البروفايل:' }}
                                     </label>
                                     <input type="file" name="profile_picture" id="profile_picture" accept="image/png,image/jpeg,image/webp,image/jpg"
-                                           class="form-control @error('profile_picture') is-invalid @enderror" style="border-radius: 10px; font-size: 0.9rem;">
+                                           class="form-control @error('profile_picture') is-invalid @enderror" style="border-radius: 10px; font-size: 0.9rem;" onchange="handleFileSelect('profile_picture', this)">
+                                    <div id="bar_profile_picture" class="mt-2 p-2 rounded-2 bg-light border d-none align-items-center justify-content-between flex-wrap gap-2">
+                                        <span class="small text-primary fw-semibold" id="text_profile_picture"></span>
+                                        <button type="button" class="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold shadow-xs" onclick="uploadDirectFromEdit('profile_picture')">
+                                            <span>⚡ رفع وحفظ الصورة فوراً</span>
+                                        </button>
+                                    </div>
                                     <div class="form-text extra-small text-muted" style="font-size: 0.75rem;">الامتدادات المدعومة: JPG, PNG, WEBP (الحد الأقصى 5 ميجابايت). يمكن للموظف أيضاً تعديل صورته بنفسه من بروفايله.</div>
                                     @error('profile_picture')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
@@ -287,7 +293,13 @@
                                     <label class="form-label extra-small text-muted mb-1" style="font-size: 0.75rem;">
                                         {{ $user->hasDocument('national_id_card') ? 'استبدال بملف جديد:' : 'اختيار ملف البطاقة:' }}
                                     </label>
-                                    <input type="file" name="national_id_card" accept="image/*,.pdf" class="form-control form-control-sm @error('national_id_card') is-invalid @enderror" style="border-radius: 8px;">
+                                    <input type="file" name="national_id_card" id="national_id_card" accept="image/*,.pdf" class="form-control form-control-sm @error('national_id_card') is-invalid @enderror" style="border-radius: 8px;" onchange="handleFileSelect('national_id_card', this)">
+                                    <div id="bar_national_id_card" class="mt-2 p-2 rounded-2 bg-light border d-none align-items-center justify-content-between flex-wrap gap-2">
+                                        <span class="small text-primary fw-semibold" id="text_national_id_card"></span>
+                                        <button type="button" class="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold shadow-xs" onclick="uploadDirectFromEdit('national_id_card')">
+                                            <span>⚡ رفع وحفظ البطاقة فوراً</span>
+                                        </button>
+                                    </div>
                                     <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 10 ميجا).</div>
                                     @error('national_id_card')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
@@ -300,15 +312,17 @@
                                         <span class="fw-bold text-slate-700 small d-flex align-items-center gap-2">
                                             <span>🎓</span> صورة المؤهل الدراسي / الشهادة
                                         </span>
-                                        @if($user->hasDocument('qualification_certificate'))
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
-                                                ✅ مرفوعة ({{ strtoupper($user->documentExtension('qualification_certificate')) }})
-                                            </span>
-                                        @else
-                                            <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.75rem;">
-                                                لم تُرفع بعد
-                                            </span>
-                                        @endif
+                                        <div id="status_qualification_certificate">
+                                            @if($user->hasDocument('qualification_certificate'))
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
+                                                    ✅ مرفوعة ({{ strtoupper($user->documentExtension('qualification_certificate')) }})
+                                                </span>
+                                            @else
+                                                <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.75rem;">
+                                                    لم تُرفع بعد
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
 
                                     @if($user->hasDocument('qualification_certificate'))
@@ -331,7 +345,13 @@
                                     <label class="form-label extra-small text-muted mb-1" style="font-size: 0.75rem;">
                                         {{ $user->hasDocument('qualification_certificate') ? 'استبدال بملف جديد:' : 'اختيار ملف المؤهل:' }}
                                     </label>
-                                    <input type="file" name="qualification_certificate" accept="image/*,.pdf" class="form-control form-control-sm @error('qualification_certificate') is-invalid @enderror" style="border-radius: 8px;">
+                                    <input type="file" name="qualification_certificate" id="qualification_certificate" accept="image/*,.pdf" class="form-control form-control-sm @error('qualification_certificate') is-invalid @enderror" style="border-radius: 8px;" onchange="handleFileSelect('qualification_certificate', this)">
+                                    <div id="bar_qualification_certificate" class="mt-2 p-2 rounded-2 bg-light border d-none align-items-center justify-content-between flex-wrap gap-2">
+                                        <span class="small text-primary fw-semibold" id="text_qualification_certificate"></span>
+                                        <button type="button" class="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold shadow-xs" onclick="uploadDirectFromEdit('qualification_certificate')">
+                                            <span>⚡ رفع وحفظ المؤهل فوراً</span>
+                                        </button>
+                                    </div>
                                     <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 10 ميجا).</div>
                                     @error('qualification_certificate')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
@@ -344,15 +364,17 @@
                                         <span class="fw-bold text-slate-700 small d-flex align-items-center gap-2">
                                             <span>📑</span> وثائق وملفات أخرى (عقد العمل / شهادات / إلخ)
                                         </span>
-                                        @if($user->hasDocument('other_document'))
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
-                                                ✅ مرفوعة ({{ strtoupper($user->documentExtension('other_document')) }})
-                                            </span>
-                                        @else
-                                            <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.75rem;">
-                                                لم تُرفع بعد
-                                            </span>
-                                        @endif
+                                        <div id="status_other_document">
+                                            @if($user->hasDocument('other_document'))
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
+                                                    ✅ مرفوعة ({{ strtoupper($user->documentExtension('other_document')) }})
+                                                </span>
+                                            @else
+                                                <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.75rem;">
+                                                    لم تُرفع بعد
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
 
                                     @if($user->hasDocument('other_document'))
@@ -375,7 +397,13 @@
                                     <label class="form-label extra-small text-muted mb-1" style="font-size: 0.75rem;">
                                         {{ $user->hasDocument('other_document') ? 'استبدال بملف جديد:' : 'اختيار ملف آخر:' }}
                                     </label>
-                                    <input type="file" name="other_document" accept="image/*,.pdf" class="form-control form-control-sm @error('other_document') is-invalid @enderror" style="border-radius: 8px;">
+                                    <input type="file" name="other_document" id="other_document" accept="image/*,.pdf" class="form-control form-control-sm @error('other_document') is-invalid @enderror" style="border-radius: 8px;" onchange="handleFileSelect('other_document', this)">
+                                    <div id="bar_other_document" class="mt-2 p-2 rounded-2 bg-light border d-none align-items-center justify-content-between flex-wrap gap-2">
+                                        <span class="small text-primary fw-semibold" id="text_other_document"></span>
+                                        <button type="button" class="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold shadow-xs" onclick="uploadDirectFromEdit('other_document')">
+                                            <span>⚡ رفع وحفظ الملف فوراً</span>
+                                        </button>
+                                    </div>
                                     <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 10 ميجا).</div>
                                     @error('other_document')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
@@ -455,6 +483,64 @@
             }
         }
     });
+
+    function handleFileSelect(field, input) {
+        const bar = document.getElementById('bar_' + field);
+        const text = document.getElementById('text_' + field);
+        if (!bar || !text) return;
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const sizeKb = (file.size / 1024).toFixed(1);
+            text.innerHTML = `📄 تم اختيار: <b>${file.name}</b> (${sizeKb} KB)`;
+            bar.classList.remove('d-none');
+            bar.classList.add('d-flex');
+        } else {
+            bar.classList.add('d-none');
+            bar.classList.remove('d-flex');
+        }
+    }
+
+    function uploadDirectFromEdit(field) {
+        const input = document.getElementById(field);
+        if (!input || !input.files || !input.files[0]) {
+            alert('يُرجى اختيار ملف أولاً.');
+            return;
+        }
+
+        const bar = document.getElementById('bar_' + field);
+        const text = document.getElementById('text_' + field);
+        text.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span> جاري رفع وحفظ الملف الآن... ⏳`;
+
+        const formData = new FormData();
+        formData.append('_token', "{{ csrf_token() }}");
+        formData.append('type', field);
+        formData.append('file', input.files[0]);
+
+        fetch("{{ route('employee_profiles.upload_document_ajax', $user->id) }}", {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                text.innerHTML = `<span class="text-success fw-bold">${data.message}</span>`;
+                const statusBox = document.getElementById('status_' + field);
+                if (statusBox) {
+                    statusBox.innerHTML = `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">✅ مرفوعة (${data.extension})</span>`;
+                }
+                setTimeout(() => {
+                    bar.classList.add('d-none');
+                    bar.classList.remove('d-flex');
+                }, 3500);
+            } else {
+                text.innerHTML = `<span class="text-danger fw-bold">⚠️ ${data.message}</span>`;
+            }
+        })
+        .catch(err => {
+            text.innerHTML = `<span class="text-danger fw-bold">⚠️ حدث خطأ في الاتصال: ${err.message}</span>`;
+        });
+    }
 </script>
 
 <style>

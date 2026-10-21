@@ -185,4 +185,100 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
             ->get(route('employee_profiles.document', [$employee1->id, 'national_id_card']));
         $response2->assertStatus(403);
     }
+
+    public function test_ajax_upload_document_success(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::create([
+            'name'     => 'HR Admin',
+            'email'    => 'hr@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'admin',
+        ]);
+
+        $employee = User::create([
+            'name'     => 'أيمن',
+            'email'    => 'ayman@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'user',
+        ]);
+
+        $pdf = UploadedFile::fake()->create('qualification.pdf', 300, 'application/pdf');
+
+        $response = $this->actingAs($admin)
+            ->post(route('employee_profiles.upload_document_ajax', $employee->id), [
+                'type' => 'qualification_certificate',
+                'file' => $pdf,
+            ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success'   => true,
+            'type'      => 'qualification_certificate',
+            'extension' => 'PDF',
+            'is_image'  => false,
+        ]);
+
+        $employee->refresh();
+        $this->assertNotNull($employee->qualification_certificate);
+        $this->assertTrue(Storage::disk('public')->exists($employee->qualification_certificate));
+    }
+
+    public function test_ajax_upload_document_forbidden_for_regular_employee(): void
+    {
+        Storage::fake('public');
+
+        $employee = User::create([
+            'name'     => 'موظف عادي',
+            'email'    => 'emp_normal@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'user',
+        ]);
+
+        $pdf = UploadedFile::fake()->create('national_id.pdf', 300, 'application/pdf');
+
+        // Regular employee trying to upload official document -> 403
+        $response = $this->actingAs($employee)
+            ->post(route('employee_profiles.upload_document_ajax', $employee->id), [
+                'type' => 'national_id_card',
+                'file' => $pdf,
+            ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_ajax_delete_document(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::create([
+            'name'     => 'Super Admin',
+            'email'    => 'super@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'admin',
+        ]);
+
+        $employee = User::create([
+            'name'     => 'موظف',
+            'email'    => 'test_del@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'user',
+        ]);
+
+        $pdf = UploadedFile::fake()->create('other.pdf', 100, 'application/pdf');
+        $path = $pdf->store('employee_documents/' . $employee->id, 'public');
+        $employee->update(['other_document' => $path]);
+
+        $response = $this->actingAs($admin)
+            ->post(route('employee_profiles.delete_document_ajax', $employee->id), [
+                'type' => 'other_document',
+            ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+
+        $employee->refresh();
+        $this->assertNull($employee->other_document);
+    }
 }

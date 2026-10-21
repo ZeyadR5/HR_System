@@ -63,17 +63,21 @@
                     <div class="row align-items-center g-4">
                         <div class="col-12 col-md-6 d-flex align-items-center gap-3">
                             <div class="position-relative d-inline-block" style="width: 80px; height: 80px; flex-shrink: 0;">
-                                <div class="rounded-circle overflow-hidden border border-2 border-white shadow-sm d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                                <div id="profile_avatar_wrapper" class="rounded-circle overflow-hidden border border-2 border-white shadow-sm d-flex align-items-center justify-content-center position-relative" style="width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                                    <div id="avatar_spinner" class="position-absolute top-0 start-0 w-100 h-100 d-none flex-column align-items-center justify-content-center bg-dark bg-opacity-75" style="z-index: 10;">
+                                        <div class="spinner-border spinner-border-sm text-light" role="status"></div>
+                                    </div>
                                     @if($user->profile_picture)
-                                        <img src="{{ $user->profile_picture_url }}" alt="{{ $user->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <img id="profile_avatar_img" src="{{ $user->profile_picture_url }}" alt="{{ $user->name }}" style="width: 100%; height: 100%; object-fit: cover;">
                                     @else
-                                        <span class="text-white fw-bold" style="font-size: 2rem;">{{ mb_substr($user->name, 0, 1) }}</span>
+                                        <span id="profile_avatar_letter" class="text-white fw-bold" style="font-size: 2rem;">{{ mb_substr($user->name, 0, 1) }}</span>
                                     @endif
                                 </div>
 
-                                @if(Auth::id() === $user->id)
-                                    {{-- Employee self-update picture button --}}
-                                    <button type="button" class="btn btn-primary btn-sm rounded-circle position-absolute bottom-0 end-0 p-0 d-flex align-items-center justify-content-center shadow" style="width: 28px; height: 28px; border: 2px solid #1e293b;" title="تحديث صورتي الشخصية" data-bs-toggle="modal" data-bs-target="#updatePictureModal">
+                                @if(Auth::id() === $user->id || Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
+                                    {{-- Hidden avatar file input for instant upload --}}
+                                    <input type="file" id="avatar_ajax_input" accept="image/png, image/jpeg, image/jpg, image/webp" style="display: none;" onchange="uploadAvatarDirect(this)">
+                                    <button type="button" class="btn btn-primary btn-sm rounded-circle position-absolute bottom-0 end-0 p-0 d-flex align-items-center justify-content-center shadow" style="width: 28px; height: 28px; border: 2px solid #1e293b;" title="تغيير الصورة الشخصية فوراً" onclick="document.getElementById('avatar_ajax_input').click()">
                                         <span style="font-size: 0.8rem;">📷</span>
                                     </button>
                                 @endif
@@ -169,72 +173,94 @@
                                 $isImg = $isUploaded ? $user->isDocumentImage($docKey) : false;
                                 $isPdf = $isUploaded ? $user->isDocumentPdf($docKey) : false;
                             @endphp
-                            <div class="col-12 col-md-4">
-                                <div class="card h-100 border transition-all" style="border-radius: 16px; border-color: {{ $isUploaded ? '#e2e8f0' : '#f1f5f9' }} !important; background: {{ $isUploaded ? '#ffffff' : '#fafafa' }};">
+                            <div class="col-12 col-md-4" id="card_col_{{ $docKey }}">
+                                @if(Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
+                                    <input type="file" id="input_{{ $docKey }}" accept="image/png, image/jpeg, image/jpg, image/webp, application/pdf" style="display: none;" onchange="uploadDocDirect('{{ $docKey }}', this)">
+                                @endif
+
+                                <div class="card h-100 border transition-all position-relative overflow-hidden" id="card_box_{{ $docKey }}" style="border-radius: 16px; border-color: {{ $isUploaded ? '#e2e8f0' : '#f1f5f9' }} !important; background: {{ $isUploaded ? '#ffffff' : '#fafafa' }};">
+                                    {{-- Uploading overlay spinner --}}
+                                    <div id="spinner_{{ $docKey }}" class="position-absolute top-0 start-0 w-100 h-100 d-none flex-column align-items-center justify-content-center bg-white bg-opacity-95" style="z-index: 10;">
+                                        <div class="spinner-border text-primary mb-2" role="status"></div>
+                                        <span class="small fw-bold text-primary">جاري رفع وحفظ الملف... ⏳</span>
+                                    </div>
+
                                     <div class="card-body p-3 d-flex flex-column justify-content-between">
                                         <div>
                                             <div class="d-flex align-items-center justify-content-between mb-3">
                                                 <div class="d-inline-flex align-items-center justify-content-center rounded-3 p-2" style="background: {{ $docMeta['bg'] }}; color: {{ $docMeta['color'] }}; font-size: 1.5rem; width: 45px; height: 45px;">
                                                     {{ $docMeta['icon'] }}
                                                 </div>
-                                                @if($isUploaded)
-                                                    <span class="badge bg-success-subtle text-success px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;">
-                                                        ✅ مرفوع ({{ strtoupper($ext) }})
-                                                    </span>
-                                                @else
-                                                    <span class="badge bg-light text-muted border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;">
-                                                        ⏳ غير متوفر
-                                                    </span>
-                                                @endif
+                                                <div id="badge_{{ $docKey }}">
+                                                    @if($isUploaded)
+                                                        <span class="badge bg-success-subtle text-success px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;">
+                                                            ✅ مرفوع ({{ strtoupper($ext) }})
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-light text-muted border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;">
+                                                            ⏳ غير متوفر
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
                                             <h6 class="fw-bold text-dark mb-1">{{ $docMeta['title'] }}</h6>
                                             <p class="text-muted small mb-3" style="font-size: 0.82rem; min-height: 38px;">{{ $docMeta['desc'] }}</p>
 
-                                            @if($isUploaded && $isImg)
-                                                <div class="mb-3 text-center rounded-3 overflow-hidden border bg-light position-relative" style="height: 120px;">
-                                                    <a href="{{ route('employee_profiles.document', [$user->id, $docKey]) }}" target="_blank" title="اضغط للمعاينة الكاملة">
-                                                        <img src="{{ route('employee_profiles.document', [$user->id, $docKey]) }}" alt="{{ $docMeta['title'] }}" style="width: 100%; height: 100%; object-fit: cover;">
-                                                    </a>
-                                                </div>
-                                            @elseif($isUploaded && $isPdf)
-                                                <div class="mb-3 text-center rounded-3 p-3 border bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center gap-2" style="height: 120px;">
-                                                    <span style="font-size: 2.5rem;">📕</span>
-                                                    <span class="fw-bold small">مستند بصيغة PDF</span>
-                                                </div>
-                                            @elseif(!$isUploaded)
-                                                <div class="mb-3 text-center rounded-3 p-3 border border-dashed text-muted d-flex flex-column align-items-center justify-content-center" style="height: 120px; background: #f8fafc;">
-                                                    <span class="fs-4 opacity-50">📭</span>
-                                                    <span class="extra-small text-muted mt-1" style="font-size: 0.75rem;">لم يتم رفع هذا الملف</span>
-                                                    <span class="extra-small text-muted opacity-75" style="font-size: 0.7rem;">(يُرفع حصراً بواسطة HR)</span>
-                                                </div>
-                                            @endif
+                                            <div id="preview_{{ $docKey }}">
+                                                @if($isUploaded && $isImg)
+                                                    <div class="mb-3 text-center rounded-3 overflow-hidden border bg-light position-relative" style="height: 120px;">
+                                                        <a href="{{ route('employee_profiles.document', [$user->id, $docKey]) }}" target="_blank" title="اضغط للمعاينة الكاملة">
+                                                            <img src="{{ route('employee_profiles.document', [$user->id, $docKey]) }}" alt="{{ $docMeta['title'] }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                                        </a>
+                                                    </div>
+                                                @elseif($isUploaded && $isPdf)
+                                                    <div class="mb-3 text-center rounded-3 p-3 border bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center gap-2" style="height: 120px;">
+                                                        <span style="font-size: 2.5rem;">📕</span>
+                                                        <span class="fw-bold small">مستند بصيغة PDF</span>
+                                                    </div>
+                                                @else
+                                                    <div class="mb-3 text-center rounded-3 p-3 border border-dashed text-muted d-flex flex-column align-items-center justify-content-center" style="height: 120px; background: #f8fafc;">
+                                                        <span class="fs-4 opacity-50">📭</span>
+                                                        <span class="extra-small text-muted mt-1" style="font-size: 0.75rem;">لم يتم رفع هذا الملف بعد</span>
+                                                        <span class="extra-small text-muted opacity-75" style="font-size: 0.7rem;">(يُرفع حصراً بواسطة HR)</span>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </div>
 
-                                        @if($isUploaded)
-                                            <div class="d-flex gap-2 mt-2 pt-2 border-top">
-                                                <a href="{{ route('employee_profiles.document', [$user->id, $docKey]) }}" target="_blank" class="btn btn-light btn-sm flex-fill rounded-pill d-inline-flex align-items-center justify-content-center gap-1 text-primary fw-semibold border shadow-xs" style="font-size: 0.8rem;">
-                                                    <span>👁️</span>
-                                                    <span>معاينة</span>
-                                                </a>
-                                                <a href="{{ route('employee_profiles.document', [$user->id, $docKey]) }}?download=1" class="btn btn-primary btn-sm flex-fill rounded-pill d-inline-flex align-items-center justify-content-center gap-1 fw-semibold shadow-xs" style="font-size: 0.8rem;">
-                                                    <span>📥</span>
-                                                    <span>تحميل</span>
-                                                </a>
-                                            </div>
-                                        @else
-                                            <div class="mt-2 pt-2 border-top text-center">
-                                                @if(Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
-                                                    <a href="{{ route('employee_profiles.edit', $user->id) }}#documents-section" class="btn btn-outline-secondary btn-sm w-100 rounded-pill d-inline-flex align-items-center justify-content-center gap-1" style="font-size: 0.8rem;">
-                                                        <span>📤</span>
-                                                        <span>رفع الملف الآن</span>
+                                        <div id="actions_{{ $docKey }}" class="mt-2 pt-2 border-top">
+                                            @if($isUploaded)
+                                                <div class="d-flex gap-2 flex-wrap">
+                                                    <a href="{{ route('employee_profiles.document', [$user->id, $docKey]) }}" target="_blank" class="btn btn-light btn-sm flex-fill rounded-pill d-inline-flex align-items-center justify-content-center gap-1 text-primary fw-semibold border shadow-xs" style="font-size: 0.8rem;">
+                                                        <span>👁️</span>
+                                                        <span>معاينة</span>
                                                     </a>
+                                                    <a href="{{ route('employee_profiles.document', [$user->id, $docKey]) }}?download=1" class="btn btn-primary btn-sm flex-fill rounded-pill d-inline-flex align-items-center justify-content-center gap-1 fw-semibold shadow-xs" style="font-size: 0.8rem;">
+                                                        <span>📥</span>
+                                                        <span>تحميل</span>
+                                                    </a>
+                                                    @if(Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center shadow-xs" style="width: 31px; height: 31px;" title="استبدال بملف جديد" onclick="document.getElementById('input_{{ $docKey }}').click()">
+                                                            <span style="font-size: 0.85rem;">🔄</span>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center shadow-xs" style="width: 31px; height: 31px;" title="حذف الملف" onclick="deleteDocDirect('{{ $docKey }}')">
+                                                            <span style="font-size: 0.85rem;">🗑️</span>
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                @if(Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
+                                                    <button type="button" class="btn btn-primary btn-sm w-100 rounded-pill d-inline-flex align-items-center justify-content-center gap-2 fw-semibold shadow-xs" style="font-size: 0.85rem; padding: 7px 12px;" onclick="document.getElementById('input_{{ $docKey }}').click()">
+                                                        <span>📤</span>
+                                                        <span>اختيار ورفع الملف الآن</span>
+                                                    </button>
                                                 @else
-                                                    <span class="text-muted extra-small d-block py-1" style="font-size: 0.78rem;">
+                                                    <span class="text-muted extra-small d-block py-1 text-center" style="font-size: 0.78rem;">
                                                         🔒 متاح الرفع للإدارة فقط
                                                     </span>
                                                 @endif
-                                            </div>
-                                        @endif
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -647,60 +673,214 @@
     });
 </script>
 
-@if(Auth::id() === $user->id)
-{{-- Modal: Update My Profile Picture --}}
-<div class="modal fade" id="updatePictureModal" tabindex="-1" aria-labelledby="updatePictureModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-            <div class="modal-header border-0 text-white" style="background: linear-gradient(135deg, #1e293b, #0f172a);">
-                <h5 class="modal-title fw-bold" id="updatePictureModalLabel">
-                    <span>📷</span>
-                    <span>تحديث صورتي الشخصية</span>
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ route('my_profile.update_picture') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-body p-4 text-center">
-                    <p class="text-muted small mb-3">يمكنك اختيار صورة شخصية جديدة لبروفايلك (JPG, PNG, WEBP - بحد أقصى 5 ميجابايت).</p>
-
-                    <div class="mb-4 d-flex justify-content-center">
-                        <div class="position-relative" style="width: 120px; height: 120px;">
-                            <img id="myAvatarPreviewImg" src="{{ $user->profile_picture_url }}" alt="معاينة الصورة" class="rounded-circle border border-3 border-primary shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">
-                        </div>
-                    </div>
-
-                    <div class="mb-3 text-start">
-                        <label for="myProfilePictureInput" class="form-label fw-bold small text-dark">اختر الصورة الجديدة:</label>
-                        <input type="file" name="profile_picture" id="myProfilePictureInput" class="form-control" accept="image/png, image/jpeg, image/jpg, image/webp" required onchange="previewMyAvatar(this)">
-                        <small class="text-muted d-block mt-1">يُفضل استخدام صورة مربعة واضحة الملامح.</small>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light border-0 px-4 py-3 d-flex justify-content-between">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
-                        <span>💾</span>
-                        <span>حفظ وتحديث الصورة</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
-    function previewMyAvatar(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = document.getElementById('myAvatarPreviewImg');
-                if (img) {
-                    img.src = e.target.result;
-                }
-            };
-            reader.readAsDataURL(input.files[0]);
+    const UPLOAD_URL = "{{ route('employee_profiles.upload_document_ajax', $user->id) }}";
+    const DELETE_URL = "{{ route('employee_profiles.delete_document_ajax', $user->id) }}";
+    const CSRF_TOKEN = "{{ csrf_token() }}";
+    const USER_ID    = "{{ $user->id }}";
+
+    function showDocToast(msg, isSuccess = true) {
+        let toast = document.getElementById('docGlobalToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'docGlobalToast';
+            toast.style.cssText = 'position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 99999; padding: 12px 28px; border-radius: 50px; font-weight: bold; font-size: 0.95rem; box-shadow: 0 10px 30px rgba(0,0,0,0.25); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; text-align: center;';
+            document.body.appendChild(toast);
         }
+        toast.style.background = isSuccess ? '#10b981' : '#ef4444';
+        toast.style.color = '#ffffff';
+        toast.innerHTML = msg;
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(-50%) translateY(10px)';
+            setTimeout(() => toast.style.display = 'none', 300);
+        }, 4500);
+    }
+
+    function uploadAvatarDirect(input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        const spinner = document.getElementById('avatar_spinner');
+        if (spinner) spinner.classList.remove('d-none');
+
+        const formData = new FormData();
+        formData.append('_token', CSRF_TOKEN);
+        formData.append('type', 'profile_picture');
+        formData.append('file', file);
+
+        fetch(UPLOAD_URL, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (spinner) spinner.classList.add('d-none');
+            if (data.success) {
+                showDocToast(data.message || '✅ تم تحديث الصورة الشخصية بنجاح!', true);
+                const wrapper = document.getElementById('profile_avatar_wrapper');
+                if (wrapper) {
+                    wrapper.innerHTML = `<img id="profile_avatar_img" src="${data.avatar_url}?t=${Date.now()}" alt="{{ $user->name }}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                }
+                const headerAvatar = document.querySelector('.header-avatar');
+                if (headerAvatar && "{{ Auth::id() }}" === USER_ID) {
+                    headerAvatar.innerHTML = `<img src="${data.avatar_url}?t=${Date.now()}" alt="{{ $user->name }}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                }
+                const sideAvatar = document.querySelector('.sidepanel-user-avatar');
+                if (sideAvatar && "{{ Auth::id() }}" === USER_ID) {
+                    sideAvatar.innerHTML = `<img src="${data.avatar_url}?t=${Date.now()}" alt="{{ $user->name }}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                }
+            } else {
+                showDocToast(data.message || '⚠️ فشل في رفع الصورة.', false);
+            }
+            input.value = '';
+        })
+        .catch(err => {
+            if (spinner) spinner.classList.add('d-none');
+            showDocToast('⚠️ حدث خطأ أثناء الاتصال: ' + err.message, false);
+            input.value = '';
+        });
+    }
+
+    function uploadDocDirect(docKey, input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        const spinner = document.getElementById('spinner_' + docKey);
+        if (spinner) spinner.classList.remove('d-none');
+
+        const formData = new FormData();
+        formData.append('_token', CSRF_TOKEN);
+        formData.append('type', docKey);
+        formData.append('file', file);
+
+        fetch(UPLOAD_URL, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (spinner) spinner.classList.add('d-none');
+            if (data.success) {
+                showDocToast(data.message || '✅ تم رفع الوثيقة وحفظها بنجاح!', true);
+                
+                // 1. Update Badge
+                const badgeBox = document.getElementById('badge_' + docKey);
+                if (badgeBox) {
+                    badgeBox.innerHTML = `<span class="badge bg-success-subtle text-success px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;">✅ مرفوع (${data.extension})</span>`;
+                }
+
+                // 2. Update Preview
+                const previewBox = document.getElementById('preview_' + docKey);
+                if (previewBox) {
+                    if (data.is_image) {
+                        previewBox.innerHTML = `
+                            <div class="mb-3 text-center rounded-3 overflow-hidden border bg-light position-relative" style="height: 120px;">
+                                <a href="${data.url}" target="_blank" title="اضغط للمعاينة الكاملة">
+                                    <img src="${data.url}?t=${Date.now()}" alt="معاينة" style="width: 100%; height: 100%; object-fit: cover;">
+                                </a>
+                            </div>
+                        `;
+                    } else {
+                        previewBox.innerHTML = `
+                            <div class="mb-3 text-center rounded-3 p-3 border bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center gap-2" style="height: 120px;">
+                                <span style="font-size: 2.5rem;">📕</span>
+                                <span class="fw-bold small">مستند بصيغة ${data.extension}</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                // 3. Update Actions
+                const actionsBox = document.getElementById('actions_' + docKey);
+                if (actionsBox) {
+                    actionsBox.innerHTML = `
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="${data.url}" target="_blank" class="btn btn-light btn-sm flex-fill rounded-pill d-inline-flex align-items-center justify-content-center gap-1 text-primary fw-semibold border shadow-xs" style="font-size: 0.8rem;">
+                                <span>👁️</span> <span>معاينة</span>
+                            </a>
+                            <a href="${data.url}?download=1" class="btn btn-primary btn-sm flex-fill rounded-pill d-inline-flex align-items-center justify-content-center gap-1 fw-semibold shadow-xs" style="font-size: 0.8rem;">
+                                <span>📥</span> <span>تحميل</span>
+                            </a>
+                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center shadow-xs" style="width: 31px; height: 31px;" title="استبدال بملف جديد" onclick="document.getElementById('input_${docKey}').click()">
+                                <span style="font-size: 0.85rem;">🔄</span>
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center shadow-xs" style="width: 31px; height: 31px;" title="حذف الملف" onclick="deleteDocDirect('${docKey}')">
+                                <span style="font-size: 0.85rem;">🗑️</span>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                input.value = '';
+            } else {
+                showDocToast(data.message || '⚠️ فشل رفع الملف.', false);
+                input.value = '';
+            }
+        })
+        .catch(err => {
+            if (spinner) spinner.classList.add('d-none');
+            showDocToast('⚠️ حدث خطأ في الاتصال: ' + err.message, false);
+            input.value = '';
+        });
+    }
+
+    function deleteDocDirect(docKey) {
+        if (!confirm('هل أنت متأكد من حذف هذا الملف نهائياً؟')) return;
+        const spinner = document.getElementById('spinner_' + docKey);
+        if (spinner) spinner.classList.remove('d-none');
+
+        const formData = new FormData();
+        formData.append('_token', CSRF_TOKEN);
+        formData.append('type', docKey);
+
+        fetch(DELETE_URL, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (spinner) spinner.classList.add('d-none');
+            if (data.success) {
+                showDocToast(data.message || '🗑️ تم حذف الملف بنجاح!', true);
+
+                const badgeBox = document.getElementById('badge_' + docKey);
+                if (badgeBox) {
+                    badgeBox.innerHTML = `<span class="badge bg-light text-muted border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;">⏳ غير متوفر</span>`;
+                }
+
+                const previewBox = document.getElementById('preview_' + docKey);
+                if (previewBox) {
+                    previewBox.innerHTML = `
+                        <div class="mb-3 text-center rounded-3 p-3 border border-dashed text-muted d-flex flex-column align-items-center justify-content-center" style="height: 120px; background: #f8fafc;">
+                            <span class="fs-4 opacity-50">📭</span>
+                            <span class="extra-small text-muted mt-1" style="font-size: 0.75rem;">لم يتم رفع هذا الملف بعد</span>
+                            <span class="extra-small text-muted opacity-75" style="font-size: 0.7rem;">(يُرفع حصراً بواسطة HR)</span>
+                        </div>
+                    `;
+                }
+
+                const actionsBox = document.getElementById('actions_' + docKey);
+                if (actionsBox) {
+                    actionsBox.innerHTML = `
+                        <button type="button" class="btn btn-primary btn-sm w-100 rounded-pill d-inline-flex align-items-center justify-content-center gap-2 fw-semibold shadow-xs" style="font-size: 0.85rem; padding: 7px 12px;" onclick="document.getElementById('input_${docKey}').click()">
+                            <span>📤</span>
+                            <span>اختيار ورفع الملف الآن</span>
+                        </button>
+                    `;
+                }
+            } else {
+                showDocToast(data.message || '⚠️ فشل حذف الملف.', false);
+            }
+        })
+        .catch(err => {
+            if (spinner) spinner.classList.add('d-none');
+            showDocToast('⚠️ حدث خطأ في الاتصال: ' + err.message, false);
+        });
     }
 </script>
-@endif
 @endsection
