@@ -207,7 +207,7 @@
                                                 </a>
                                             </div>
                                             @php
-                                                $canManageAvatar = Auth::id() === $user->id || Auth::user()->can('employees.avatar_manage') || Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']);
+                                                $canManageAvatar = Auth::id() === $user->id || Auth::user()->can('employees.avatar_manage');
                                             @endphp
                                             @if($canManageAvatar)
                                                 <button type="button" class="btn btn-sm btn-outline-danger mt-2 d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('profile_picture', this)">
@@ -266,8 +266,8 @@
                                 @endphp
 
                                 @php
-                                    $canUploadDocs = Auth::user()->can('employees.documents_upload') || Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']);
-                                    $canDeleteDocs = Auth::user()->can('employees.documents_delete') || Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']);
+                                    $canUploadDocs = Auth::user()->can('employees.documents_upload');
+                                    $canDeleteDocs = Auth::user()->can('employees.documents_delete');
                                 @endphp
 
                                 @foreach($editDocs as $docKey => $meta)

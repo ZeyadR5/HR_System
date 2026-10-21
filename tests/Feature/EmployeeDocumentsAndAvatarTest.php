@@ -71,10 +71,31 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
             });
         }
 
+        foreach (['leaves', 'permissions', 'overtimes', 'penalties', 'notifications'] as $tbl) {
+            if (!Schema::hasTable($tbl)) {
+                Schema::create($tbl, function ($table) {
+                    $table->id();
+                    $table->unsignedBigInteger('user_id')->nullable();
+                    $table->string('notifiable_type')->nullable();
+                    $table->unsignedBigInteger('notifiable_id')->nullable();
+                    $table->timestamp('read_at')->nullable();
+                    $table->date('date')->nullable();
+                    $table->string('status')->nullable();
+                    $table->timestamps();
+                });
+            }
+        }
+
         Role::flushCache();
         Role::firstOrCreate(['name' => 'admin'], [
             'display_name' => 'Admin',
-            'permissions' => ['employees.view_profiles', 'employees.edit_profiles'],
+            'permissions' => [
+                'employees.view_profiles',
+                'employees.edit_profiles',
+                'employees.documents_upload',
+                'employees.documents_delete',
+                'employees.avatar_manage',
+            ],
         ]);
         Role::firstOrCreate(['name' => 'user'], [
             'display_name' => 'Employee',
@@ -374,5 +395,38 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
                 'file_id' => $doc->id,
             ]);
         $delRes->assertStatus(403);
+    }
+
+    public function test_regular_admin_without_upload_permission_cannot_upload_and_sees_no_upload_button(): void
+    {
+        Storage::fake('public');
+
+        Role::firstOrCreate(['name' => 'plain_admin'], [
+            'display_name' => 'ادمن بدون صلاحية وثائق',
+            'permissions'  => ['overtime.view_all', 'leave.view_all'],
+        ]);
+
+        $plainAdmin = User::create([
+            'name'     => 'أدمن عادي',
+            'email'    => 'plain_admin@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'plain_admin',
+        ]);
+
+        // 1. Trying to upload via AJAX -> 403 Forbidden
+        $pdf = UploadedFile::fake()->create('id.pdf', 100, 'application/pdf');
+        $this->actingAs($plainAdmin)
+            ->post(route('employee_profiles.upload_document_ajax', $plainAdmin->id), [
+                'type' => 'national_id_card',
+                'file' => $pdf,
+            ])
+            ->assertStatus(403)
+            ->assertJson(['success' => false]);
+
+        // 2. Visiting own profile (my-profile) -> Should NOT see upload button
+        $page = $this->actingAs($plainAdmin)->get(route('my_profile'));
+        $page->assertStatus(200);
+        $page->assertDontSee('اختيار ورفع الملفات الآن');
+        $page->assertDontSee('إدارة / رفع الوثائق');
     }
 }

@@ -74,7 +74,7 @@
                                     @endif
                                 </div>
 
-                                @if(Auth::id() === $user->id || Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
+                                @if(Auth::id() === $user->id || Auth::user()->can('employees.avatar_manage'))
                                     {{-- Hidden avatar file input for instant upload --}}
                                     <input type="file" id="avatar_ajax_input" accept="image/png, image/jpeg, image/jpg, image/webp" style="display: none;" onchange="uploadAvatarDirect(this)">
                                     <button type="button" class="btn btn-primary btn-sm rounded-circle position-absolute bottom-0 end-0 p-0 d-flex align-items-center justify-content-center shadow" style="width: 28px; height: 28px; border: 2px solid #1e293b;" title="تغيير الصورة الشخصية فوراً" onclick="document.getElementById('avatar_ajax_input').click()">
@@ -131,7 +131,7 @@
                             <small class="text-muted">مستندات الموظف الرسمية والمرفوعة والمعتمدة من قِبل إدارة الموارد البشرية (HR)</small>
                         </div>
                     </div>
-                    @if(Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
+                    @if(Auth::user()->can('employees.documents_upload') || Auth::user()->can('employees.edit_profiles'))
                         <a href="{{ route('employee_profiles.edit', $user->id) }}#documents-section" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1.5 d-inline-flex align-items-center gap-2 fw-semibold">
                             <span>✏️</span>
                             <span>إدارة / رفع الوثائق</span>
@@ -170,8 +170,8 @@
                             @php
                                 $files = $user->documentFilesOf($docKey);
                                 $isUploaded = $files->isNotEmpty();
-                                $canUploadDocs = Auth::user()->can('employees.documents_upload') || Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']);
-                                $canDeleteDocs = Auth::user()->can('employees.documents_delete') || Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']);
+                                $canUploadDocs = Auth::user()->can('employees.documents_upload');
+                                $canDeleteDocs = Auth::user()->can('employees.documents_delete');
                             @endphp
                             <div class="col-12 col-md-4" id="card_col_{{ $docKey }}">
                                 @if($canUploadDocs)
