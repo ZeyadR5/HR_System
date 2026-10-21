@@ -62,23 +62,34 @@
                 <div class="card-body p-4">
                     <div class="row align-items-center g-4">
                         <div class="col-12 col-md-6 d-flex align-items-center gap-3">
-                            <div class="position-relative d-inline-block" style="width: 80px; height: 80px; flex-shrink: 0;">
-                                <div id="profile_avatar_wrapper" class="rounded-circle overflow-hidden border border-2 border-white shadow-sm d-flex align-items-center justify-content-center position-relative" style="width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                            <div class="position-relative d-inline-block" style="width: 120px; height: 120px; flex-shrink: 0;">
+                                <div id="profile_avatar_wrapper" 
+                                     class="rounded-circle overflow-hidden border border-3 border-white shadow-lg d-flex align-items-center justify-content-center position-relative profile-avatar-clickable" 
+                                     style="width: 120px; height: 120px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); cursor: pointer; transition: transform 0.25s ease, box-shadow 0.25s ease;"
+                                     title="انقر لعرض وتكبير الصورة بالكامل 🔍"
+                                     onclick="openAvatarViewer()">
                                     <div id="avatar_spinner" class="position-absolute top-0 start-0 w-100 h-100 d-none flex-column align-items-center justify-content-center bg-dark bg-opacity-75" style="z-index: 10;">
                                         <div class="spinner-border spinner-border-sm text-light" role="status"></div>
+                                    </div>
+                                    <div class="avatar-hover-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.2s; z-index: 5;">
+                                        <span style="font-size: 1.6rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));">🔍</span>
                                     </div>
                                     @if($user->profile_picture)
                                         <img id="profile_avatar_img" src="{{ $user->profile_picture_url }}" alt="{{ $user->name }}" style="width: 100%; height: 100%; object-fit: cover;">
                                     @else
-                                        <span id="profile_avatar_letter" class="text-white fw-bold" style="font-size: 2rem;">{{ mb_substr($user->name, 0, 1) }}</span>
+                                        <span id="profile_avatar_letter" class="text-white fw-bold" style="font-size: 3rem;">{{ mb_substr($user->name, 0, 1) }}</span>
                                     @endif
                                 </div>
 
                                 @if(Auth::id() === $user->id || Auth::user()->can('employees.avatar_manage'))
                                     {{-- Hidden avatar file input for instant upload --}}
                                     <input type="file" id="avatar_ajax_input" accept="image/png, image/jpeg, image/jpg, image/webp" style="display: none;" onchange="uploadAvatarDirect(this)">
-                                    <button type="button" class="btn btn-primary btn-sm rounded-circle position-absolute bottom-0 end-0 p-0 d-flex align-items-center justify-content-center shadow" style="width: 28px; height: 28px; border: 2px solid #1e293b;" title="تغيير الصورة الشخصية فوراً" onclick="document.getElementById('avatar_ajax_input').click()">
-                                        <span style="font-size: 0.8rem;">📷</span>
+                                    <button type="button" 
+                                            class="btn btn-primary btn-sm rounded-circle position-absolute bottom-0 end-0 p-0 d-flex align-items-center justify-content-center shadow" 
+                                            style="width: 36px; height: 36px; border: 3px solid #1e293b; z-index: 15;" 
+                                            title="تغيير الصورة الشخصية فوراً" 
+                                            onclick="event.stopPropagation(); document.getElementById('avatar_ajax_input').click()">
+                                        <span style="font-size: 0.95rem;">📷</span>
                                     </button>
                                 @endif
                             </div>
@@ -713,7 +724,52 @@
         background: #ffffff;
         border-color: #e2e8f0 #e2e8f0 #ffffff #e2e8f0;
     }
+    .profile-avatar-clickable:hover {
+        transform: scale(1.04);
+        box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.45) !important;
+    }
+    .profile-avatar-clickable:hover .avatar-hover-overlay {
+        opacity: 1 !important;
+    }
 </style>
+
+{{-- Fullscreen Avatar Lightbox Modal --}}
+<div id="avatarViewerModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none; z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 650px;">
+        <div class="modal-content border-0 shadow-lg text-white" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15) !important;">
+            <div class="modal-header border-0 pb-0 pt-3 px-4 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fs-5">👤</span>
+                    <h6 class="modal-title fw-bold mb-0 text-white" id="avatarViewerTitle">الصورة الشخصية — {{ $user->name }}</h6>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a id="avatarViewerDownloadBtn" href="{{ $user->profile_picture ? $user->profile_picture_url : '#' }}" target="_blank" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1 d-inline-flex align-items-center gap-1 shadow-xs" title="فتح الصورة بالحجم الكامل">
+                        <span>↗️</span>
+                        <span class="small fw-semibold">الحجم الأصلي</span>
+                    </a>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+            </div>
+            <div class="modal-body p-4 text-center d-flex flex-column align-items-center justify-content-center">
+                <div id="avatarModalImgContainer" class="rounded-4 overflow-hidden shadow-lg border border-2 border-white border-opacity-25 bg-black" style="max-width: 100%; max-height: 72vh; display: inline-flex; align-items: center; justify-content: center;">
+                    <img id="avatarViewerImg" src="{{ $user->profile_picture_url }}" alt="{{ $user->name }}" style="max-width: 100%; max-height: 72vh; object-fit: contain; display: {{ $user->profile_picture ? 'block' : 'none' }}; border-radius: 12px;">
+                    <div id="avatarViewerPlaceholder" style="width: 240px; height: 240px; display: {{ $user->profile_picture ? 'none' : 'flex' }}; align-items: center; justify-content: center; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 20px;">
+                        <span class="text-white fw-bold" style="font-size: 6rem;">{{ mb_substr($user->name, 0, 1) }}</span>
+                    </div>
+                </div>
+                <div class="mt-3 text-slate-300 small d-flex align-items-center justify-content-center gap-3">
+                    <span>🏢 {{ $user->job_title ?? 'موظف' }}</span>
+                    <span>•</span>
+                    <span>✉️ {{ $user->email }}</span>
+                    @if($user->is_insured)
+                        <span>•</span>
+                        <span class="badge bg-success text-white px-2 py-0.5">🛡️ مؤمن عليه</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -791,6 +847,35 @@
         });
     }
 
+    function openAvatarViewer() {
+        const avatarImg = document.getElementById('profile_avatar_img');
+        const viewerImg = document.getElementById('avatarViewerImg');
+        const placeholder = document.getElementById('avatarViewerPlaceholder');
+        const downloadBtn = document.getElementById('avatarViewerDownloadBtn');
+
+        if (avatarImg && avatarImg.src && !avatarImg.src.includes('data:image/svg')) {
+            if (viewerImg) {
+                viewerImg.src = avatarImg.src;
+                viewerImg.style.display = 'block';
+            }
+            if (placeholder) placeholder.style.display = 'none';
+            if (downloadBtn) {
+                downloadBtn.href = avatarImg.src;
+                downloadBtn.style.display = 'inline-flex';
+            }
+        } else {
+            if (viewerImg) viewerImg.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'flex';
+            if (downloadBtn) downloadBtn.style.display = 'none';
+        }
+
+        const modalEl = document.getElementById('avatarViewerModal');
+        if (modalEl && typeof bootstrap !== 'undefined') {
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+    }
+
     function uploadAvatarDirect(input) {
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
@@ -816,7 +901,27 @@
                 showDocToast(data.message || '✅ تم تحديث الصورة الشخصية بنجاح!', true);
                 const wrapper = document.getElementById('profile_avatar_wrapper');
                 if (wrapper) {
-                    wrapper.innerHTML = `<img id="profile_avatar_img" src="${data.avatar_url}?t=${Date.now()}" alt="{{ $user->name }}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                    wrapper.innerHTML = `
+                        <div id="avatar_spinner" class="position-absolute top-0 start-0 w-100 h-100 d-none flex-column align-items-center justify-content-center bg-dark bg-opacity-75" style="z-index: 10;">
+                            <div class="spinner-border spinner-border-sm text-light" role="status"></div>
+                        </div>
+                        <div class="avatar-hover-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.2s; z-index: 5;">
+                            <span style="font-size: 1.6rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));">🔍</span>
+                        </div>
+                        <img id="profile_avatar_img" src="${data.avatar_url}?t=${Date.now()}" alt="{{ $user->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    `;
+                }
+                const viewerImg = document.getElementById('avatarViewerImg');
+                const placeholder = document.getElementById('avatarViewerPlaceholder');
+                const downloadBtn = document.getElementById('avatarViewerDownloadBtn');
+                if (viewerImg) {
+                    viewerImg.src = `${data.avatar_url}?t=${Date.now()}`;
+                    viewerImg.style.display = 'block';
+                }
+                if (placeholder) placeholder.style.display = 'none';
+                if (downloadBtn) {
+                    downloadBtn.href = data.avatar_url;
+                    downloadBtn.style.display = 'inline-flex';
                 }
                 const headerAvatar = document.querySelector('.header-avatar');
                 if (headerAvatar && "{{ Auth::id() }}" === USER_ID) {
