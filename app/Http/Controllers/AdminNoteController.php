@@ -13,14 +13,14 @@ class AdminNoteController extends Controller
     // صفحة إضافة ملاحظة
     public function create()
     {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('admin_notes.create') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
         return view('admin_note');
     }
 
     // حفظ الملاحظة
     public function store(Request $request)
     {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('admin_notes.create') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $request->validate([
             'note' => 'required|string|max:2000',
@@ -37,7 +37,7 @@ class AdminNoteController extends Controller
     // صفحة عرض الملاحظات
     public function index(Request $request)
     {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('admin_notes.view') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $period = PayrollPeriod::fromRequest($request->query('period_start'));
         $periodStart = $period['start'];
@@ -66,7 +66,7 @@ class AdminNoteController extends Controller
     // تصدير Excel
     public function export(Request $request)
     {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('admin_notes.export') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $period = PayrollPeriod::fromRequest($request->query('period_start'));
         $periodStart = $period['start'];

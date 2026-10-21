@@ -135,6 +135,7 @@ public function permission_index()
 
 public function leave_accept($id)
 {
+    if (!Auth::user()->can('leave.approve')) abort(403);
     $leave = Leave::findOrFail($id);
     $leave->update([
         'status'      => 'accepted',
@@ -156,6 +157,7 @@ public function leave_accept($id)
 
 public function leave_refuse(Request $request, $id)
 {
+    if (!Auth::user()->can('leave.approve')) abort(403);
     $request->validate(['refuse_reason' => 'required|string|max:500']);
     $leave = Leave::findOrFail($id);
     $leave->update([
@@ -315,6 +317,7 @@ public function view_permission(Request $request)
 
 public function permission_accept($id)
 {
+    if (!Auth::user()->can('permission.approve')) abort(403);
     $p = Permission::findOrFail($id);
     $p->update([
         'status'      => 'accepted',
@@ -336,6 +339,7 @@ public function permission_accept($id)
 
 public function permission_refuse(Request $request, $id)
 {
+    if (!Auth::user()->can('permission.approve')) abort(403);
     $request->validate(['refuse_reason' => 'required|string|max:500']);
     $p = Permission::findOrFail($id);
     $p->update([
@@ -362,7 +366,7 @@ public function permission_refuse(Request $request, $id)
 
 public function export_lev(Request $request)
 {
-    if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+    if (!Auth::user()->can('leave.export')) abort(403);
     
     $period = \App\Support\PayrollPeriod::fromRequest($request->query('period_start'));
     $periodStart = $period['start'];
@@ -383,7 +387,7 @@ public function export_lev(Request $request)
 
 public function export_per(Request $request)
 {
-    if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+    if (!Auth::user()->can('permission.export')) abort(403);
 
     $period = \App\Support\PayrollPeriod::fromRequest($request->query('period_start'));
     $periodStart = $period['start'];

@@ -174,7 +174,7 @@ public function refuse(Request $request, $id)
             ])
             ->where('status', 'accepted');
 
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) {
+        if (!Auth::user()->can('overtime.export') && !Auth::user()->can('overtime.view_all')) {
             $overtimeQuery->where('user_id', Auth::id());
             $monthlyTotalsQuery->where('user_id', Auth::id());
         }

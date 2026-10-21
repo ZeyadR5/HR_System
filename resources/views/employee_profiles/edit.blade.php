@@ -89,7 +89,7 @@
                             @enderror
                         </div>
 
-                        @if(Auth::user()->role === 'developer')
+                        @if(Auth::user()->role === 'developer' || Auth::user()->can('developer.roles'))
                         <div class="mb-4">
                             <label for="role" class="form-label fw-bold text-slate-700">الصلاحية (Role)</label>
                             <select name="role" id="role" 

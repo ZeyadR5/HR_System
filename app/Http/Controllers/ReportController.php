@@ -20,7 +20,7 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('reports.full_report') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $period = PayrollPeriod::fromRequest($request->query('period_start'));
         $periodStart         = $period['start'];
@@ -39,7 +39,7 @@ class ReportController extends Controller
 
     public function export(Request $request)
     {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('reports.full_report') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $period = PayrollPeriod::fromRequest($request->query('period_start'));
         $periodStart = $period['start'];

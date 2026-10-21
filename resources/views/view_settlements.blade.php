@@ -35,7 +35,7 @@
             </div>
         </div>
 
-        @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+        @can('settlements.view_all')
         <hr class="my-4 border-default">
         <form action="{{ route('settlements.index') }}" method="GET" class="flex flex-wrap items-end gap-3">
             <input type="hidden" name="period_start" value="{{ $selectedPeriodStart }}">
@@ -59,9 +59,9 @@
                 </a>
             @endif
         </form>
-        @endif
+        @endcan
 
-        @if(in_array(Auth::user()->role, ['super_admin', 'developer']) && $olderPendingCount > 0)
+        @if(Auth::user()->can('settlements.approve') && $olderPendingCount > 0)
             <div class="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
                 يوجد {{ $olderPendingCount }} طلب تسوية Pending من فترات أقدم.
                 يمكنك مراجعتها من خلال زر <span class="font-semibold">الدورة السابقة</span>.
@@ -95,13 +95,13 @@
                     <th class="px-4 py-3 font-medium">تاريخ الطلب</th>
                     <th class="px-4 py-3 font-medium">اليوم</th>
                     <th class="px-4 py-3 font-medium">الحالة</th>
-                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+                    @can('settlements.approve')
                         <th class="px-4 py-3 font-medium">الإجراءات</th>
-                    @endif
+                    @endcan
                     <th class="px-4 py-3 font-medium">بواسطة</th>
-                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+                    @can('system.view_ip')
                         <th class="px-4 py-3 font-medium">IP Address</th>
-                    @endif
+                    @endcan
                 </tr>
             </thead>
             <tbody>
@@ -121,7 +121,7 @@
                             <span class="bg-yellow-100 text-yellow-700 text-xs font-medium px-2.5 py-1 rounded-full">قيد المراجعة</span>
                         @endif
                     </td>
-                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+                    @can('settlements.approve')
                     <td class="px-4 py-3">
                         @if($item->status === 'pending')
                             <div class="flex gap-2">
@@ -136,16 +136,16 @@
                             <span class="text-gray-400 text-xs">Done</span>
                         @endif
                     </td>
-                    @endif
+                    @endcan
                     <td class="px-4 py-3">
                         <span class="inline-flex items-center gap-1 text-xs text-gray-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                             {{ $item->actioned_by ?? '—' }}
                         </span>
                     </td>
-                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+                    @can('system.view_ip')
                         <td class="px-4 py-3 text-xs text-gray-500" dir="ltr" style="text-align: left;">{{ $item->created_ip ?? '-' }}</td>
-                    @endif
+                    @endcan
                 </tr>
                 
                 @if($item->status === 'accepted' && $item->accept_note)
@@ -177,7 +177,7 @@
         </table>
     </div>
 
-    @if(in_array(Auth::user()->role, ['super_admin', 'developer']) && $settlements->count() > 0)
+    @if(Auth::user()->can('settlements.export') && $settlements->count() > 0)
     <div class="flex justify-end mt-4 mb-8">
         <a href="{{ route('settlements.export', ['period_start' => $selectedPeriodStart]) }}"
            class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg">

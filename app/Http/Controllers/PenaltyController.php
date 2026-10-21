@@ -15,7 +15,7 @@ class PenaltyController extends Controller
     // صفحة إضافة جزاء - ادمن + سوبر ادمن
     public function index()
     {
-        if (!in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('penalties.create') && !in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) abort(403);
         $users = User::orderBy('name')->get();
         return view('admin_penalty', compact('users'));
     }
@@ -23,7 +23,7 @@ class PenaltyController extends Controller
     // حفظ الجزاء - ادمن + سوبر ادمن
     public function store(Request $request)
     {
-        if (!in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('penalties.create') && !in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) abort(403);
 
         $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -58,7 +58,7 @@ class PenaltyController extends Controller
     // قبول الجزاء - سوبر ادمن فقط
     public function accept($id)
     {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('penalties.approve') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         Penalty::findOrFail($id)->update([
             'status'      => 'accepted',
@@ -74,7 +74,7 @@ class PenaltyController extends Controller
     // رفض الجزاء - سوبر ادمن فقط
     public function refuse(Request $request, $id)
     {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('penalties.approve') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $request->validate(['refuse_reason' => 'required|string|max:500']);
 
@@ -103,7 +103,7 @@ class PenaltyController extends Controller
         $selectedPeriodStart = $periodStart->format('Y-m-d');
 
         $users = [];
-        if (in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
+        if (Auth::user()->can('penalties.view_all') || in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
             $users = User::orderBy('name')->get();
             $query = Penalty::whereBetween('created_at', [$periodStart, $periodEnd]);
             if ($request->has('user_id') && $request->user_id) {
@@ -124,7 +124,7 @@ class PenaltyController extends Controller
 
     public function export(Request $request)
     {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('penalties.export') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $period = PayrollPeriod::fromRequest($request->query('period_start'));
         $periodStart = $period['start'];

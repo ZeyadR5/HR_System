@@ -7,11 +7,11 @@
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <h1 class="text-xl font-semibold text-heading">
-                    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+                    @can('penalties.view_all')
                         جزاءات جميع الموظفين
                     @else
                         جزاءاتي
-                    @endif
+                    @endcan
                 </h1>
                 <p class="text-sm text-body mt-1">الدورة تتحسب من يوم 26 إلى يوم 25.</p>
                 <p class="text-sm font-medium text-heading mt-2">
@@ -41,7 +41,7 @@
             </div>
         </div>
 
-        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+        @can('penalties.view_all')
         <hr class="my-4 border-default">
         <form action="{{ route('view_penalties') }}" method="GET" class="flex flex-wrap items-end gap-3">
             <input type="hidden" name="period_start" value="{{ $selectedPeriodStart }}">
@@ -65,7 +65,7 @@
                 </a>
             @endif
         </form>
-        @endif
+        @endcan
     </div>
 
     <script>
@@ -89,27 +89,27 @@
             <thead class="bg-neutral-secondary-soft border-b border-default">
                 <tr>
                     <th class="px-2 py-2 font-medium">N</th>
-                    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+                    @can('penalties.view_all')
                     <th class="px-2 py-2 font-medium">اسم الموظف</th>
-                    @endif
+                    @endcan
                     <th class="px-2 py-2 font-medium">سبب الجزاء</th>
                     <th class="px-2 py-2 font-medium">القيمة</th>
                     <th class="px-2 py-2 font-medium">ملاحظات</th>
                     <th class="px-2 py-2 font-medium">بواسطة</th>
                     <th class="px-2 py-2 font-medium">الحالة</th>
                     <th class="px-2 py-2 font-medium">التاريخ (Create At)</th>
-                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+                    @can('system.view_ip')
                         <th class="px-2 py-2 font-medium">IP Address</th>
-                    @endif
+                    @endcan
                 </tr>
             </thead>
             <tbody>
                 @forelse($penalties as $index => $item)
                 <tr class="odd:bg-neutral-primary even:bg-neutral-secondary-soft border-b border-default">
                     <td class="px-2 py-2">{{ $index + 1 }}</td>
-                    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+                    @can('penalties.view_all')
                     <td class="px-2 py-2 font-medium text-heading">{{ $item->name }}</td>
-                    @endif
+                    @endcan
                     <td class="px-2 py-2">{{ $item->reason }}</td>
                     <td class="px-2 py-2">
                         <span class="bg-red-100 text-red-700 text-xs font-medium px-2.5 py-1 rounded-full">
@@ -135,13 +135,13 @@
                     </td>
                     <td class="px-2 py-2">
                         {{ $item->created_at->format('d M Y') }}
-                        @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+                        @can('system.view_ip')
                             <br><span class="text-xs text-gray-500">{{ $item->created_at->format('H:i:s') }}</span>
-                        @endif
+                        @endcan
                     </td>
-                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+                    @can('system.view_ip')
                         <td class="px-6 py-4 text-xs text-gray-500" dir="ltr" style="text-align: left;">{{ $item->created_ip ?? '-' }}</td>
-                    @endif
+                    @endcan
                 </tr>
                 @empty
                 <tr>
@@ -172,7 +172,7 @@
     </div>
 
     {{-- جدول الإجمالي لكل موظف - أدمن فقط --}}
-    @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']) && $penalties->count() > 0)
+    @if(Auth::user()->can('penalties.view_all') && $penalties->count() > 0)
     <div class="relative overflow-x-auto bg-neutral-primary-soft shadow-xs rounded-base border border-default mt-6">
         <div class="px-2 py-2 bg-neutral-secondary-soft border-b border-default">
             <h6 class="font-semibold text-heading">
@@ -209,7 +209,7 @@
         </table>
     </div>
 
-    @if(in_array(Auth::user()->role, ['super_admin', 'developer']))
+    @can('penalties.export')
     <div class="flex justify-end mt-4 mb-8">
         <a href="{{ route('penalties.export', ['period_start' => $selectedPeriodStart]) }}"
            class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg">
@@ -220,6 +220,7 @@
             Export To Excel
         </a>
     </div>
+    @endcan
     @endif
     @endif
 

@@ -7,7 +7,7 @@
     <div class="row justify-content-center">
         <div class="col-12 col-lg-10">
 
-            @if(in_array(Auth::user()->role, ['super_admin', 'developer']) || Auth::user()->role === 'admin')
+            @if(Auth::user()->can('employees.view_profiles'))
                 @php
                     $backParams = array_filter([
                         'page'      => request('page') ?: request('return_page'),
@@ -88,7 +88,7 @@
                                     <span>🏢 {{ $user->job_title ?? 'موظف' }}</span>
                                     <span>•</span>
                                     <span>✉️ {{ $user->email }}</span>
-                                    @if(in_array(Auth::user()->role, ['super_admin', 'developer']) || Auth::user()->role === 'admin' || Auth::id() === $user->id)
+                                    @if(Auth::user()->can('employees.view_profiles') || Auth::id() === $user->id)
                                         <span>•</span>
                                         <span class="badge bg-info text-dark">⏱️ {{ number_format($user->hourly_rate, 2) }} ج.م/ساعة</span>
                                     @endif
@@ -127,7 +127,7 @@
             </div>
 
             {{-- 1.5. Official Employee Documents Section (الوثائق والأوراق الرسمية) --}}
-            @if(Auth::id() === $user->id || Auth::user()->can('employees.view_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
+            @if(Auth::id() === $user->id || Auth::user()->can('employees.view_profiles'))
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px; background: #ffffff;">
                 <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <div class="d-flex align-items-center gap-2">

@@ -12,7 +12,7 @@ class AuditController extends Controller
     {
         // Strictly restrict access to z@z.z
         //if (Auth::user()->email !== 'z@z.z' || Auth::user()->email !== 'mtaha@gama.com') {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) {
+        if (!Auth::user()->can('reports.audit_log') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) {
             abort(403, 'Unauthorized access.');
         }
 

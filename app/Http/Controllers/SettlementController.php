@@ -18,7 +18,7 @@ class SettlementController extends Controller
         $startDay = \App\Support\Settings::get('settlement_start_day', 1);
         $endDay = \App\Support\Settings::get('settlement_end_day', 10);
         $dayOfMonth = now()->day;
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer']) && ($dayOfMonth < $startDay || $dayOfMonth > $endDay)) {
+        if (!Auth::user()->can('settlements.bypass_window') && !in_array(Auth::user()->role, ['super_admin', 'developer']) && ($dayOfMonth < $startDay || $dayOfMonth > $endDay)) {
             return redirect()->route('home')->with('alert_error', "⚠️ عذراً، تقديم طلبات التسوية متاح فقط من يوم {$startDay} إلى يوم {$endDay} من كل شهر.");
         }
         return view('settlement');
@@ -30,7 +30,7 @@ class SettlementController extends Controller
         $startDay = \App\Support\Settings::get('settlement_start_day', 1);
         $endDay = \App\Support\Settings::get('settlement_end_day', 10);
         $dayOfMonth = now()->day;
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer']) && ($dayOfMonth < $startDay || $dayOfMonth > $endDay)) {
+        if (!Auth::user()->can('settlements.bypass_window') && !in_array(Auth::user()->role, ['super_admin', 'developer']) && ($dayOfMonth < $startDay || $dayOfMonth > $endDay)) {
             return redirect()->route('home')->with('alert_error', "⚠️ عذراً، التقديم مغلق حالياً. الفترة المسموح بها هي من {$startDay} إلى {$endDay} في الشهر.");
         }
 
@@ -65,7 +65,7 @@ class SettlementController extends Controller
 
         $users = [];
 
-        if (in_array(Auth::user()->role, ['super_admin', 'developer'])) {
+        if (Auth::user()->can('settlements.view_all') || in_array(Auth::user()->role, ['super_admin', 'developer'])) {
             $users = User::orderBy('name')->get();
             if ($request->has('user_id') && $request->user_id) {
                 $query->where('user_id', $request->user_id);
@@ -76,7 +76,7 @@ class SettlementController extends Controller
 
         $settlements = $query->get();
 
-        $olderPendingCount = (in_array(Auth::user()->role, ['super_admin', 'developer']))
+        $olderPendingCount = (Auth::user()->can('settlements.approve') || in_array(Auth::user()->role, ['super_admin', 'developer']))
             ? Settlement::where('status', 'pending')
                 ->whereDate('date', '<', $periodStart->toDateString())
                 ->count()
@@ -99,7 +99,7 @@ class SettlementController extends Controller
     // قبول التسوية
     public function accept(Request $request, $id)
     {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('settlements.approve') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $request->validate(['accept_note' => 'nullable|string|max:500']);
 
@@ -118,7 +118,7 @@ class SettlementController extends Controller
     // رفض التسوية
     public function refuse(Request $request, $id)
     {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('settlements.approve') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $request->validate(['refuse_reason' => 'required|string|max:500']);
 
@@ -137,7 +137,7 @@ class SettlementController extends Controller
     // تصدير Excel
     public function export(Request $request)
     {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('settlements.export') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $period = PayrollPeriod::fromRequest($request->query('period_start'));
         $periodStart = $period['start'];

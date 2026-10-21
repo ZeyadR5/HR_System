@@ -25,10 +25,9 @@ class CheckInOutController extends Controller
 
     public function store(Request $request)
     {
-        if (!(in_array(Auth::user()->role, ['super_admin', 'developer']) || 
-              Auth::user()->email === 'hend@gama.com' || 
-              Auth::user()->email === 'RawanEssam@gamma.com' || 
-              Auth::user()->email === 'esraa.abdulla30@gmail.com')) {
+        if (!Auth::user()->can('checkinout.self_register') && 
+            !in_array(Auth::user()->role, ['super_admin', 'developer']) && 
+            !in_array(Auth::user()->email, ['hend@gama.com', 'RawanEssam@gamma.com', 'esraa.abdulla30@gmail.com'])) {
             return redirect()->route('home')->withErrors(['error' => 'عفواً، لا تملك صلاحية القيام بهذا الإجراء.']);
         }
 
@@ -81,7 +80,7 @@ class CheckInOutController extends Controller
 
         $users = [];
 
-        if (in_array(Auth::user()->role, ['super_admin', 'developer']) || Auth::user()->role === 'admin') {
+        if (Auth::user()->can('checkinout.view_all') || in_array(Auth::user()->role, ['super_admin', 'developer']) || Auth::user()->role === 'admin') {
             $users = User::orderBy('name')->get();
             if ($request->has('user_id') && $request->user_id) {
                 $query->where('user_id', $request->user_id);
@@ -99,7 +98,7 @@ class CheckInOutController extends Controller
             ])
             ->where('status', 'accepted');
 
-        if (in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
+        if (Auth::user()->can('checkinout.view_all') || in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])) {
             if ($request->has('user_id') && $request->user_id) {
                 $summaryQuery->where('user_id', $request->user_id);
             }
@@ -109,7 +108,7 @@ class CheckInOutController extends Controller
 
         $cycleSummary = self::computeCycleSummary($summaryQuery->get(), $periodStart, $periodEnd);
 
-        $olderPendingCount = in_array(Auth::user()->role, ['admin', 'super_admin', 'developer'])
+        $olderPendingCount = (Auth::user()->can('checkinout.approve') || in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
             ? CheckInOut::where('status', 'pending')
                 ->whereDate('date', '<', $periodStart->toDateString())
                 ->count()
@@ -132,10 +131,9 @@ class CheckInOutController extends Controller
 
     public function accept($id)
     {
-        if (!(in_array(Auth::user()->role, ['super_admin', 'developer']) || 
-              Auth::user()->email === 'hend@gama.com' || 
-              Auth::user()->email === 'RawanEssam@gamma.com' || 
-              Auth::user()->email === 'esraa.abdulla30@gmail.com')) {
+        if (!Auth::user()->can('checkinout.approve') && 
+            !in_array(Auth::user()->role, ['super_admin', 'developer']) && 
+            !in_array(Auth::user()->email, ['hend@gama.com', 'RawanEssam@gamma.com', 'esraa.abdulla30@gmail.com'])) {
             return redirect()->route('home')->withErrors(['error' => 'عفواً، لا تملك صلاحية القيام بهذا الإجراء.']);
         }
 
@@ -152,10 +150,9 @@ class CheckInOutController extends Controller
 
     public function refuse(Request $request, $id)
     {
-        if (!(in_array(Auth::user()->role, ['super_admin', 'developer']) || 
-              Auth::user()->email === 'hend@gama.com' || 
-              Auth::user()->email === 'RawanEssam@gamma.com' || 
-              Auth::user()->email === 'esraa.abdulla30@gmail.com')) {
+        if (!Auth::user()->can('checkinout.approve') && 
+            !in_array(Auth::user()->role, ['super_admin', 'developer']) && 
+            !in_array(Auth::user()->email, ['hend@gama.com', 'RawanEssam@gamma.com', 'esraa.abdulla30@gmail.com'])) {
             return redirect()->route('home')->withErrors(['error' => 'عفواً، لا تملك صلاحية القيام بهذا الإجراء.']);
         }
 
@@ -264,7 +261,7 @@ class CheckInOutController extends Controller
 
     public function export(Request $request)
     {
-        if (!in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
+        if (!Auth::user()->can('checkinout.export') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
         $period = PayrollPeriod::fromRequest($request->query('period_start'));
         $periodStart = $period['start'];

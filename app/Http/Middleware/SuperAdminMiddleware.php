@@ -14,7 +14,13 @@ class SuperAdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && in_array(Auth::user()->role, ['super_admin', 'developer'])) {
+        if (Auth::check() && (
+            in_array(Auth::user()->role, ['super_admin', 'developer']) ||
+            Auth::user()->hasAnyPermission([
+                'reports.full_report', 'reports.audit_log', 'settlements.approve', 
+                'penalties.approve', 'employees.edit_profiles', 'employees.manual_entry'
+            ])
+        )) {
             return $next($request);
         }
 

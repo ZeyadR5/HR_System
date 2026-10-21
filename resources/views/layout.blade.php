@@ -1136,7 +1136,20 @@
         </div>
 
         {{-- Section 3: Management & HR Tools --}}
-        @if(in_array(Auth::user()->role, ['admin', 'super_admin', 'developer']))
+        @php
+            $canSeeAdminCategory = Auth::user()->isDeveloper() || Auth::user()->hasAnyPermission([
+                'employees.view_profiles',
+                'reports.full_report',
+                'employees.manual_entry',
+                'employees.reset_password',
+                'penalties.create',
+                'incentives.create',
+                'incentives.view',
+                'admin_notes.create',
+                'admin_notes.view',
+            ]);
+        @endphp
+        @if($canSeeAdminCategory)
         <div class="nav-category" data-category="admin">
             <div class="nav-category-title">
                 <span>🛠️</span>
@@ -1218,13 +1231,16 @@
         @endif
 
         {{-- Section 4: System & Developer --}}
-        @if(Auth::user()->email === 'z@z.z' || Auth::user()->email === 'mtaha@gama.com' || Auth::user()->role === 'developer')
+        @php
+            $canSeeSystemCategory = Auth::user()->isDeveloper() || Auth::user()->can('reports.audit_log') || Auth::user()->email === 'z@z.z' || Auth::user()->email === 'mtaha@gama.com';
+        @endphp
+        @if($canSeeSystemCategory)
         <div class="nav-category" data-category="developer">
             <div class="nav-category-title">
                 <span>🛡️</span>
                 <span>أمان وإعدادات النظام</span>
             </div>
-            @if(Auth::user()->email === 'z@z.z' || Auth::user()->email === 'mtaha@gama.com')
+            @if(Auth::user()->can('reports.audit_log') || Auth::user()->email === 'z@z.z' || Auth::user()->email === 'mtaha@gama.com')
             <a href="{{ route('audit_log') }}" class="sidepanel-nav-link {{ request()->routeIs('audit_log') ? 'active' : '' }}">
                 <div class="sidepanel-link-left">
                     <span class="sidepanel-link-icon">📜</span>
