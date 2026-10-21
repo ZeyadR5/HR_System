@@ -206,12 +206,9 @@
                                                     👁️ عرض
                                                 </a>
                                             </div>
-                                            <div class="form-check mt-2">
-                                                <input class="form-check-input" type="checkbox" name="delete_profile_picture" value="1" id="delete_profile_picture">
-                                                <label class="form-check-label text-danger small" for="delete_profile_picture">
-                                                    🗑️ حذف الصورة الحالية والعودة للأيقونة الافتراضية
-                                                </label>
-                                            </div>
+                                            <button type="button" class="btn btn-sm btn-outline-danger mt-2 d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('profile_picture', this)">
+                                                <span>🗑️</span> حذف الصورة الحالية والعودة للأيقونة الافتراضية
+                                            </button>
                                         @else
                                             <span class="badge bg-light text-muted border">
                                                 الأيقونة الافتراضية بالحرف الأول
@@ -278,12 +275,9 @@
                                             <a href="{{ route('employee_profiles.document', [$user->id, 'national_id_card']) }}?download=1" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
                                                 <span>📥</span> تحميل
                                             </a>
-                                            <div class="form-check ms-auto mb-0">
-                                                <input class="form-check-input" type="checkbox" name="delete_national_id_card" value="1" id="del_id_card">
-                                                <label class="form-check-label text-danger small" for="del_id_card" style="font-size: 0.78rem;">
-                                                    🗑️ حذف
-                                                </label>
-                                            </div>
+                                            <button type="button" class="btn btn-sm btn-outline-danger ms-auto d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('national_id_card', this)">
+                                                <span>🗑️</span> حذف
+                                            </button>
                                         </div>
                                     @endif
 
@@ -327,12 +321,9 @@
                                             <a href="{{ route('employee_profiles.document', [$user->id, 'qualification_certificate']) }}?download=1" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
                                                 <span>📥</span> تحميل
                                             </a>
-                                            <div class="form-check ms-auto mb-0">
-                                                <input class="form-check-input" type="checkbox" name="delete_qualification_certificate" value="1" id="del_qual">
-                                                <label class="form-check-label text-danger small" for="del_qual" style="font-size: 0.78rem;">
-                                                    🗑️ حذف
-                                                </label>
-                                            </div>
+                                            <button type="button" class="btn btn-sm btn-outline-danger ms-auto d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('qualification_certificate', this)">
+                                                <span>🗑️</span> حذف
+                                            </button>
                                         </div>
                                     @endif
 
@@ -376,12 +367,9 @@
                                             <a href="{{ route('employee_profiles.document', [$user->id, 'other_document']) }}?download=1" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
                                                 <span>📥</span> تحميل
                                             </a>
-                                            <div class="form-check ms-auto mb-0">
-                                                <input class="form-check-input" type="checkbox" name="delete_other_document" value="1" id="del_other">
-                                                <label class="form-check-label text-danger small" for="del_other" style="font-size: 0.78rem;">
-                                                    🗑️ حذف
-                                                </label>
-                                            </div>
+                                            <button type="button" class="btn btn-sm btn-outline-danger ms-auto d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('other_document', this)">
+                                                <span>🗑️</span> حذف
+                                            </button>
                                         </div>
                                     @endif
 
@@ -487,6 +475,33 @@
             bar.classList.add('d-none');
             bar.classList.remove('d-flex');
         }
+    }
+
+    function deleteFromEdit(field, btn) {
+        if (!confirm('هل أنت متأكد من حذف هذا الملف؟')) return;
+        btn.disabled = true;
+        const formData = new FormData();
+        formData.append('_token', "{{ csrf_token() }}");
+        formData.append('type', field);
+
+        fetch("{{ route('employee_profiles.delete_document_ajax', $user->id) }}", {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                btn.disabled = false;
+                alert(data.message || 'تعذّر حذف الملف.');
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            alert('حدث خطأ في الاتصال: ' + err.message);
+        });
     }
 
     function shrinkImageFile(file) {
