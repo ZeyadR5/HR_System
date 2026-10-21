@@ -43,12 +43,26 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
                 $table->string('qualification_certificate')->nullable();
                 $table->string('other_document')->nullable();
                 $table->boolean('is_insured')->default(false);
+                $table->decimal('basic_incentive', 10, 2)->default(0)->nullable();
+                $table->date('hire_date')->nullable();
+                $table->string('evaluation', 10)->nullable();
                 $table->rememberToken();
                 $table->timestamps();
             });
-        } elseif (!Schema::hasColumn('users', 'is_insured')) {
+        } else {
             Schema::table('users', function ($table) {
-                $table->boolean('is_insured')->default(false);
+                if (!Schema::hasColumn('users', 'is_insured')) {
+                    $table->boolean('is_insured')->default(false);
+                }
+                if (!Schema::hasColumn('users', 'basic_incentive')) {
+                    $table->decimal('basic_incentive', 10, 2)->default(0)->nullable();
+                }
+                if (!Schema::hasColumn('users', 'hire_date')) {
+                    $table->date('hire_date')->nullable();
+                }
+                if (!Schema::hasColumn('users', 'evaluation')) {
+                    $table->string('evaluation', 10)->nullable();
+                }
             });
         }
 
@@ -561,5 +575,70 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
 
         $response->assertStatus(403);
         $this->assertFalse((bool)$employee->fresh()->is_insured);
+    }
+
+    public function test_hr_can_set_basic_incentive_hire_date_and_evaluation(): void
+    {
+        $admin = User::create([
+            'name'     => 'مسؤول HR',
+            'email'    => 'hr_fields@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'admin',
+        ]);
+
+        $employee = User::create([
+            'name'            => 'موظف تجريبي',
+            'email'           => 'test_hr_fields@example.com',
+            'password'        => bcrypt('123456'),
+            'role'            => 'user',
+            'hourly_rate'     => 50,
+            'basic_incentive' => 0,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->withSession(['unlocked_employee_profiles' => true])
+            ->post(route('employee_profiles.update', $employee->id), [
+                'job_title'       => 'Nur',
+                'hourly_rate'     => 60,
+                'basic_incentive' => 1500.50,
+                'hire_date'       => '2024-03-15',
+                'evaluation'      => 'A',
+            ]);
+
+        $response->assertRedirect(route('employee_profiles.index'));
+
+        $employee->refresh();
+        $this->assertEquals(1500.50, (float)$employee->basic_incentive);
+        $this->assertEquals('2024-03-15', $employee->hire_date->format('Y-m-d'));
+        $this->assertEquals('A', $employee->evaluation);
+    }
+
+    public function test_evaluation_rejects_invalid_grade(): void
+    {
+        $admin = User::create([
+            'name'     => 'مسؤول HR 2',
+            'email'    => 'hr_fields2@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'admin',
+        ]);
+
+        $employee = User::create([
+            'name'            => 'موظف تجريبي',
+            'email'           => 'invalid_grade@example.com',
+            'password'        => bcrypt('123456'),
+            'role'            => 'user',
+            'hourly_rate'     => 50,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->withSession(['unlocked_employee_profiles' => true])
+            ->post(route('employee_profiles.update', $employee->id), [
+                'job_title'       => 'Nur',
+                'hourly_rate'     => 50,
+                'evaluation'      => 'D', // Invalid! Only A, B, C allowed
+            ]);
+
+        $response->assertSessionHasErrors('evaluation');
+        $this->assertNull($employee->fresh()->evaluation);
     }
 }

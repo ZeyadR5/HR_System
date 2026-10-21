@@ -34,6 +34,9 @@ class User extends Authenticatable
         'onesignal_id',
         'shift_group_id',
         'is_insured',
+        'basic_incentive',
+        'hire_date',
+        'evaluation',
     ];
 
     /**
@@ -59,6 +62,8 @@ class User extends Authenticatable
             'salary_amount' => 'decimal:2',
             'working_hours' => 'decimal:2',
             'hourly_rate' => 'decimal:2',
+            'basic_incentive' => 'decimal:2',
+            'hire_date' => 'date',
             'is_insured' => 'boolean',
         ];
     }

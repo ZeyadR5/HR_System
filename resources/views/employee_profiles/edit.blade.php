@@ -196,6 +196,76 @@
                             </div>
                         </div>
 
+                        {{-- بيانات وتفاصيل الموارد البشرية (الحافز الأساسي، تاريخ بدء العمل، والتقييم) --}}
+                        <div class="card border-0 mb-4" style="border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <label class="form-label fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2" style="font-size: 0.95rem;">
+                                        <span>📋</span> بيانات الموارد البشرية والتقييم (HR)
+                                    </label>
+                                    <span class="badge bg-secondary-subtle text-secondary border px-2 py-1" style="font-size: 0.75rem;">
+                                        ⭐ تقييم وتاريخ الحافز
+                                    </span>
+                                </div>
+
+                                <div class="row g-3">
+                                    {{-- 1. قيمة الحافز الأساسي --}}
+                                    <div class="col-12 col-md-4">
+                                        <label for="basic_incentive" class="form-label fw-bold text-slate-700 small mb-1">
+                                            🎁 قيمة الحافز الأساسي (ج.م)
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" step="0.01" min="0" id="basic_incentive" name="basic_incentive" 
+                                                   class="form-control text-center fw-semibold @error('basic_incentive') is-invalid @enderror" 
+                                                   value="{{ old('basic_incentive', $user->basic_incentive !== null ? (float)$user->basic_incentive : '0') }}" 
+                                                   placeholder="0.00"
+                                                   style="border-radius: 10px; font-size: 0.95rem;">
+                                        </div>
+                                        <div class="form-text extra-small text-muted" style="font-size: 0.75rem;">قيمة الحافز الشهري الثابت</div>
+                                        @error('basic_incentive')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    {{-- 2. تاريخ بدء العمل --}}
+                                    <div class="col-12 col-md-4">
+                                        <label for="hire_date" class="form-label fw-bold text-slate-700 small mb-1">
+                                            📅 تاريخ بدء العمل
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="date" id="hire_date" name="hire_date" 
+                                                   class="form-control text-center fw-semibold @error('hire_date') is-invalid @enderror" 
+                                                   value="{{ old('hire_date', $user->hire_date ? \Carbon\Carbon::parse($user->hire_date)->format('Y-m-d') : '') }}" 
+                                                   style="border-radius: 10px; font-size: 0.95rem;">
+                                        </div>
+                                        <div class="form-text extra-small text-muted" style="font-size: 0.75rem;">تاريخ مباشرة العمل / التعيين</div>
+                                        @error('hire_date')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    {{-- 3. تقييم الموظف (A, B, C فقط) --}}
+                                    <div class="col-12 col-md-4">
+                                        <label for="evaluation" class="form-label fw-bold text-slate-700 small mb-1">
+                                            ⭐ تقييم الموظف
+                                        </label>
+                                        <select name="evaluation" id="evaluation" 
+                                                class="form-select text-center fw-bold @error('evaluation') is-invalid @enderror" 
+                                                style="border-radius: 10px; font-size: 0.95rem;">
+                                            <option value="" {{ old('evaluation', $user->evaluation) == '' ? 'selected' : '' }}>— بدون تقييم —</option>
+                                            <option value="A" {{ old('evaluation', $user->evaluation) == 'A' ? 'selected' : '' }} style="color: #b45309; font-weight: bold;">⭐ فئة A (ممتاز)</option>
+                                            <option value="B" {{ old('evaluation', $user->evaluation) == 'B' ? 'selected' : '' }} style="color: #1d4ed8; font-weight: bold;">🥈 فئة B (جيد جداً)</option>
+                                            <option value="C" {{ old('evaluation', $user->evaluation) == 'C' ? 'selected' : '' }} style="color: #475569; font-weight: bold;">🥉 فئة C (متوسط)</option>
+                                        </select>
+                                        <div class="form-text extra-small text-muted" style="font-size: 0.75rem;">درجة التقييم (A, B, C)</div>
+                                        @error('evaluation')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- قسم صورة البروفايل --}}
                         <div class="card border-0 mb-4" style="border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
                             <div class="card-body p-3">

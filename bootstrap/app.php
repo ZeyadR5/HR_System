@@ -65,6 +65,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 500);
             }
 
+            // Let ValidationException flash validation errors normally
+            if ($e instanceof \Illuminate\Validation\ValidationException) {
+                return null;
+            }
+
             // Let standard HTTP exceptions (404, 403, 401) render their designated error views
             if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
                 return null;

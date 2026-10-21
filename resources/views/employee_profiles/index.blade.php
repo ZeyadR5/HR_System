@@ -157,6 +157,13 @@
                                                     <a href="{{ route('employee_profiles.show', array_merge(['id' => $user->id], $queryParams)) }}" class="text-decoration-none text-slate-800 fw-bold" style="transition: color 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#1e293b'">
                                                         {{ $user->name }}
                                                     </a>
+                                                    @if($user->evaluation === 'A')
+                                                        <span class="badge bg-warning text-dark px-1.5 py-0.5 rounded-pill small" title="تقييم A (ممتاز)" style="font-size: 0.7rem;">⭐ A</span>
+                                                    @elseif($user->evaluation === 'B')
+                                                        <span class="badge bg-primary text-white px-1.5 py-0.5 rounded-pill small" title="تقييم B (جيد جداً)" style="font-size: 0.7rem;">🥈 B</span>
+                                                    @elseif($user->evaluation === 'C')
+                                                        <span class="badge bg-secondary text-white px-1.5 py-0.5 rounded-pill small" title="تقييم C (متوسط)" style="font-size: 0.7rem;">🥉 C</span>
+                                                    @endif
                                                     @if($isHighlighted)
                                                         <span class="badge bg-warning text-dark ms-1 small">✔</span>
                                                     @endif

@@ -379,10 +379,14 @@ class EmployeeProfileController extends Controller
             'hourly_rate'                => 'required|numeric|min:0',
             'salary_amount'              => 'nullable|numeric|min:0',
             'working_hours'              => 'nullable|numeric|min:0',
+            'basic_incentive'            => 'nullable|numeric|min:0',
+            'hire_date'                  => 'nullable|date',
+            'evaluation'                 => 'nullable|string|in:A,B,C',
             'role'                       => 'nullable|exists:roles,name',
             'profile_picture'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
         ], [
             'hourly_rate.required'               => 'قيمة الساعة مطلوبة',
+            'evaluation.in'                      => 'تقييم الموظف يجب أن يكون A أو B أو C فقط.',
             'profile_picture.image'              => 'صورة البروفايل يجب أن تكون ملف صورة صالح.',
             'profile_picture.max'                => 'صورة البروفايل لا تتجاوز 5 ميجابايت.',
             'national_id_card.mimes'             => 'صورة البطاقة تقبل صور أو ملفات PDF فقط.',
@@ -394,10 +398,13 @@ class EmployeeProfileController extends Controller
         ]);
 
         $updateData = [
-            'job_title'     => $request->job_title,
-            'hourly_rate'   => $request->hourly_rate,
-            'salary_amount' => $request->filled('salary_amount') ? $request->salary_amount : null,
-            'working_hours' => $request->filled('working_hours') ? $request->working_hours : null,
+            'job_title'       => $request->job_title,
+            'hourly_rate'     => $request->hourly_rate,
+            'salary_amount'   => $request->filled('salary_amount') ? $request->salary_amount : null,
+            'working_hours'   => $request->filled('working_hours') ? $request->working_hours : null,
+            'basic_incentive' => $request->filled('basic_incentive') ? $request->basic_incentive : 0,
+            'hire_date'       => $request->filled('hire_date') ? $request->hire_date : null,
+            'evaluation'      => $request->filled('evaluation') ? $request->evaluation : null,
         ];
 
         if ($request->has('is_insured')) {
@@ -509,27 +516,34 @@ class EmployeeProfileController extends Controller
             'password'      => 'required|string|min:4',
             'job_title'     => 'nullable|string|max:255',
             'hourly_rate'   => 'nullable|numeric|min:0',
-            'salary_amount' => 'nullable|numeric|min:0',
-            'working_hours' => 'nullable|numeric|min:0',
-            'role'          => 'required|exists:roles,name',
+            'salary_amount'   => 'nullable|numeric|min:0',
+            'working_hours'   => 'nullable|numeric|min:0',
+            'basic_incentive' => 'nullable|numeric|min:0',
+            'hire_date'       => 'nullable|date',
+            'evaluation'      => 'nullable|string|in:A,B,C',
+            'role'            => 'required|exists:roles,name',
         ], [
             'name.required'     => 'اسم الموظف مطلوب.',
             'email.required'    => 'البريد الإلكتروني مطلوب.',
             'email.unique'      => 'هذا البريد مأخوذ من قبل، حاول استخدام كلمة أخرى.',
             'password.required' => 'كلمة السر مطلوبة.',
             'role.required'     => 'فئة الموظف مطلوبة.',
+            'evaluation.in'     => 'تقييم الموظف يجب أن يكون A أو B أو C فقط.',
         ]);
 
         $user = User::create([
-            'name'          => trim($request->name),
-            'email'         => $email,
-            'password'      => \Illuminate\Support\Facades\Hash::make($request->password),
-            'job_title'     => $request->job_title ?: null,
-            'hourly_rate'   => $request->hourly_rate ?: 0,
-            'salary_amount' => $request->filled('salary_amount') ? $request->salary_amount : null,
-            'working_hours' => $request->filled('working_hours') ? $request->working_hours : null,
-            'role'          => $request->role,
-            'is_insured'    => $request->boolean('is_insured'),
+            'name'            => trim($request->name),
+            'email'           => $email,
+            'password'        => \Illuminate\Support\Facades\Hash::make($request->password),
+            'job_title'       => $request->job_title ?: null,
+            'hourly_rate'     => $request->hourly_rate ?: 0,
+            'salary_amount'   => $request->filled('salary_amount') ? $request->salary_amount : null,
+            'working_hours'   => $request->filled('working_hours') ? $request->working_hours : null,
+            'basic_incentive' => $request->filled('basic_incentive') ? $request->basic_incentive : 0,
+            'hire_date'       => $request->filled('hire_date') ? $request->hire_date : null,
+            'evaluation'      => $request->filled('evaluation') ? $request->evaluation : null,
+            'role'            => $request->role,
+            'is_insured'      => $request->boolean('is_insured'),
         ]);
 
         $fileUpdates = [];

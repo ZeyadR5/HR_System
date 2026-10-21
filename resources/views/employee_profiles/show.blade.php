@@ -98,6 +98,24 @@
                                     @else
                                         <span class="badge bg-secondary text-light px-2 py-1 shadow-xs" style="font-size: 0.78rem; opacity: 0.85;">غير مؤمن عليه</span>
                                     @endif
+                                    @if($user->basic_incentive > 0)
+                                        <span>•</span>
+                                        <span class="badge bg-warning text-dark px-2 py-1 shadow-xs" style="font-size: 0.78rem;">🎁 حافز: {{ number_format($user->basic_incentive, 2) }} ج.م</span>
+                                    @endif
+                                    @if($user->hire_date)
+                                        <span>•</span>
+                                        <span class="badge bg-light text-dark px-2 py-1 shadow-xs" style="font-size: 0.78rem;">📅 بدء العمل: {{ \Carbon\Carbon::parse($user->hire_date)->format('d M Y') }}</span>
+                                    @endif
+                                    @if($user->evaluation)
+                                        <span>•</span>
+                                        @if($user->evaluation === 'A')
+                                            <span class="badge text-dark px-2 py-1 shadow-xs" style="background: linear-gradient(135deg, #fef08a, #facc15); font-size: 0.78rem; font-weight: 700;">⭐ تقييم A (ممتاز)</span>
+                                        @elseif($user->evaluation === 'B')
+                                            <span class="badge text-white px-2 py-1 shadow-xs" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); font-size: 0.78rem; font-weight: 700;">🥈 تقييم B (جيد جداً)</span>
+                                        @elseif($user->evaluation === 'C')
+                                            <span class="badge text-white px-2 py-1 shadow-xs" style="background: linear-gradient(135deg, #64748b, #475569); font-size: 0.78rem; font-weight: 700;">🥉 تقييم C (متوسط)</span>
+                                        @endif
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -120,6 +138,66 @@
                                     <span>المُستهلك: <strong>{{ $yearUsedLeavesDays }}</strong> يوم (عام {{ now()->year }})</span>
                                     <span>الإجمالي السنوي: <strong>{{ $annualQuota }}</strong> يوم</span>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 1.2. HR Details Overview Strip --}}
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-md-4">
+                    <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 16px; background: #ffffff;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 46px; height: 46px; background: #fef3c7; color: #b45309; font-size: 1.3rem;">
+                                🎁
+                            </div>
+                            <div>
+                                <span class="text-muted small fw-semibold d-block" style="font-size: 0.78rem;">قيمة الحافز الأساسي</span>
+                                <span class="fs-6 fw-bold text-dark">
+                                    {{ $user->basic_incentive > 0 ? number_format($user->basic_incentive, 2) . ' ج.م' : '—' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 16px; background: #ffffff;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 46px; height: 46px; background: #eff6ff; color: #1d4ed8; font-size: 1.3rem;">
+                                📅
+                            </div>
+                            <div>
+                                <span class="text-muted small fw-semibold d-block" style="font-size: 0.78rem;">تاريخ بدء العمل</span>
+                                <span class="fs-6 fw-bold text-dark">
+                                    @if($user->hire_date)
+                                        {{ \Carbon\Carbon::parse($user->hire_date)->format('d M Y') }}
+                                        <small class="text-muted fw-normal" style="font-size: 0.72rem;">({{ \Carbon\Carbon::parse($user->hire_date)->diffForHumans(null, true) }})</small>
+                                    @else
+                                        <span class="text-muted small fw-normal">غير محدد</span>
+                                    @endif
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 16px; background: #ffffff;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 46px; height: 46px; background: #fdf4ff; color: #7e22ce; font-size: 1.3rem;">
+                                ⭐
+                            </div>
+                            <div>
+                                <span class="text-muted small fw-semibold d-block" style="font-size: 0.78rem;">تقييم الموظف</span>
+                                @if($user->evaluation === 'A')
+                                    <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-bold" style="font-size: 0.8rem;">⭐ فئة A (ممتاز)</span>
+                                @elseif($user->evaluation === 'B')
+                                    <span class="badge bg-primary text-white px-2.5 py-1 rounded-pill fw-bold" style="font-size: 0.8rem;">🥈 فئة B (جيد جداً)</span>
+                                @elseif($user->evaluation === 'C')
+                                    <span class="badge bg-secondary text-white px-2.5 py-1 rounded-pill fw-bold" style="font-size: 0.8rem;">🥉 فئة C (متوسط)</span>
+                                @else
+                                    <span class="text-muted small fw-normal">بدون تقييم</span>
+                                @endif
                             </div>
                         </div>
                     </div>
