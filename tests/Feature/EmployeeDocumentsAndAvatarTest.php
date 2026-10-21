@@ -429,4 +429,31 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
         $page->assertDontSee('اختيار ورفع الملفات الآن');
         $page->assertDontSee('إدارة / رفع الوثائق');
     }
+
+    public function test_edit_view_loads_successfully_when_employee_has_no_avatar(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::create([
+            'name'     => 'أدمن كامل',
+            'email'    => 'admin_full@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'admin',
+        ]);
+
+        $employeeWithoutAvatar = User::create([
+            'name'            => 'موظف بدون صورة',
+            'email'           => 'no_avatar@example.com',
+            'password'        => bcrypt('123456'),
+            'role'            => 'user',
+            'profile_picture' => null,
+        ]);
+
+        $res = $this->actingAs($admin)
+            ->withSession(['unlocked_employee_profiles' => true])
+            ->get(route('employee_profiles.edit', $employeeWithoutAvatar->id));
+
+        $res->assertStatus(200);
+        $res->assertSee('تعديل بروفايل موظف');
+    }
 }

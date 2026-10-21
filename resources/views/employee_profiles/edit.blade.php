@@ -183,6 +183,9 @@
                         {{-- قسم صورة البروفايل --}}
                         <div class="card border-0 mb-4" style="border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
                             <div class="card-body p-3">
+                                @php
+                                    $canManageAvatar = Auth::id() === $user->id || Auth::user()->can('employees.avatar_manage');
+                                @endphp
                                 <label class="form-label fw-bold text-slate-800 d-flex align-items-center justify-content-between mb-3" style="font-size: 0.95rem;">
                                     <span class="d-flex align-items-center gap-2">
                                         <span>👤</span> صورة البروفايل الشخصية للموظف
@@ -206,9 +209,6 @@
                                                     👁️ عرض
                                                 </a>
                                             </div>
-                                            @php
-                                                $canManageAvatar = Auth::id() === $user->id || Auth::user()->can('employees.avatar_manage');
-                                            @endphp
                                             @if($canManageAvatar)
                                                 <button type="button" class="btn btn-sm btn-outline-danger mt-2 d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('profile_picture', this)">
                                                     <span>🗑️</span> حذف الصورة الحالية والعودة للأيقونة الافتراضية
