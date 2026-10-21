@@ -178,25 +178,37 @@
                                         @endif
                                     </td>
                                     <td class="px-3 py-3 text-center" id="insurance-cell-{{ $user->id }}">
-                                        <div class="d-inline-flex flex-column align-items-center justify-content-center">
-                                            <div class="form-check form-switch m-0 d-flex align-items-center justify-content-center p-0">
-                                                <input class="form-check-input insurance-toggle" 
-                                                       type="checkbox" 
-                                                       role="switch" 
-                                                       id="insurance_switch_{{ $user->id }}"
-                                                       data-user-id="{{ $user->id }}" 
-                                                       data-user-name="{{ $user->name }}"
-                                                       {{ $user->is_insured ? 'checked' : '' }} 
-                                                       {{ !auth()->user()->can('employees.edit_profiles') ? 'disabled' : '' }} 
-                                                       style="cursor: {{ auth()->user()->can('employees.edit_profiles') ? 'pointer' : 'not-allowed' }}; width: 2.6rem; height: 1.35rem; margin: 0;"
-                                                       title="{{ auth()->user()->can('employees.edit_profiles') ? 'اضغط لتغيير حالة التأمين وحفظها فوراً' : 'ليس لديك صلاحية تعديل التأمين' }}"
-                                                       onchange="handleInsuranceToggle(this)">
-                                            </div>
-                                            <span class="badge mt-1 {{ $user->is_insured ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-light text-muted border' }}" 
-                                                  id="insurance_badge_{{ $user->id }}" 
-                                                  style="font-size: 0.72rem; font-weight: 600; min-width: 65px;">
-                                                {{ $user->is_insured ? 'مؤمن عليه' : 'غير مؤمن' }}
-                                            </span>
+                                        <div class="d-inline-flex align-items-center justify-content-center">
+                                            <button type="button" 
+                                                    class="creative-insurance-btn {{ $user->is_insured ? 'is-insured' : 'is-not-insured' }}"
+                                                    id="insurance_btn_{{ $user->id }}"
+                                                    data-user-id="{{ $user->id }}" 
+                                                    data-user-name="{{ $user->name }}"
+                                                    data-insured="{{ $user->is_insured ? '1' : '0' }}"
+                                                    {{ !auth()->user()->can('employees.edit_profiles') ? 'disabled' : '' }}
+                                                    onclick="toggleCreativeInsurance(this)"
+                                                    title="{{ auth()->user()->can('employees.edit_profiles') ? ($user->is_insured ? 'مؤمن عليه — انقر للإلغاء' : 'غير مؤمن — انقر لتعيينه كمؤمن عليه') : 'ليس لديك صلاحية تعديل التأمين' }}">
+                                                
+                                                <span class="creative-toggle-track">
+                                                    <span class="creative-toggle-thumb" id="insurance_thumb_{{ $user->id }}">
+                                                        <span class="thumb-icon-shield">🛡️</span>
+                                                        <span class="thumb-icon-dash">✕</span>
+                                                    </span>
+                                                </span>
+
+                                                <span class="creative-toggle-content">
+                                                    <span class="creative-toggle-text" id="insurance_text_{{ $user->id }}">
+                                                        {{ $user->is_insured ? 'مؤمن عليه' : 'غير مؤمن' }}
+                                                    </span>
+                                                    <span class="creative-pulse-dot" id="insurance_dot_{{ $user->id }}"></span>
+                                                </span>
+                                            </button>
+
+                                            {{-- Hidden checkbox for test assertions & forms --}}
+                                            <input type="checkbox" 
+                                                   id="insurance_switch_{{ $user->id }}" 
+                                                   class="d-none" 
+                                                   {{ $user->is_insured ? 'checked' : '' }}>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-center">
@@ -360,24 +372,24 @@
     });
 
     /**
-     * الحفظ الفوري لحالة التأمين عند تغيير الـ switch
+     * الحفظ الفوري لحالة التأمين بالزر الكرييتف المريح والأنيق
      */
-    function handleInsuranceToggle(checkbox) {
-        const userId = checkbox.dataset.userId;
-        const userName = checkbox.dataset.userName || 'الموظف';
-        const isChecked = checkbox.checked;
-        const badge = document.getElementById('insurance_badge_' + userId);
+    function toggleCreativeInsurance(btn) {
+        if (btn.disabled || btn.classList.contains('is-loading')) return;
 
-        // تعطيل الزر مؤقتاً أثناء الاتصال
-        checkbox.disabled = true;
+        const userId = btn.dataset.userId;
+        const userName = btn.dataset.userName || 'الموظف';
+        const currentInsured = btn.dataset.insured === '1';
+        const nextInsured = !currentInsured;
 
-        const originalBadgeText = badge ? badge.innerText : '';
-        const originalBadgeClass = badge ? badge.className : '';
+        const text = document.getElementById('insurance_text_' + userId);
+        const hiddenCheckbox = document.getElementById('insurance_switch_' + userId);
 
-        if (badge) {
-            badge.innerText = 'جاري الحفظ...';
-            badge.className = 'badge mt-1 bg-secondary text-white';
-        }
+        // وضع التحميل السلس
+        btn.classList.add('is-loading');
+        btn.disabled = true;
+        const originalText = text ? text.innerText : '';
+        if (text) text.innerText = 'جاري الحفظ...';
 
         fetch(`{{ url('/employee-profiles') }}/${userId}/toggle-insurance`, {
             method: 'POST',
@@ -386,39 +398,50 @@
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ is_insured: isChecked ? 1 : 0 })
+            body: JSON.stringify({ is_insured: nextInsured ? 1 : 0 })
         })
         .then(async response => {
             const data = await response.json();
-            checkbox.disabled = false;
+            btn.classList.remove('is-loading');
+            btn.disabled = false;
+
             if (!response.ok || !data.success) {
                 throw new Error(data.message || 'حدث خطأ أثناء حفظ حالة التأمين.');
             }
 
-            if (badge) {
-                if (data.is_insured) {
-                    badge.innerText = 'مؤمن عليه';
-                    badge.className = 'badge mt-1 bg-success-subtle text-success border border-success-subtle';
-                } else {
-                    badge.innerText = 'غير مؤمن';
-                    badge.className = 'badge mt-1 bg-light text-muted border';
-                }
+            const isInsured = data.is_insured;
+            btn.dataset.insured = isInsured ? '1' : '0';
+
+            if (isInsured) {
+                btn.classList.remove('is-not-insured');
+                btn.classList.add('is-insured');
+                if (text) text.innerText = 'مؤمن عليه';
+                btn.title = 'مؤمن عليه — انقر للإلغاء';
+                if (hiddenCheckbox) hiddenCheckbox.checked = true;
+            } else {
+                btn.classList.remove('is-insured');
+                btn.classList.add('is-not-insured');
+                if (text) text.innerText = 'غير مؤمن';
+                btn.title = 'غير مؤمن — انقر لتعيينه كمؤمن عليه';
+                if (hiddenCheckbox) hiddenCheckbox.checked = false;
             }
-            showInsuranceToast(data.message || (isChecked ? 'تم الحفظ: مؤمن عليه' : 'تم الحفظ: غير مؤمن'), 'success');
+
+            // حركة اهتزاز/نبضة مبهجة تدل على النجاح
+            btn.classList.add('animate-pop');
+            setTimeout(() => btn.classList.remove('animate-pop'), 450);
+
+            showInsuranceToast(data.message || (isInsured ? 'تم تأكيد التأمين للموظف' : 'تم إلغاء حالة التأمين'), 'success');
         })
         .catch(error => {
-            checkbox.disabled = false;
-            checkbox.checked = !isChecked; // إعادة التراجع
-            if (badge) {
-                badge.innerText = originalBadgeText;
-                badge.className = originalBadgeClass;
-            }
+            btn.classList.remove('is-loading');
+            btn.disabled = false;
+            if (text) text.innerText = originalText;
             showInsuranceToast(error.message, 'danger');
         });
     }
 
     /**
-     * إظهار إشعار عائم Toast أنيق ومباشر
+     * إظهار إشعار عائم Toast أنيق ومريح في أسفل الشاشة
      */
     function showInsuranceToast(message, type = 'success') {
         let container = document.getElementById('insurance-toast-container');
@@ -438,18 +461,25 @@
 
         const toast = document.createElement('div');
         toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} shadow-lg py-2 px-3 d-flex align-items-center gap-2 mb-0`;
-        toast.style.borderRadius = '12px';
+        toast.style.borderRadius = '14px';
         toast.style.fontSize = '0.9rem';
-        toast.style.minWidth = '270px';
-        toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
-        toast.style.transition = 'all 0.3s ease';
+        toast.style.minWidth = '280px';
+        toast.style.boxShadow = '0 12px 30px rgba(0,0,0,0.18)';
+        toast.style.transition = 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        toast.style.transform = 'translateY(20px) scale(0.95)';
+        toast.style.opacity = '0';
         toast.innerHTML = `<span>${type === 'success' ? '🛡️' : '⚠️'}</span> <span class="fw-semibold">${message}</span>`;
         container.appendChild(toast);
 
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateY(0) scale(1)';
+            toast.style.opacity = '1';
+        });
+
         setTimeout(() => {
             toast.style.opacity = '0';
-            toast.style.transform = 'translateY(10px)';
-            setTimeout(() => toast.remove(), 300);
+            toast.style.transform = 'translateY(15px) scale(0.95)';
+            setTimeout(() => toast.remove(), 350);
         }, 3500);
     }
 </script>
@@ -463,6 +493,189 @@
 @endif
 
 <style>
+    /* زر التأمين الكرييتف التفاعلي المريح */
+    .creative-insurance-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 14px 4px 6px;
+        border-radius: 9999px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+        border: 1.5px solid transparent;
+        transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        outline: none;
+        background: transparent;
+        user-select: none;
+        text-decoration: none;
+        height: 36px;
+        box-sizing: border-box;
+    }
+
+    .creative-insurance-btn:active {
+        transform: scale(0.93) !important;
+    }
+
+    .creative-insurance-btn.animate-pop {
+        animation: popFeedback 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popFeedback {
+        0% { transform: scale(0.92); }
+        50% { transform: scale(1.08); }
+        100% { transform: scale(1); }
+    }
+
+    /* حالة: مؤمن عليه */
+    .creative-insurance-btn.is-insured {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        border-color: #10b981;
+        color: #065f46;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .creative-insurance-btn.is-insured:hover {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        border-color: #059669;
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.26);
+        transform: translateY(-1.5px);
+    }
+
+    /* حالة: غير مؤمن */
+    .creative-insurance-btn.is-not-insured {
+        background: #f8fafc;
+        border: 1.5px dashed #cbd5e1;
+        color: #64748b;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .creative-insurance-btn.is-not-insured:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+        color: #1e293b;
+        transform: translateY(-1.5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .creative-insurance-btn[disabled] {
+        opacity: 0.6;
+        cursor: not-allowed !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .creative-insurance-btn.is-loading {
+        pointer-events: none;
+        opacity: 0.75;
+    }
+
+    /* التراك الداخلي للمفتاح */
+    .creative-toggle-track {
+        width: 40px;
+        height: 24px;
+        border-radius: 9999px;
+        position: relative;
+        transition: background-color 0.28s ease;
+        flex-shrink: 0;
+        display: inline-block;
+    }
+
+    .is-insured .creative-toggle-track {
+        background: #10b981;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .is-not-insured .creative-toggle-track {
+        background: #cbd5e1;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* زرار التبديل الدائري Thumb */
+    .creative-toggle-thumb {
+        width: 20px;
+        height: 20px;
+        background: #ffffff;
+        border-radius: 50%;
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+    }
+
+    /* اتجاه الـ RTL: عند اليمين مؤمن عليه، وعند السحب لليسار غير مؤمن */
+    .is-not-insured .creative-toggle-thumb {
+        transform: translateX(-16px);
+    }
+    .is-insured .creative-toggle-thumb {
+        transform: translateX(0);
+    }
+
+    .thumb-icon-shield {
+        display: none;
+        font-size: 11px;
+        line-height: 1;
+    }
+    .thumb-icon-dash {
+        display: none;
+        font-size: 9px;
+        color: #94a3b8;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .is-insured .thumb-icon-shield {
+        display: inline-block;
+    }
+    .is-not-insured .thumb-icon-dash {
+        display: inline-block;
+    }
+
+    .creative-toggle-content {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding-left: 2px;
+        white-space: nowrap;
+    }
+
+    .creative-pulse-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        display: inline-block;
+        transition: all 0.25s ease;
+    }
+
+    .is-insured .creative-pulse-dot {
+        background: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+        animation: creativePulse 2s infinite;
+    }
+
+    .is-not-insured .creative-pulse-dot {
+        background: #cbd5e1;
+        box-shadow: none;
+    }
+
+    @keyframes creativePulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
+        }
+        70% {
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+
     .modal-custom-close {
         width: 34px;
         height: 34px;
