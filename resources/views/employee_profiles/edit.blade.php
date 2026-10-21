@@ -300,7 +300,7 @@
                                             <span>⚡ رفع وحفظ البطاقة فوراً</span>
                                         </button>
                                     </div>
-                                    <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 10 ميجا).</div>
+                                    <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 5 ميجا).</div>
                                     @error('national_id_card')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
@@ -352,7 +352,7 @@
                                             <span>⚡ رفع وحفظ المؤهل فوراً</span>
                                         </button>
                                     </div>
-                                    <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 10 ميجا).</div>
+                                    <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 5 ميجا).</div>
                                     @error('qualification_certificate')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
@@ -404,7 +404,7 @@
                                             <span>⚡ رفع وحفظ الملف فوراً</span>
                                         </button>
                                     </div>
-                                    <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 10 ميجا).</div>
+                                    <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 5 ميجا).</div>
                                     @error('other_document')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror

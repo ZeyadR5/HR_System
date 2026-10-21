@@ -367,19 +367,19 @@ class EmployeeProfileController extends Controller
             'working_hours'              => 'nullable|numeric|min:0',
             'role'                       => 'nullable|exists:roles,name',
             'profile_picture'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-            'national_id_card'           => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
-            'qualification_certificate'  => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
-            'other_document'             => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
+            'national_id_card'           => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:5120',
+            'qualification_certificate'  => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:5120',
+            'other_document'             => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:5120',
         ], [
             'hourly_rate.required'               => 'قيمة الساعة مطلوبة',
             'profile_picture.image'              => 'صورة البروفايل يجب أن تكون ملف صورة صالح.',
             'profile_picture.max'                => 'صورة البروفايل لا تتجاوز 5 ميجابايت.',
             'national_id_card.mimes'             => 'صورة البطاقة تقبل صور أو ملفات PDF فقط.',
-            'national_id_card.max'               => 'صورة البطاقة لا تتجاوز 10 ميجابايت.',
+            'national_id_card.max'               => 'صورة البطاقة لا تتجاوز 5 ميجابايت.',
             'qualification_certificate.mimes'    => 'صورة المؤهل تقبل صور أو ملفات PDF فقط.',
-            'qualification_certificate.max'      => 'صورة المؤهل لا تتجاوز 10 ميجابايت.',
+            'qualification_certificate.max'      => 'صورة المؤهل لا تتجاوز 5 ميجابايت.',
             'other_document.mimes'               => 'الوثائق الأخرى تقبل صور أو ملفات PDF فقط.',
-            'other_document.max'                 => 'الوثائق الأخرى لا تتجاوز 10 ميجابايت.',
+            'other_document.max'                 => 'الوثائق الأخرى لا تتجاوز 5 ميجابايت.',
         ]);
 
         $updateData = [
@@ -830,10 +830,10 @@ class EmployeeProfileController extends Controller
                 $user->update(['profile_picture' => $path]);
             } else {
                 $request->validate([
-                    'file' => 'file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
+                    'file' => 'file|mimes:jpeg,png,jpg,webp,pdf|max:5120',
                 ], [
                     'file.mimes' => 'الصيغ المسموحة للوثائق: صور (JPG, PNG, WEBP) أو ملفات PDF.',
-                    'file.max'   => 'أقصى حجم للوثيقة 10 ميجابايت.',
+                    'file.max'   => 'أقصى حجم للوثيقة 5 ميجابايت.',
                 ]);
 
                 if (!empty($user->{$type}) && Storage::disk('public')->exists($user->{$type})) {
