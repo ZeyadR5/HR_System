@@ -92,6 +92,12 @@
                                         <span>•</span>
                                         <span class="badge bg-info text-dark">⏱️ {{ number_format($user->hourly_rate, 2) }} ج.م/ساعة</span>
                                     @endif
+                                    <span>•</span>
+                                    @if($user->is_insured)
+                                        <span class="badge bg-success text-white px-2 py-1 shadow-xs" style="font-size: 0.78rem;">🛡️ مؤمن عليه</span>
+                                    @else
+                                        <span class="badge bg-secondary text-light px-2 py-1 shadow-xs" style="font-size: 0.78rem; opacity: 0.85;">غير مؤمن عليه</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>

@@ -33,6 +33,7 @@ class User extends Authenticatable
         'other_document',
         'onesignal_id',
         'shift_group_id',
+        'is_insured',
     ];
 
     /**
@@ -58,6 +59,7 @@ class User extends Authenticatable
             'salary_amount' => 'decimal:2',
             'working_hours' => 'decimal:2',
             'hourly_rate' => 'decimal:2',
+            'is_insured' => 'boolean',
         ];
     }
 

@@ -42,8 +42,13 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
                 $table->string('national_id_card')->nullable();
                 $table->string('qualification_certificate')->nullable();
                 $table->string('other_document')->nullable();
+                $table->boolean('is_insured')->default(false);
                 $table->rememberToken();
                 $table->timestamps();
+            });
+        } elseif (!Schema::hasColumn('users', 'is_insured')) {
+            Schema::table('users', function ($table) {
+                $table->boolean('is_insured')->default(false);
             });
         }
 
@@ -455,5 +460,106 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
 
         $res->assertStatus(200);
         $res->assertSee('تعديل بروفايل موظف');
+    }
+
+    public function test_index_renders_employee_avatar_and_insurance_column(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::create([
+            'name'     => 'مسؤول النظام',
+            'email'    => 'admin_index@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'admin',
+        ]);
+
+        $employee = User::create([
+            'name'        => 'موظف تجريبي',
+            'email'       => 'emp_test@example.com',
+            'password'    => bcrypt('123456'),
+            'role'        => 'user',
+            'is_insured'  => true,
+        ]);
+
+        $res = $this->actingAs($admin)
+            ->withSession(['unlocked_employee_profiles' => true])
+            ->get(route('employee_profiles.index'));
+
+        $res->assertStatus(200);
+        $res->assertSee('موظف تجريبي');
+        $res->assertSee('insurance_switch_' . $employee->id);
+        $res->assertSee('مؤمن عليه');
+    }
+
+    public function test_hr_can_toggle_insurance_status_via_ajax(): void
+    {
+        $admin = User::create([
+            'name'     => 'مسؤول HR',
+            'email'    => 'hr_toggle@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'admin',
+        ]);
+
+        $employee = User::create([
+            'name'       => 'موظف غير مؤمن',
+            'email'      => 'emp_not_ins@example.com',
+            'password'   => bcrypt('123456'),
+            'role'       => 'user',
+            'is_insured' => false,
+        ]);
+
+        // 1. Toggle to insured
+        $response = $this->actingAs($admin)
+            ->postJson(route('employee_profiles.toggle_insurance', $employee->id), [
+                'is_insured' => true,
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success'    => true,
+                'is_insured' => true,
+            ]);
+
+        $this->assertTrue((bool)$employee->fresh()->is_insured);
+
+        // 2. Toggle back to not insured
+        $response2 = $this->actingAs($admin)
+            ->postJson(route('employee_profiles.toggle_insurance', $employee->id), [
+                'is_insured' => false,
+            ]);
+
+        $response2->assertStatus(200)
+            ->assertJson([
+                'success'    => true,
+                'is_insured' => false,
+            ]);
+
+        $this->assertFalse((bool)$employee->fresh()->is_insured);
+    }
+
+    public function test_user_without_edit_permission_cannot_toggle_insurance(): void
+    {
+        $regularUser = User::create([
+            'name'     => 'موظف عادي',
+            'email'    => 'regular_emp@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'user',
+        ]);
+
+        $employee = User::create([
+            'name'       => 'موظف هدف',
+            'email'      => 'target_emp@example.com',
+            'password'   => bcrypt('123456'),
+            'role'       => 'user',
+            'is_insured' => false,
+        ]);
+
+        $response = $this->actingAs($regularUser)
+            ->postJson(route('employee_profiles.toggle_insurance', $employee->id), [
+                'is_insured' => true,
+            ]);
+
+        $response->assertStatus(403);
+        $this->assertFalse((bool)$employee->fresh()->is_insured);
     }
 }

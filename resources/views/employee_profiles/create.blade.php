@@ -141,7 +141,23 @@
                             </select>
                         </div>
 
-                        {{-- 5. صورة البروفايل ووثائق الموظف (اختياري عند الإنشاء) --}}
+                        {{-- 5. حالة التأمين الاجتماعي --}}
+                        <div class="card border-0 mb-4" style="border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
+                            <div class="card-body p-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <div>
+                                    <label for="is_insured" class="form-label fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2" style="font-size: 0.95rem;">
+                                        <span>🛡️</span> حالة التأمين الاجتماعي
+                                    </label>
+                                    <div class="text-muted extra-small" style="font-size: 0.78rem;">تحديد ما إذا كان الموظف مؤمناً عليه رسمياً في التأمينات الاجتماعية أم لا</div>
+                                </div>
+                                <div class="form-check form-switch m-0 fs-4">
+                                    <input type="hidden" name="is_insured" value="0">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="is_insured" name="is_insured" value="1" {{ old('is_insured') ? 'checked' : '' }} style="cursor: pointer;">
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- 6. صورة البروفايل ووثائق الموظف (اختياري عند الإنشاء) --}}
                         <div class="card border-0 mb-4" style="border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
                             <div class="card-body p-3">
                                 <label class="form-label fw-bold text-slate-800 mb-2" style="font-size: .95rem;">

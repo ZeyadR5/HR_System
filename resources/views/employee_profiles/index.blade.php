@@ -33,7 +33,16 @@
                         <input type="hidden" name="sort_dir" value="{{ request('sort_dir') }}">
                     @endif
 
-                    <div style="min-width: 200px;">
+                    <div style="min-width: 170px;">
+                        <label class="text-muted small mb-1 d-block">التأمين الاجتماعي:</label>
+                        <select name="insured" id="insured" class="form-select" style="border-radius: 8px; height: 38px; font-size: 0.88rem;" onchange="this.form.submit()">
+                            <option value="">جميع الحالات (الكل)</option>
+                            <option value="1" {{ request('insured') === '1' ? 'selected' : '' }}>🛡️ مؤمن عليهم فقط</option>
+                            <option value="0" {{ request('insured') === '0' ? 'selected' : '' }}>⚠️ غير مؤمن عليهم فقط</option>
+                        </select>
+                    </div>
+
+                    <div style="min-width: 180px;">
                         <label class="text-muted small mb-1 d-block">فلترة بالوظيفة:</label>
                         <select name="job_title" id="job_title" class="form-select" style="border-radius: 8px; height: 38px; font-size: 0.88rem;" onchange="this.form.submit()">
                             <option value="">جميع الوظائف (الكل)</option>
@@ -45,7 +54,7 @@
                         </select>
                     </div>
 
-                    <div style="min-width: 220px;">
+                    <div style="min-width: 200px;">
                         <label class="text-muted small mb-1 d-block">بحث بموظف معين:</label>
                         <select name="user_id" id="user_id" class="user-search-select" onchange="this.form.submit()">
                             <option value="">كل الموظفين</option>
@@ -57,7 +66,7 @@
                         </select>
                     </div>
 
-                    @if(request('user_id') || request('job_title') || request('sort_by'))
+                    @if(request('user_id') || request('job_title') || request('sort_by') || request()->filled('insured'))
                         <a href="{{ route('employee_profiles.index') }}" class="btn btn-outline-secondary" title="إلغاء الفلتر والترتيب" style="border-radius: 8px; height: 38px; display: flex; align-items: center;">✖ إعادة ضبط</a>
                     @endif
                 </form>
@@ -93,7 +102,7 @@
                                         $nextDir = (request('sort_by') === 'name' && request('sort_dir', 'asc') === 'asc') ? 'desc' : 'asc';
                                     @endphp
                                     <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'name', 'sort_dir' => $nextDir]) }}" class="text-decoration-none text-dark d-inline-flex align-items-center gap-1 fw-bold">
-                                        الاسم
+                                        الموظف
                                         @if(request('sort_by') === 'name' || !request('sort_by'))
                                             <span style="font-size: 0.8rem; color: #2563eb;">{{ request('sort_dir') === 'desc' ? '▼' : '▲' }}</span>
                                         @else
@@ -115,21 +124,48 @@
                                         @endif
                                     </a>
                                 </th>
+                                <th class="px-4 py-3 text-center" style="min-width: 130px;">
+                                    @php
+                                        $nextInsuredDir = (request('sort_by') === 'is_insured' && request('sort_dir') === 'asc') ? 'desc' : 'asc';
+                                    @endphp
+                                    <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'is_insured', 'sort_dir' => $nextInsuredDir]) }}" class="text-decoration-none text-dark d-inline-flex align-items-center gap-1 fw-bold">
+                                        🛡️ مؤمن عليه
+                                        @if(request('sort_by') === 'is_insured')
+                                            <span style="font-size: 0.8rem; color: #2563eb;">{{ request('sort_dir') === 'desc' ? '▼' : '▲' }}</span>
+                                        @else
+                                            <span class="text-muted" style="opacity: 0.4;">↕</span>
+                                        @endif
+                                    </a>
+                                </th>
                                 <th class="px-4 py-3 text-center">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($users as $user)
                                 @php
-                                    $queryParams = request()->only(['page', 'job_title', 'user_id', 'sort_by', 'sort_dir']);
+                                    $queryParams = request()->only(['page', 'job_title', 'user_id', 'sort_by', 'sort_dir', 'insured']);
                                     $isHighlighted = session('highlight_user_id') == $user->id;
                                 @endphp
                                 <tr id="user-row-{{ $user->id }}" class="{{ $isHighlighted ? 'table-warning' : '' }}" style="{{ $isHighlighted ? 'background-color: #fef9c3 !important; box-shadow: inset 0 0 0 2px #f59e0b; transition: all 0.5s;' : '' }}">
                                     <td class="px-4 py-3 fw-semibold text-slate-700">
-                                        {{ $user->name }}
-                                        @if($isHighlighted)
-                                            <span class="badge bg-warning text-dark ms-2 small">✔</span>
-                                        @endif
+                                        <div class="d-flex align-items-center gap-3">
+                                            <a href="{{ route('employee_profiles.show', array_merge(['id' => $user->id], $queryParams)) }}" class="text-decoration-none flex-shrink-0" title="عرض بروفايل {{ $user->name }}">
+                                                <img src="{{ $user->profile_picture_url }}" alt="{{ $user->name }}" class="rounded-circle shadow-xs" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e2e8f0; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+                                            </a>
+                                            <div>
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <a href="{{ route('employee_profiles.show', array_merge(['id' => $user->id], $queryParams)) }}" class="text-decoration-none text-slate-800 fw-bold" style="transition: color 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#1e293b'">
+                                                        {{ $user->name }}
+                                                    </a>
+                                                    @if($isHighlighted)
+                                                        <span class="badge bg-warning text-dark ms-1 small">✔</span>
+                                                    @endif
+                                                </div>
+                                                @if($user->role && $user->role !== 'user')
+                                                    <div class="text-muted" style="font-size: 0.72rem;">{{ $user->role }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="px-4 py-3 text-muted small">{{ $user->email }}</td>
                                     <td class="px-4 py-3">
@@ -141,9 +177,28 @@
                                             <span class="text-muted italic small">غير محدد</span>
                                         @endif
                                     </td>
-                                    <!-- <td class="px-4 py-3 fw-bold text-info">
-                                        {{ number_format($user->hourly_rate, 2) }} ج.م
-                                    </td> -->
+                                    <td class="px-3 py-3 text-center" id="insurance-cell-{{ $user->id }}">
+                                        <div class="d-inline-flex flex-column align-items-center justify-content-center">
+                                            <div class="form-check form-switch m-0 d-flex align-items-center justify-content-center p-0">
+                                                <input class="form-check-input insurance-toggle" 
+                                                       type="checkbox" 
+                                                       role="switch" 
+                                                       id="insurance_switch_{{ $user->id }}"
+                                                       data-user-id="{{ $user->id }}" 
+                                                       data-user-name="{{ $user->name }}"
+                                                       {{ $user->is_insured ? 'checked' : '' }} 
+                                                       {{ !auth()->user()->can('employees.edit_profiles') ? 'disabled' : '' }} 
+                                                       style="cursor: {{ auth()->user()->can('employees.edit_profiles') ? 'pointer' : 'not-allowed' }}; width: 2.6rem; height: 1.35rem; margin: 0;"
+                                                       title="{{ auth()->user()->can('employees.edit_profiles') ? 'اضغط لتغيير حالة التأمين وحفظها فوراً' : 'ليس لديك صلاحية تعديل التأمين' }}"
+                                                       onchange="handleInsuranceToggle(this)">
+                                            </div>
+                                            <span class="badge mt-1 {{ $user->is_insured ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-light text-muted border' }}" 
+                                                  id="insurance_badge_{{ $user->id }}" 
+                                                  style="font-size: 0.72rem; font-weight: 600; min-width: 65px;">
+                                                {{ $user->is_insured ? 'مؤمن عليه' : 'غير مؤمن' }}
+                                            </span>
+                                        </div>
+                                    </td>
                                     <td class="px-4 py-3 text-center">
                                         <div class="d-inline-flex align-items-center gap-1">
                                             <a href="{{ route('employee_profiles.show', array_merge(['id' => $user->id], $queryParams)) }}" class="btn btn-sm btn-outline-info px-3" style="border-radius: 8px;">
@@ -303,6 +358,100 @@
         }, 150);
         @endif
     });
+
+    /**
+     * الحفظ الفوري لحالة التأمين عند تغيير الـ switch
+     */
+    function handleInsuranceToggle(checkbox) {
+        const userId = checkbox.dataset.userId;
+        const userName = checkbox.dataset.userName || 'الموظف';
+        const isChecked = checkbox.checked;
+        const badge = document.getElementById('insurance_badge_' + userId);
+
+        // تعطيل الزر مؤقتاً أثناء الاتصال
+        checkbox.disabled = true;
+
+        const originalBadgeText = badge ? badge.innerText : '';
+        const originalBadgeClass = badge ? badge.className : '';
+
+        if (badge) {
+            badge.innerText = 'جاري الحفظ...';
+            badge.className = 'badge mt-1 bg-secondary text-white';
+        }
+
+        fetch(`{{ url('/employee-profiles') }}/${userId}/toggle-insurance`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ is_insured: isChecked ? 1 : 0 })
+        })
+        .then(async response => {
+            const data = await response.json();
+            checkbox.disabled = false;
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'حدث خطأ أثناء حفظ حالة التأمين.');
+            }
+
+            if (badge) {
+                if (data.is_insured) {
+                    badge.innerText = 'مؤمن عليه';
+                    badge.className = 'badge mt-1 bg-success-subtle text-success border border-success-subtle';
+                } else {
+                    badge.innerText = 'غير مؤمن';
+                    badge.className = 'badge mt-1 bg-light text-muted border';
+                }
+            }
+            showInsuranceToast(data.message || (isChecked ? 'تم الحفظ: مؤمن عليه' : 'تم الحفظ: غير مؤمن'), 'success');
+        })
+        .catch(error => {
+            checkbox.disabled = false;
+            checkbox.checked = !isChecked; // إعادة التراجع
+            if (badge) {
+                badge.innerText = originalBadgeText;
+                badge.className = originalBadgeClass;
+            }
+            showInsuranceToast(error.message, 'danger');
+        });
+    }
+
+    /**
+     * إظهار إشعار عائم Toast أنيق ومباشر
+     */
+    function showInsuranceToast(message, type = 'success') {
+        let container = document.getElementById('insurance-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'insurance-toast-container';
+            container.style.position = 'fixed';
+            container.style.bottom = '25px';
+            container.style.left = '25px';
+            container.style.zIndex = '99999';
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.gap = '10px';
+            container.style.direction = 'rtl';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} shadow-lg py-2 px-3 d-flex align-items-center gap-2 mb-0`;
+        toast.style.borderRadius = '12px';
+        toast.style.fontSize = '0.9rem';
+        toast.style.minWidth = '270px';
+        toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
+        toast.style.transition = 'all 0.3s ease';
+        toast.innerHTML = `<span>${type === 'success' ? '🛡️' : '⚠️'}</span> <span class="fw-semibold">${message}</span>`;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(10px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
+    }
 </script>
 
 @if($errors->has('system_password'))

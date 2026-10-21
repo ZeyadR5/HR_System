@@ -274,12 +274,25 @@ class EmployeeProfileController extends Controller
             $query->where('job_title', $request->job_title);
         }
 
+        if ($request->filled('insured')) {
+            if ($request->insured === '1') {
+                $query->where('is_insured', true);
+            } elseif ($request->insured === '0') {
+                $query->where(function ($q) {
+                    $q->where('is_insured', false)->orWhereNull('is_insured');
+                });
+            }
+        }
+
         $sortBy = $request->get('sort_by', 'name');
         $sortDir = strtolower($request->get('sort_dir', 'asc')) === 'desc' ? 'desc' : 'asc';
 
         if ($sortBy === 'job_title') {
             $query->orderByRaw('CASE WHEN job_title IS NULL OR job_title = "" THEN 1 ELSE 0 END')
                   ->orderBy('job_title', $sortDir)
+                  ->orderBy('name', 'asc');
+        } elseif ($sortBy === 'is_insured') {
+            $query->orderBy('is_insured', $sortDir)
                   ->orderBy('name', 'asc');
         } else {
             $query->orderBy('name', $sortDir);
@@ -386,6 +399,10 @@ class EmployeeProfileController extends Controller
             'salary_amount' => $request->filled('salary_amount') ? $request->salary_amount : null,
             'working_hours' => $request->filled('working_hours') ? $request->working_hours : null,
         ];
+
+        if ($request->has('is_insured')) {
+            $updateData['is_insured'] = $request->boolean('is_insured');
+        }
 
         if ($request->filled('role') && Auth::user()->role === 'developer') {
             $updateData['role'] = $request->role;
@@ -512,6 +529,7 @@ class EmployeeProfileController extends Controller
             'salary_amount' => $request->filled('salary_amount') ? $request->salary_amount : null,
             'working_hours' => $request->filled('working_hours') ? $request->working_hours : null,
             'role'          => $request->role,
+            'is_insured'    => $request->boolean('is_insured'),
         ]);
 
         $fileUpdates = [];
@@ -978,6 +996,40 @@ class EmployeeProfileController extends Controller
             'message'    => '🗑️ تم حذف الملف بنجاح!',
             'type'       => $type,
             'avatar_url' => $user->profile_picture_url,
+        ]);
+    }
+
+    /**
+     * تبديل حالة التأمين الاجتماعي للموظف عبر AJAX مباشرة من جدول الموظفين.
+     */
+    public function toggleInsuranceAjax(Request $request, $id)
+    {
+        if (!Auth::user()->can('employees.edit_profiles')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'غير مصرح لك بتعديل بيانات التأمين للموظفين.'
+            ], 403);
+        }
+
+        $user = User::findOrFail($id);
+        $isInsured = $request->boolean('is_insured');
+        $user->is_insured = $isInsured;
+        $user->save();
+
+        AuditLog::log(
+            Auth::user()->name,
+            'Updated',
+            'Employee Profile',
+            $user->name,
+            'تحديث حالة التأمين: ' . ($isInsured ? 'مؤمن عليه' : 'غير مؤمن عليه')
+        );
+
+        return response()->json([
+            'success'    => true,
+            'is_insured' => (bool)$user->is_insured,
+            'message'    => $isInsured 
+                ? "تم حفظ الموظف «{$user->name}» كمؤمن عليه." 
+                : "تم حفظ الموظف «{$user->name}» كغير مؤمن عليه."
         ]);
     }
 }
