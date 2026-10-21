@@ -142,51 +142,29 @@ class User extends Authenticatable
     }
 
     /**
-     * Get document path for a specific type.
+     * ملفات الموظف الرسمية (يمكن رفع أكثر من ملف لكل نوع).
      */
-    public function documentPath(string $type): ?string
+    public function documentFiles()
     {
-        return match($type) {
-            'national_id_card' => $this->national_id_card,
-            'qualification_certificate' => $this->qualification_certificate,
-            'other_document' => $this->other_document,
-            default => null,
-        };
+        return $this->hasMany(EmployeeDocument::class)->orderBy('id');
     }
 
     /**
-     * Check if document exists on disk.
+     * ملفات نوع معين (بطاقة / مؤهل / أخرى) الموجودة فعلياً على القرص.
+     */
+    public function documentFilesOf(string $type)
+    {
+        return $this->documentFiles
+            ->where('type', $type)
+            ->filter(fn ($doc) => $doc->exists())
+            ->values();
+    }
+
+    /**
+     * Check if at least one document of the type exists on disk.
      */
     public function hasDocument(string $type): bool
     {
-        $path = $this->documentPath($type);
-        return !empty($path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($path);
-    }
-
-    /**
-     * Get document file extension or type (pdf/image).
-     */
-    public function documentExtension(string $type): ?string
-    {
-        $path = $this->documentPath($type);
-        if (!$path) return null;
-        return strtolower(pathinfo($path, PATHINFO_EXTENSION));
-    }
-
-    /**
-     * Check if document is an image.
-     */
-    public function isDocumentImage(string $type): bool
-    {
-        $ext = $this->documentExtension($type);
-        return in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif']);
-    }
-
-    /**
-     * Check if document is a PDF.
-     */
-    public function isDocumentPdf(string $type): bool
-    {
-        return $this->documentExtension($type) === 'pdf';
+        return $this->documentFilesOf($type)->isNotEmpty();
     }
 }

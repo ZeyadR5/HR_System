@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\EmployeeDocument;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -55,6 +56,17 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
                 $table->string('target')->nullable();
                 $table->text('details')->nullable();
                 $table->string('ip_address')->nullable();
+                $table->timestamps();
+            });
+        }
+
+        if (!Schema::hasTable('employee_documents')) {
+            Schema::create('employee_documents', function ($table) {
+                $table->id();
+                $table->unsignedBigInteger('user_id');
+                $table->string('type', 50);
+                $table->string('path');
+                $table->string('original_name')->nullable();
                 $table->timestamps();
             });
         }
@@ -128,29 +140,27 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
         $response = $this->actingAs($admin)
             ->withSession(['unlocked_employee_profiles' => true])
             ->post(route('employee_profiles.update', $employee->id), [
-                'hourly_rate'               => 150,
-                'job_title'                 => 'مهندس شبكات',
-                'profile_picture'           => $avatar,
-                'national_id_card'          => $nationalId,
-                'qualification_certificate' => $qualification,
-                'other_document'            => $otherDoc,
+                'hourly_rate'     => 150,
+                'job_title'       => 'مهندس شبكات',
+                'profile_picture' => $avatar,
             ]);
 
         $response->assertRedirect(route('employee_profiles.index'));
         $employee->refresh();
 
         $this->assertNotNull($employee->profile_picture);
-        $this->assertNotNull($employee->national_id_card);
-        $this->assertNotNull($employee->qualification_certificate);
-        $this->assertNotNull($employee->other_document);
+        $this->assertTrue(Storage::disk('public')->exists($employee->profile_picture));
 
-        $this->assertTrue($employee->hasDocument('national_id_card'));
-        $this->assertTrue($employee->hasDocument('qualification_certificate'));
-        $this->assertTrue($employee->hasDocument('other_document'));
-
-        $this->assertTrue(Storage::disk('public')->exists($employee->national_id_card));
-        $this->assertTrue(Storage::disk('public')->exists($employee->qualification_certificate));
-        $this->assertTrue(Storage::disk('public')->exists($employee->other_document));
+        // الوثائق الرسمية تُرفع عبر AJAX (أكثر من ملف لكل نوع)
+        foreach (['national_id_card', 'qualification_certificate', 'other_document'] as $type) {
+            $this->actingAs($admin)
+                ->post(route('employee_profiles.upload_document_ajax', $employee->id), [
+                    'type' => $type,
+                    'file' => $nationalId,
+                ])
+                ->assertStatus(200);
+            $this->assertTrue($employee->fresh()->hasDocument($type));
+        }
     }
 
     public function test_employee_can_view_own_document_but_not_others(): void
@@ -173,7 +183,11 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
 
         $pdf = UploadedFile::fake()->create('national_id.pdf', 100, 'application/pdf');
         $path = $pdf->store('employee_documents/' . $employee1->id, 'public');
-        $employee1->update(['national_id_card' => $path]);
+        EmployeeDocument::create([
+            'user_id' => $employee1->id,
+            'type'    => 'national_id_card',
+            'path'    => $path,
+        ]);
 
         // Employee 1 views own document -> 200 OK
         $response1 = $this->actingAs($employee1)
@@ -220,9 +234,8 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
             'is_image'  => false,
         ]);
 
-        $employee->refresh();
-        $this->assertNotNull($employee->qualification_certificate);
-        $this->assertTrue(Storage::disk('public')->exists($employee->qualification_certificate));
+        $this->assertSame(1, EmployeeDocument::where('user_id', $employee->id)->where('type', 'qualification_certificate')->count());
+        $this->assertTrue($employee->fresh()->hasDocument('qualification_certificate'));
     }
 
     public function test_ajax_upload_document_forbidden_for_regular_employee(): void
@@ -268,17 +281,54 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
 
         $pdf = UploadedFile::fake()->create('other.pdf', 100, 'application/pdf');
         $path = $pdf->store('employee_documents/' . $employee->id, 'public');
-        $employee->update(['other_document' => $path]);
+        $doc = EmployeeDocument::create([
+            'user_id' => $employee->id,
+            'type'    => 'other_document',
+            'path'    => $path,
+        ]);
 
         $response = $this->actingAs($admin)
             ->post(route('employee_profiles.delete_document_ajax', $employee->id), [
-                'type' => 'other_document',
+                'type'    => 'other_document',
+                'file_id' => $doc->id,
             ]);
 
         $response->assertStatus(200);
         $response->assertJson(['success' => true]);
 
-        $employee->refresh();
-        $this->assertNull($employee->other_document);
+        $this->assertNull(EmployeeDocument::find($doc->id));
+        $this->assertFalse(Storage::disk('public')->exists($path));
+    }
+
+    public function test_ajax_upload_multiple_files_for_same_type(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::create([
+            'name'     => 'HR Admin',
+            'email'    => 'hr_multi@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'admin',
+        ]);
+
+        $employee = User::create([
+            'name'     => 'موظف متعدد',
+            'email'    => 'multi@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'user',
+        ]);
+
+        foreach (['a.pdf', 'b.pdf', 'c.pdf'] as $name) {
+            $this->actingAs($admin)
+                ->post(route('employee_profiles.upload_document_ajax', $employee->id), [
+                    'type' => 'national_id_card',
+                    'file' => UploadedFile::fake()->create($name, 100, 'application/pdf'),
+                ])
+                ->assertStatus(200)
+                ->assertJson(['success' => true]);
+        }
+
+        $this->assertSame(3, EmployeeDocument::where('user_id', $employee->id)->where('type', 'national_id_card')->count());
+        $this->assertCount(3, $employee->fresh()->documentFilesOf('national_id_card'));
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\EmployeeDocument;
 use App\Models\AuditLog;
 use App\Models\Leave;
 use App\Models\Permission;
@@ -367,9 +368,6 @@ class EmployeeProfileController extends Controller
             'working_hours'              => 'nullable|numeric|min:0',
             'role'                       => 'nullable|exists:roles,name',
             'profile_picture'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-            'national_id_card'           => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:5120',
-            'qualification_certificate'  => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:5120',
-            'other_document'             => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:5120',
         ], [
             'hourly_rate.required'               => 'قيمة الساعة مطلوبة',
             'profile_picture.image'              => 'صورة البروفايل يجب أن تكون ملف صورة صالح.',
@@ -393,12 +391,9 @@ class EmployeeProfileController extends Controller
             $updateData['role'] = $request->role;
         }
 
-        // معالجة حذف الملفات في حال طلب الـ HR حذفها
+        // معالجة حذف الصورة الشخصية (الوثائق الرسمية تُدار عبر AJAX بشكل منفصل)
         $docKeys = [
-            'profile_picture'           => 'delete_profile_picture',
-            'national_id_card'          => 'delete_national_id_card',
-            'qualification_certificate' => 'delete_qualification_certificate',
-            'other_document'            => 'delete_other_document',
+            'profile_picture' => 'delete_profile_picture',
         ];
 
         foreach ($docKeys as $column => $deleteParam) {
@@ -416,16 +411,6 @@ class EmployeeProfileController extends Controller
                 Storage::disk('public')->delete($user->profile_picture);
             }
             $updateData['profile_picture'] = $this->storeUploadedFile($request->file('profile_picture'), 'profile_pictures');
-        }
-
-        // رفع ملفات ووثائق الموظف (بطاقة، مؤهل، أخرى)
-        foreach (['national_id_card', 'qualification_certificate', 'other_document'] as $docCol) {
-            if ($request->hasFile($docCol)) {
-                if (!empty($user->{$docCol}) && Storage::disk('public')->exists($user->{$docCol})) {
-                    Storage::disk('public')->delete($user->{$docCol});
-                }
-                $updateData[$docCol] = $this->storeUploadedFile($request->file($docCol), "employee_documents/{$user->id}");
-            }
         }
 
         $user->update($updateData);
@@ -534,8 +519,15 @@ class EmployeeProfileController extends Controller
             $fileUpdates['profile_picture'] = $this->storeUploadedFile($request->file('profile_picture'), 'profile_pictures');
         }
         foreach (['national_id_card', 'qualification_certificate', 'other_document'] as $docCol) {
-            if ($request->hasFile($docCol)) {
-                $fileUpdates[$docCol] = $this->storeUploadedFile($request->file($docCol), "employee_documents/{$user->id}");
+            foreach (\Illuminate\Support\Arr::wrap($request->file($docCol)) as $uploaded) {
+                if ($uploaded && $uploaded->isValid()) {
+                    EmployeeDocument::create([
+                        'user_id'       => $user->id,
+                        'type'          => $docCol,
+                        'path'          => $this->storeUploadedFile($uploaded, "employee_documents/{$user->id}"),
+                        'original_name' => $uploaded->getClientOriginalName(),
+                    ]);
+                }
             }
         }
         if (!empty($fileUpdates)) {
@@ -739,7 +731,15 @@ class EmployeeProfileController extends Controller
             abort(404, 'نوع الوثيقة غير معروف.');
         }
 
-        $path = $type === 'profile_picture' ? $user->profile_picture : $user->documentPath($type);
+        if ($type === 'profile_picture') {
+            $path = $user->profile_picture;
+        } else {
+            $docQuery = \App\Models\EmployeeDocument::where('user_id', $user->id)->where('type', $type);
+            $doc = $request->query('file')
+                ? (clone $docQuery)->where('id', $request->query('file'))->first()
+                : $docQuery->orderBy('id')->first();
+            $path = $doc?->path;
+        }
 
         if (!$path || !Storage::disk('public')->exists($path)) {
             abort(404, 'الملف المطلوب غير موجود أو لم يتم رفعه بعد.');
@@ -853,12 +853,20 @@ class EmployeeProfileController extends Controller
                     'file.max'   => 'أقصى حجم للوثيقة 5 ميجابايت.',
                 ]);
 
-                if (!empty($user->{$type}) && Storage::disk('public')->exists($user->{$type})) {
-                    Storage::disk('public')->delete($user->{$type});
+                if (EmployeeDocument::where('user_id', $user->id)->where('type', $type)->count() >= 10) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'الحد الأقصى 10 ملفات لكل نوع.',
+                    ], 422);
                 }
 
                 $path = $this->storeUploadedFile($file, "employee_documents/{$user->id}");
-                $user->update([$type => $path]);
+                $doc = EmployeeDocument::create([
+                    'user_id'       => $user->id,
+                    'type'          => $type,
+                    'path'          => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                ]);
             }
 
             $typeLabels = [
@@ -880,15 +888,25 @@ class EmployeeProfileController extends Controller
             $ext = strtoupper(pathinfo($path, PATHINFO_EXTENSION));
             $isImg = in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'webp']);
             $url = route('employee_profiles.document', [$user->id, $type]);
+            $fileId = null;
+            $downloadUrl = $url . '?download=1';
+            if (isset($doc)) {
+                $fileId = $doc->id;
+                $url = $doc->url();
+                $downloadUrl = $doc->downloadUrl();
+            }
 
             return response()->json([
-                'success'    => true,
-                'message'    => "✅ تم رفع {$typeLabels[$type]} بنجاح!",
-                'type'       => $type,
-                'url'        => $url,
-                'avatar_url' => $user->profile_picture_url,
-                'extension'  => $ext,
-                'is_image'   => $isImg,
+                'success'      => true,
+                'message'      => "✅ تم رفع {$typeLabels[$type]} بنجاح!",
+                'type'         => $type,
+                'file_id'      => $fileId,
+                'file_name'    => $file->getClientOriginalName(),
+                'url'          => $url,
+                'download_url' => $downloadUrl,
+                'avatar_url'   => $user->profile_picture_url,
+                'extension'    => $ext,
+                'is_image'     => $isImg,
             ]);
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json([
@@ -925,10 +943,26 @@ class EmployeeProfileController extends Controller
             }
         }
 
-        if (!empty($user->{$type}) && Storage::disk('public')->exists($user->{$type})) {
-            Storage::disk('public')->delete($user->{$type});
+        if ($type === 'profile_picture') {
+            if (!empty($user->profile_picture) && Storage::disk('public')->exists($user->profile_picture)) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+            $user->update(['profile_picture' => null]);
+        } else {
+            $doc = EmployeeDocument::where('user_id', $user->id)
+                ->where('type', $type)
+                ->where('id', $request->input('file_id'))
+                ->first();
+
+            if (!$doc) {
+                return response()->json(['success' => false, 'message' => 'الملف غير موجود.'], 404);
+            }
+
+            if (Storage::disk('public')->exists($doc->path)) {
+                Storage::disk('public')->delete($doc->path);
+            }
+            $doc->delete();
         }
-        $user->update([$type => null]);
         $user->refresh();
 
         return response()->json([

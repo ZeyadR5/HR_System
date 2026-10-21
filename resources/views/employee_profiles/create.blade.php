@@ -158,15 +158,15 @@
                                     </div>
                                     <div class="col-12 col-md-6">
                                         <label class="form-label small fw-semibold text-slate-700 mb-1">🪪 صورة البطاقة:</label>
-                                        <input type="file" name="national_id_card" accept="image/*,.pdf" class="form-control form-control-sm" style="border-radius: 8px;">
+                                        <input type="file" name="national_id_card[]" multiple accept="image/*,.pdf" class="form-control form-control-sm" style="border-radius: 8px;">
                                     </div>
                                     <div class="col-12 col-md-6">
                                         <label class="form-label small fw-semibold text-slate-700 mb-1">🎓 صورة المؤهل:</label>
-                                        <input type="file" name="qualification_certificate" accept="image/*,.pdf" class="form-control form-control-sm" style="border-radius: 8px;">
+                                        <input type="file" name="qualification_certificate[]" multiple accept="image/*,.pdf" class="form-control form-control-sm" style="border-radius: 8px;">
                                     </div>
                                     <div class="col-12 col-md-6">
                                         <label class="form-label small fw-semibold text-slate-700 mb-1">📑 وثيقة أخرى:</label>
-                                        <input type="file" name="other_document" accept="image/*,.pdf" class="form-control form-control-sm" style="border-radius: 8px;">
+                                        <input type="file" name="other_document[]" multiple accept="image/*,.pdf" class="form-control form-control-sm" style="border-radius: 8px;">
                                     </div>
                                 </div>
                             </div>

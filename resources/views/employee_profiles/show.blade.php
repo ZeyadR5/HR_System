@@ -168,21 +168,20 @@
                     <div class="row g-3">
                         @foreach($docsList as $docKey => $docMeta)
                             @php
-                                $isUploaded = $user->hasDocument($docKey);
-                                $ext = $isUploaded ? $user->documentExtension($docKey) : null;
-                                $isImg = $isUploaded ? $user->isDocumentImage($docKey) : false;
-                                $isPdf = $isUploaded ? $user->isDocumentPdf($docKey) : false;
+                                $files = $user->documentFilesOf($docKey);
+                                $isUploaded = $files->isNotEmpty();
+                                $canManageDocs = Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']);
                             @endphp
                             <div class="col-12 col-md-4" id="card_col_{{ $docKey }}">
-                                @if(Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
-                                    <input type="file" id="input_{{ $docKey }}" accept="image/png, image/jpeg, image/jpg, image/webp, application/pdf" style="display: none;" onchange="uploadDocDirect('{{ $docKey }}', this)">
+                                @if($canManageDocs)
+                                    <input type="file" id="input_{{ $docKey }}" multiple accept="image/png, image/jpeg, image/jpg, image/webp, application/pdf" style="display: none;" onchange="uploadDocDirect('{{ $docKey }}', this)">
                                 @endif
 
                                 <div class="card h-100 border transition-all position-relative overflow-hidden" id="card_box_{{ $docKey }}" style="border-radius: 16px; border-color: {{ $isUploaded ? '#e2e8f0' : '#f1f5f9' }} !important; background: {{ $isUploaded ? '#ffffff' : '#fafafa' }};">
                                     {{-- Uploading overlay spinner --}}
                                     <div id="spinner_{{ $docKey }}" class="position-absolute top-0 start-0 w-100 h-100 d-none flex-column align-items-center justify-content-center bg-white bg-opacity-95" style="z-index: 10;">
                                         <div class="spinner-border text-primary mb-2" role="status"></div>
-                                        <span class="small fw-bold text-primary">جاري رفع وحفظ الملف... ⏳</span>
+                                        <span class="small fw-bold text-primary" id="spinner_text_{{ $docKey }}">جاري رفع وحفظ الملف... ⏳</span>
                                     </div>
 
                                     <div class="card-body p-3 d-flex flex-column justify-content-between">
@@ -194,7 +193,7 @@
                                                 <div id="badge_{{ $docKey }}">
                                                     @if($isUploaded)
                                                         <span class="badge bg-success-subtle text-success px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;">
-                                                            ✅ مرفوع ({{ strtoupper($ext) }})
+                                                            ✅ {{ $files->count() }} {{ $files->count() === 1 ? 'ملف' : 'ملفات' }}
                                                         </span>
                                                     @else
                                                         <span class="badge bg-light text-muted border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;">
@@ -204,61 +203,46 @@
                                                 </div>
                                             </div>
                                             <h6 class="fw-bold text-dark mb-1">{{ $docMeta['title'] }}</h6>
-                                            <p class="text-muted small mb-3" style="font-size: 0.82rem; min-height: 38px;">{{ $docMeta['desc'] }}</p>
+                                            <p class="text-muted small mb-3" style="font-size: 0.82rem;">{{ $docMeta['desc'] }}</p>
 
-                                            <div id="preview_{{ $docKey }}">
-                                                @if($isUploaded && $isImg)
-                                                    <div class="mb-3 text-center rounded-3 overflow-hidden border bg-light position-relative" style="height: 120px;">
-                                                        <a href="{{ route('employee_profiles.document', [$user->id, $docKey]) }}" target="_blank" title="اضغط للمعاينة الكاملة">
-                                                            <img src="{{ route('employee_profiles.document', [$user->id, $docKey]) }}" alt="{{ $docMeta['title'] }}" style="width: 100%; height: 100%; object-fit: cover;">
-                                                        </a>
-                                                    </div>
-                                                @elseif($isUploaded && $isPdf)
-                                                    <div class="mb-3 text-center rounded-3 p-3 border bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center gap-2" style="height: 120px;">
-                                                        <span style="font-size: 2.5rem;">📕</span>
-                                                        <span class="fw-bold small">مستند بصيغة PDF</span>
-                                                    </div>
-                                                @else
-                                                    <div class="mb-3 text-center rounded-3 p-3 border border-dashed text-muted d-flex flex-column align-items-center justify-content-center" style="height: 120px; background: #f8fafc;">
-                                                        <span class="fs-4 opacity-50">📭</span>
-                                                        <span class="extra-small text-muted mt-1" style="font-size: 0.75rem;">لم يتم رفع هذا الملف بعد</span>
-                                                        <span class="extra-small text-muted opacity-75" style="font-size: 0.7rem;">(يُرفع حصراً بواسطة HR)</span>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-
-                                        <div id="actions_{{ $docKey }}" class="mt-2 pt-2 border-top">
-                                            @if($isUploaded)
-                                                <div class="d-flex gap-2 flex-wrap">
-                                                    <a href="{{ route('employee_profiles.document', [$user->id, $docKey]) }}" target="_blank" class="btn btn-light btn-sm flex-fill rounded-pill d-inline-flex align-items-center justify-content-center gap-1 text-primary fw-semibold border shadow-xs" style="font-size: 0.8rem;">
-                                                        <span>👁️</span>
-                                                        <span>معاينة</span>
+                                            @forelse($files as $file)
+                                                <div class="d-flex align-items-center gap-2 p-2 mb-2 rounded-3 border bg-light" id="file_row_{{ $file->id }}">
+                                                    <a href="{{ $file->url() }}" target="_blank" class="flex-shrink-0 d-inline-flex align-items-center justify-content-center rounded-2 overflow-hidden border bg-white" style="width: 46px; height: 46px;">
+                                                        @if($file->isImage())
+                                                            <img src="{{ $file->url() }}" alt="{{ $docMeta['title'] }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                                        @else
+                                                            <span style="font-size: 1.5rem;">📕</span>
+                                                        @endif
                                                     </a>
-                                                    <a href="{{ route('employee_profiles.document', [$user->id, $docKey]) }}?download=1" class="btn btn-primary btn-sm flex-fill rounded-pill d-inline-flex align-items-center justify-content-center gap-1 fw-semibold shadow-xs" style="font-size: 0.8rem;">
-                                                        <span>📥</span>
-                                                        <span>تحميل</span>
-                                                    </a>
-                                                    @if(Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
-                                                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center shadow-xs" style="width: 31px; height: 31px;" title="استبدال بملف جديد" onclick="document.getElementById('input_{{ $docKey }}').click()">
-                                                            <span style="font-size: 0.85rem;">🔄</span>
-                                                        </button>
-                                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center shadow-xs" style="width: 31px; height: 31px;" title="حذف الملف" onclick="deleteDocDirect('{{ $docKey }}')">
-                                                            <span style="font-size: 0.85rem;">🗑️</span>
-                                                        </button>
+                                                    <div class="flex-grow-1 text-truncate small fw-semibold" title="{{ $file->original_name }}">
+                                                        {{ $file->original_name ?: ('ملف ' . strtoupper($file->extension())) }}
+                                                        <div class="text-muted" style="font-size: 0.7rem;">{{ strtoupper($file->extension()) }}</div>
+                                                    </div>
+                                                    <a href="{{ $file->url() }}" target="_blank" class="btn btn-light btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center border" style="width: 30px; height: 30px;" title="معاينة">👁️</a>
+                                                    <a href="{{ $file->downloadUrl() }}" class="btn btn-primary btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" title="تحميل">📥</a>
+                                                    @if($canManageDocs)
+                                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" title="حذف الملف" onclick="deleteDocDirect('{{ $docKey }}', {{ $file->id }})">🗑️</button>
                                                     @endif
                                                 </div>
-                                            @else
-                                                @if(Auth::user()->can('employees.edit_profiles') || in_array(Auth::user()->role, ['super_admin', 'developer', 'admin']))
-                                                    <button type="button" class="btn btn-primary btn-sm w-100 rounded-pill d-inline-flex align-items-center justify-content-center gap-2 fw-semibold shadow-xs" style="font-size: 0.85rem; padding: 7px 12px;" onclick="document.getElementById('input_{{ $docKey }}').click()">
-                                                        <span>📤</span>
-                                                        <span>اختيار ورفع الملف الآن</span>
-                                                    </button>
-                                                @else
-                                                    <span class="text-muted extra-small d-block py-1 text-center" style="font-size: 0.78rem;">
-                                                        🔒 متاح الرفع للإدارة فقط
-                                                    </span>
-                                                @endif
+                                            @empty
+                                                <div class="mb-3 text-center rounded-3 p-3 border border-dashed text-muted d-flex flex-column align-items-center justify-content-center" style="height: 120px; background: #f8fafc;">
+                                                    <span class="fs-4 opacity-50">📭</span>
+                                                    <span class="extra-small text-muted mt-1" style="font-size: 0.75rem;">لم يتم رفع ملفات بعد</span>
+                                                    <span class="extra-small text-muted opacity-75" style="font-size: 0.7rem;">(يُرفع حصراً بواسطة HR)</span>
+                                                </div>
+                                            @endforelse
+                                        </div>
+
+                                        <div class="mt-2 pt-2 border-top">
+                                            @if($canManageDocs)
+                                                <button type="button" class="btn btn-primary btn-sm w-100 rounded-pill d-inline-flex align-items-center justify-content-center gap-2 fw-semibold shadow-xs" style="font-size: 0.85rem; padding: 7px 12px;" onclick="document.getElementById('input_{{ $docKey }}').click()">
+                                                    <span>📤</span>
+                                                    <span>{{ $isUploaded ? 'إضافة ملفات أخرى' : 'اختيار ورفع الملفات الآن' }}</span>
+                                                </button>
+                                            @elseif(!$isUploaded)
+                                                <span class="text-muted extra-small d-block py-1 text-center" style="font-size: 0.78rem;">
+                                                    🔒 متاح الرفع للإدارة فقط
+                                                </span>
                                             @endif
                                         </div>
                                     </div>
@@ -769,92 +753,53 @@
         });
     }
 
-    function uploadDocDirect(docKey, input) {
-        if (!input.files || !input.files[0]) return;
-        const file = input.files[0];
+    async function uploadDocDirect(docKey, input) {
+        if (!input.files || !input.files.length) return;
+        const files = Array.from(input.files);
         const spinner = document.getElementById('spinner_' + docKey);
+        const spinnerText = document.getElementById('spinner_text_' + docKey);
         if (spinner) spinner.classList.remove('d-none');
 
-        const formData = new FormData();
-        formData.append('_token', CSRF_TOKEN);
-        formData.append('type', docKey);
+        let okCount = 0;
+        let lastError = null;
 
-        shrinkImageFile(file).then(f => {
-            formData.append('file', f, f.name);
-            return fetch(UPLOAD_URL, {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-                body: formData
-            });
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (spinner) spinner.classList.add('d-none');
-            if (data.success) {
-                showDocToast(data.message || '✅ تم رفع الوثيقة وحفظها بنجاح!', true);
-                
-                // 1. Update Badge
-                const badgeBox = document.getElementById('badge_' + docKey);
-                if (badgeBox) {
-                    badgeBox.innerHTML = `<span class="badge bg-success-subtle text-success px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;">✅ مرفوع (${data.extension})</span>`;
+        for (let i = 0; i < files.length; i++) {
+            if (spinnerText) spinnerText.textContent = `جاري رفع الملف ${i + 1} من ${files.length}... ⏳`;
+            try {
+                const f = await shrinkImageFile(files[i]);
+                const formData = new FormData();
+                formData.append('_token', CSRF_TOKEN);
+                formData.append('type', docKey);
+                formData.append('file', f, f.name);
+
+                const res = await fetch(UPLOAD_URL, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    okCount++;
+                } else {
+                    lastError = data.message || '⚠️ فشل رفع الملف.';
                 }
-
-                // 2. Update Preview
-                const previewBox = document.getElementById('preview_' + docKey);
-                if (previewBox) {
-                    if (data.is_image) {
-                        previewBox.innerHTML = `
-                            <div class="mb-3 text-center rounded-3 overflow-hidden border bg-light position-relative" style="height: 120px;">
-                                <a href="${data.url}" target="_blank" title="اضغط للمعاينة الكاملة">
-                                    <img src="${data.url}?t=${Date.now()}" alt="معاينة" style="width: 100%; height: 100%; object-fit: cover;">
-                                </a>
-                            </div>
-                        `;
-                    } else {
-                        previewBox.innerHTML = `
-                            <div class="mb-3 text-center rounded-3 p-3 border bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center gap-2" style="height: 120px;">
-                                <span style="font-size: 2.5rem;">📕</span>
-                                <span class="fw-bold small">مستند بصيغة ${data.extension}</span>
-                            </div>
-                        `;
-                    }
-                }
-
-                // 3. Update Actions
-                const actionsBox = document.getElementById('actions_' + docKey);
-                if (actionsBox) {
-                    actionsBox.innerHTML = `
-                        <div class="d-flex gap-2 flex-wrap">
-                            <a href="${data.url}" target="_blank" class="btn btn-light btn-sm flex-fill rounded-pill d-inline-flex align-items-center justify-content-center gap-1 text-primary fw-semibold border shadow-xs" style="font-size: 0.8rem;">
-                                <span>👁️</span> <span>معاينة</span>
-                            </a>
-                            <a href="${data.url}?download=1" class="btn btn-primary btn-sm flex-fill rounded-pill d-inline-flex align-items-center justify-content-center gap-1 fw-semibold shadow-xs" style="font-size: 0.8rem;">
-                                <span>📥</span> <span>تحميل</span>
-                            </a>
-                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center shadow-xs" style="width: 31px; height: 31px;" title="استبدال بملف جديد" onclick="document.getElementById('input_${docKey}').click()">
-                                <span style="font-size: 0.85rem;">🔄</span>
-                            </button>
-                            <button type="button" class="btn btn-outline-danger btn-sm rounded-circle p-0 d-inline-flex align-items-center justify-content-center shadow-xs" style="width: 31px; height: 31px;" title="حذف الملف" onclick="deleteDocDirect('${docKey}')">
-                                <span style="font-size: 0.85rem;">🗑️</span>
-                            </button>
-                        </div>
-                    `;
-                }
-
-                input.value = '';
-            } else {
-                showDocToast(data.message || '⚠️ فشل رفع الملف.', false);
-                input.value = '';
+            } catch (err) {
+                lastError = '⚠️ حدث خطأ في الاتصال: ' + err.message;
             }
-        })
-        .catch(err => {
+        }
+
+        input.value = '';
+
+        if (okCount > 0) {
+            showDocToast(`✅ تم رفع ${okCount} ${okCount === 1 ? 'ملف' : 'ملفات'} بنجاح!` + (lastError ? ' (مع وجود أخطاء في بعضها)' : ''), true);
+            setTimeout(() => window.location.reload(), 700);
+        } else {
             if (spinner) spinner.classList.add('d-none');
-            showDocToast('⚠️ حدث خطأ في الاتصال: ' + err.message, false);
-            input.value = '';
-        });
+            showDocToast(lastError || '⚠️ فشل رفع الملف.', false);
+        }
     }
 
-    function deleteDocDirect(docKey) {
+    function deleteDocDirect(docKey, fileId) {
         if (!confirm('هل أنت متأكد من حذف هذا الملف نهائياً؟')) return;
         const spinner = document.getElementById('spinner_' + docKey);
         if (spinner) spinner.classList.remove('d-none');
@@ -862,44 +807,20 @@
         const formData = new FormData();
         formData.append('_token', CSRF_TOKEN);
         formData.append('type', docKey);
+        formData.append('file_id', fileId);
 
         fetch(DELETE_URL, {
             method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
             body: formData
         })
         .then(res => res.json())
         .then(data => {
-            if (spinner) spinner.classList.add('d-none');
             if (data.success) {
                 showDocToast(data.message || '🗑️ تم حذف الملف بنجاح!', true);
-
-                const badgeBox = document.getElementById('badge_' + docKey);
-                if (badgeBox) {
-                    badgeBox.innerHTML = `<span class="badge bg-light text-muted border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;">⏳ غير متوفر</span>`;
-                }
-
-                const previewBox = document.getElementById('preview_' + docKey);
-                if (previewBox) {
-                    previewBox.innerHTML = `
-                        <div class="mb-3 text-center rounded-3 p-3 border border-dashed text-muted d-flex flex-column align-items-center justify-content-center" style="height: 120px; background: #f8fafc;">
-                            <span class="fs-4 opacity-50">📭</span>
-                            <span class="extra-small text-muted mt-1" style="font-size: 0.75rem;">لم يتم رفع هذا الملف بعد</span>
-                            <span class="extra-small text-muted opacity-75" style="font-size: 0.7rem;">(يُرفع حصراً بواسطة HR)</span>
-                        </div>
-                    `;
-                }
-
-                const actionsBox = document.getElementById('actions_' + docKey);
-                if (actionsBox) {
-                    actionsBox.innerHTML = `
-                        <button type="button" class="btn btn-primary btn-sm w-100 rounded-pill d-inline-flex align-items-center justify-content-center gap-2 fw-semibold shadow-xs" style="font-size: 0.85rem; padding: 7px 12px;" onclick="document.getElementById('input_${docKey}').click()">
-                            <span>📤</span>
-                            <span>اختيار ورفع الملف الآن</span>
-                        </button>
-                    `;
-                }
+                setTimeout(() => window.location.reload(), 500);
             } else {
+                if (spinner) spinner.classList.add('d-none');
                 showDocToast(data.message || '⚠️ فشل حذف الملف.', false);
             }
         })

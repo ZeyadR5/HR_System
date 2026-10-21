@@ -250,141 +250,59 @@
                                     هذه الملفات يرفعها ويتحكم فيها مسؤولو الموارد البشرية فقط، وتظهر للموظف في بروفايله الشخصي للاطلاع والتحميل فقط دون إمكانية التعديل.
                                 </p>
 
-                                {{-- 1. بطاقة الرقم القومي --}}
-                                <div class="p-3 bg-white rounded-3 border mb-3">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="fw-bold text-slate-700 small d-flex align-items-center gap-2">
-                                            <span>🪪</span> صورة بطاقة الرقم القومي
-                                        </span>
-                                        @if($user->hasDocument('national_id_card'))
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
-                                                ✅ مرفوعة ({{ strtoupper($user->documentExtension('national_id_card')) }})
+                                @php
+                                    $editDocs = [
+                                        'national_id_card' => ['icon' => '🪪', 'title' => 'صورة بطاقة الرقم القومي', 'pick' => 'اختيار ملفات البطاقة'],
+                                        'qualification_certificate' => ['icon' => '🎓', 'title' => 'صورة المؤهل الدراسي / الشهادة', 'pick' => 'اختيار ملفات المؤهل'],
+                                        'other_document' => ['icon' => '📑', 'title' => 'وثائق وملفات أخرى', 'pick' => 'اختيار ملفات أخرى'],
+                                    ];
+                                @endphp
+
+                                @foreach($editDocs as $docKey => $meta)
+                                    @php $docFiles = $user->documentFilesOf($docKey); @endphp
+                                    <div class="p-3 bg-white rounded-3 border mb-3" id="doc_block_{{ $docKey }}">
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="fw-bold text-slate-700 small d-flex align-items-center gap-2">
+                                                <span>{{ $meta['icon'] }}</span> {{ $meta['title'] }}
                                             </span>
-                                        @else
-                                            <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.75rem;">
-                                                لم تُرفع بعد
-                                            </span>
-                                        @endif
-                                    </div>
-
-                                    @if($user->hasDocument('national_id_card'))
-                                        <div class="d-flex align-items-center gap-2 mb-2 p-2 bg-light rounded-2 flex-wrap">
-                                            <a href="{{ route('employee_profiles.document', [$user->id, 'national_id_card']) }}" target="_blank" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
-                                                <span>👁️</span> معاينة البطاقة
-                                            </a>
-                                            <a href="{{ route('employee_profiles.document', [$user->id, 'national_id_card']) }}?download=1" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
-                                                <span>📥</span> تحميل
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger ms-auto d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('national_id_card', this)">
-                                                <span>🗑️</span> حذف
-                                            </button>
+                                            <div id="status_{{ $docKey }}">
+                                                @if($docFiles->isNotEmpty())
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
+                                                        ✅ {{ $docFiles->count() }} {{ $docFiles->count() === 1 ? 'ملف' : 'ملفات' }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.75rem;">لم يتم الرفع</span>
+                                                @endif
+                                            </div>
                                         </div>
-                                    @endif
 
-                                    <label class="form-label extra-small text-muted mb-1" style="font-size: 0.75rem;">
-                                        {{ $user->hasDocument('national_id_card') ? 'استبدال بملف جديد:' : 'اختيار ملف البطاقة:' }}
-                                    </label>
-                                    <input type="file" name="national_id_card" id="national_id_card" accept="image/*,.pdf" class="form-control form-control-sm @error('national_id_card') is-invalid @enderror" style="border-radius: 8px;" onchange="handleFileSelect('national_id_card', this)">
-                                    <div id="bar_national_id_card" class="mt-2 p-2 rounded-2 bg-light border d-none align-items-center justify-content-between flex-wrap gap-2">
-                                        <span class="small text-primary fw-semibold" id="text_national_id_card"></span>
-                                    </div>
-                                    <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 5 ميجا).</div>
-                                    @error('national_id_card')
-                                        <div class="text-danger small mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- 2. صورة المؤهل الدراسي --}}
-                                <div class="p-3 bg-white rounded-3 border mb-3">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="fw-bold text-slate-700 small d-flex align-items-center gap-2">
-                                            <span>🎓</span> صورة المؤهل الدراسي / الشهادة
-                                        </span>
-                                        <div id="status_qualification_certificate">
-                                            @if($user->hasDocument('qualification_certificate'))
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
-                                                    ✅ مرفوعة ({{ strtoupper($user->documentExtension('qualification_certificate')) }})
+                                        @foreach($docFiles as $docFile)
+                                            <div class="d-flex align-items-center gap-2 mb-2 p-2 bg-light rounded-3 border flex-wrap">
+                                                <span class="flex-grow-1 small fw-semibold text-truncate" style="min-width: 120px;" title="{{ $docFile->original_name }}">
+                                                    {{ $docFile->isImage() ? '🖼️' : '📕' }} {{ $docFile->original_name ?: ('ملف ' . strtoupper($docFile->extension())) }}
                                                 </span>
-                                            @else
-                                                <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.75rem;">
-                                                    لم تُرفع بعد
-                                                </span>
-                                            @endif
+                                                <a href="{{ $docFile->url() }}" target="_blank" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
+                                                    <span>👁️</span> معاينة
+                                                </a>
+                                                <a href="{{ $docFile->downloadUrl() }}" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
+                                                    <span>📥</span> تحميل
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('{{ $docKey }}', this, {{ $docFile->id }})">
+                                                    <span>🗑️</span> حذف
+                                                </button>
+                                            </div>
+                                        @endforeach
+
+                                        <label class="form-label extra-small text-muted mb-1" style="font-size: 0.75rem;">
+                                            {{ $docFiles->isNotEmpty() ? 'إضافة ملفات أخرى (يمكن اختيار أكثر من ملف):' : $meta['pick'] . ' (يمكن اختيار أكثر من ملف):' }}
+                                        </label>
+                                        <input type="file" id="{{ $docKey }}" multiple accept="image/*,.pdf" class="form-control form-control-sm" style="border-radius: 8px;" onchange="uploadDocsFromEdit('{{ $docKey }}', this)">
+                                        <div id="bar_{{ $docKey }}" class="mt-2 p-2 rounded-2 bg-light border d-none align-items-center justify-content-between flex-wrap gap-2">
+                                            <span class="small text-primary fw-semibold" id="text_{{ $docKey }}"></span>
                                         </div>
+                                        <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 5 ميجا لكل ملف). يترفع الملف أول ما تختاره.</div>
                                     </div>
-
-                                    @if($user->hasDocument('qualification_certificate'))
-                                        <div class="d-flex align-items-center gap-2 mb-2 p-2 bg-light rounded-2 flex-wrap">
-                                            <a href="{{ route('employee_profiles.document', [$user->id, 'qualification_certificate']) }}" target="_blank" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
-                                                <span>👁️</span> معاينة المؤهل
-                                            </a>
-                                            <a href="{{ route('employee_profiles.document', [$user->id, 'qualification_certificate']) }}?download=1" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
-                                                <span>📥</span> تحميل
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger ms-auto d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('qualification_certificate', this)">
-                                                <span>🗑️</span> حذف
-                                            </button>
-                                        </div>
-                                    @endif
-
-                                    <label class="form-label extra-small text-muted mb-1" style="font-size: 0.75rem;">
-                                        {{ $user->hasDocument('qualification_certificate') ? 'استبدال بملف جديد:' : 'اختيار ملف المؤهل:' }}
-                                    </label>
-                                    <input type="file" name="qualification_certificate" id="qualification_certificate" accept="image/*,.pdf" class="form-control form-control-sm @error('qualification_certificate') is-invalid @enderror" style="border-radius: 8px;" onchange="handleFileSelect('qualification_certificate', this)">
-                                    <div id="bar_qualification_certificate" class="mt-2 p-2 rounded-2 bg-light border d-none align-items-center justify-content-between flex-wrap gap-2">
-                                        <span class="small text-primary fw-semibold" id="text_qualification_certificate"></span>
-                                    </div>
-                                    <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 5 ميجا).</div>
-                                    @error('qualification_certificate')
-                                        <div class="text-danger small mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- 3. وثائق أخرى --}}
-                                <div class="p-3 bg-white rounded-3 border">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="fw-bold text-slate-700 small d-flex align-items-center gap-2">
-                                            <span>📑</span> وثائق وملفات أخرى (عقد العمل / شهادات / إلخ)
-                                        </span>
-                                        <div id="status_other_document">
-                                            @if($user->hasDocument('other_document'))
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
-                                                    ✅ مرفوعة ({{ strtoupper($user->documentExtension('other_document')) }})
-                                                </span>
-                                            @else
-                                                <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 0.75rem;">
-                                                    لم تُرفع بعد
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </div>
-
-                                    @if($user->hasDocument('other_document'))
-                                        <div class="d-flex align-items-center gap-2 mb-2 p-2 bg-light rounded-2 flex-wrap">
-                                            <a href="{{ route('employee_profiles.document', [$user->id, 'other_document']) }}" target="_blank" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
-                                                <span>👁️</span> معاينة الوثيقة
-                                            </a>
-                                            <a href="{{ route('employee_profiles.document', [$user->id, 'other_document']) }}?download=1" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.8rem;">
-                                                <span>📥</span> تحميل
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger ms-auto d-flex align-items-center gap-1" style="font-size: 0.8rem;" onclick="deleteFromEdit('other_document', this)">
-                                                <span>🗑️</span> حذف
-                                            </button>
-                                        </div>
-                                    @endif
-
-                                    <label class="form-label extra-small text-muted mb-1" style="font-size: 0.75rem;">
-                                        {{ $user->hasDocument('other_document') ? 'استبدال بملف جديد:' : 'اختيار ملف آخر:' }}
-                                    </label>
-                                    <input type="file" name="other_document" id="other_document" accept="image/*,.pdf" class="form-control form-control-sm @error('other_document') is-invalid @enderror" style="border-radius: 8px;" onchange="handleFileSelect('other_document', this)">
-                                    <div id="bar_other_document" class="mt-2 p-2 rounded-2 bg-light border d-none align-items-center justify-content-between flex-wrap gap-2">
-                                        <span class="small text-primary fw-semibold" id="text_other_document"></span>
-                                    </div>
-                                    <div class="form-text extra-small text-muted" style="font-size: 0.72rem;">يقبل صور (JPG/PNG/WEBP) أو ملفات PDF (بحد أقصى 5 ميجا).</div>
-                                    @error('other_document')
-                                        <div class="text-danger small mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                                @endforeach
 
                             </div>
                         </div>
@@ -477,12 +395,59 @@
         }
     }
 
-    function deleteFromEdit(field, btn) {
+    async function uploadDocsFromEdit(field, input) {
+        if (!input.files || !input.files.length) return;
+        const files = Array.from(input.files);
+        const bar = document.getElementById('bar_' + field);
+        const text = document.getElementById('text_' + field);
+        bar.classList.remove('d-none');
+        bar.classList.add('d-flex');
+
+        let okCount = 0;
+        let lastError = null;
+
+        for (let i = 0; i < files.length; i++) {
+            text.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span> جاري رفع الملف ${i + 1} من ${files.length}: <b>${files[i].name}</b> ⏳`;
+            try {
+                const f = await shrinkImageFile(files[i]);
+                const formData = new FormData();
+                formData.append('_token', "{{ csrf_token() }}");
+                formData.append('type', field);
+                formData.append('file', f, f.name);
+
+                const res = await fetch("{{ route('employee_profiles.upload_document_ajax', $user->id) }}", {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    okCount++;
+                } else {
+                    lastError = data.message || 'فشل رفع الملف.';
+                }
+            } catch (err) {
+                lastError = 'حدث خطأ في الاتصال: ' + err.message;
+            }
+        }
+
+        input.value = '';
+
+        if (okCount > 0) {
+            text.innerHTML = `<span class="text-success fw-bold">✅ تم رفع ${okCount} ${okCount === 1 ? 'ملف' : 'ملفات'} بنجاح</span>` + (lastError ? ` <span class="text-danger">⚠️ ${lastError}</span>` : '');
+            setTimeout(() => window.location.reload(), 900);
+        } else {
+            text.innerHTML = `<span class="text-danger fw-bold">⚠️ ${lastError || 'فشل رفع الملف.'}</span>`;
+        }
+    }
+
+    function deleteFromEdit(field, btn, fileId) {
         if (!confirm('هل أنت متأكد من حذف هذا الملف؟')) return;
         btn.disabled = true;
         const formData = new FormData();
         formData.append('_token', "{{ csrf_token() }}");
         formData.append('type', field);
+        if (fileId) formData.append('file_id', fileId);
 
         fetch("{{ route('employee_profiles.delete_document_ajax', $user->id) }}", {
             method: 'POST',
