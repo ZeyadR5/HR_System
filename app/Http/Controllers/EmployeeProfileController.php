@@ -796,9 +796,17 @@ class EmployeeProfileController extends Controller
         }
 
         if (!$request->hasFile('file')) {
+            $raw = $_FILES['file']['error'] ?? null;
+            $limit = ini_get('upload_max_filesize');
+            $msg = in_array($raw, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)
+                ? "حجم الملف أكبر من المسموح في السيرفر ({$limit}). صغّر الصورة أو ارفع الحد في إعدادات PHP."
+                : ($raw === null && (int) $request->server('CONTENT_LENGTH') > 0 && empty($_POST)
+                    ? "حجم الطلب أكبر من المسموح في السيرفر (post_max_size = " . ini_get('post_max_size') . ")."
+                    : 'لم يصل الملف للسيرفر، حاول مرة أخرى.');
+            \Log::warning('Employee document upload: file missing', ['php_error' => $raw, 'upload_max_filesize' => $limit, 'post_max_size' => ini_get('post_max_size')]);
             return response()->json([
                 'success' => false,
-                'message' => 'يُرجى اختيار ملف للرفع.'
+                'message' => $msg
             ], 422);
         }
 

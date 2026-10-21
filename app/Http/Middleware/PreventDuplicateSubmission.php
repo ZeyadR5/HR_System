@@ -17,7 +17,7 @@ class PreventDuplicateSubmission
     private const LOCK_SECONDS = 8;
 
     /** مسارات مستثناة (بتتكرر بشكل طبيعي) */
-    private const EXCEPT = ['login', 'logout', 'poll_notifications', 'api/*'];
+    private const EXCEPT = ['login', 'logout', 'poll_notifications', 'api/*', 'employee-profiles/*/upload-document-ajax', 'employee-profiles/*/delete-document-ajax'];
 
     public function handle(Request $request, Closure $next): Response
     {
