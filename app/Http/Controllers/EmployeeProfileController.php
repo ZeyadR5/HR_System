@@ -43,7 +43,7 @@ class EmployeeProfileController extends Controller
             return redirect()->route('employee_profiles.index')->withErrors(['system_password' => 'يُرجى إدخال كلمة مرور النظام أولاً لعرض بروفايل الموظف.']);
         }
 
-        $user = User::findOrFail($id);
+        $user = User::withTrashed()->findOrFail($id);
         return $this->renderProfileView($user, $request);
     }
 
@@ -303,6 +303,85 @@ class EmployeeProfileController extends Controller
         $jobTitles = User::whereNotNull('job_title')->where('job_title', '!=', '')->distinct()->pluck('job_title')->sort()->values();
 
         return view('employee_profiles.index', compact('users', 'allUsers', 'jobTitles', 'sortBy', 'sortDir'));
+    }
+
+    /**
+     * Display the archived employees page.
+     */
+    public function archive(Request $request)
+    {
+        if (!Auth::user()->can('employees.view_profiles')) {
+            abort(403, 'غير مصرح لك بالوصول لأرشيف الموظفين');
+        }
+
+        if (!session('unlocked_employee_profiles')) {
+            return view('employee_profiles.unlock');
+        }
+
+        $query = User::onlyTrashed();
+
+        if ($request->filled('user_id')) {
+            $query->where('id', $request->user_id);
+        }
+
+        if ($request->filled('job_title')) {
+            $query->where('job_title', $request->job_title);
+        }
+
+        if ($request->filled('insured')) {
+            if ($request->insured === '1') {
+                $query->where('is_insured', true);
+            } elseif ($request->insured === '0') {
+                $query->where(function ($q) {
+                    $q->where('is_insured', false)->orWhereNull('is_insured');
+                });
+            }
+        }
+
+        $sortBy = $request->get('sort_by', 'deleted_at');
+        $sortDir = strtolower($request->get('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if ($sortBy === 'job_title') {
+            $query->orderByRaw('CASE WHEN job_title IS NULL OR job_title = "" THEN 1 ELSE 0 END')
+                  ->orderBy('job_title', $sortDir)
+                  ->orderBy('deleted_at', 'desc');
+        } elseif ($sortBy === 'name') {
+            $query->orderBy('name', $sortDir);
+        } else {
+            $query->orderBy('deleted_at', $sortDir);
+        }
+
+        $users = $query->paginate(20)->withQueryString();
+        $allArchivedUsers = User::onlyTrashed()->orderBy('name')->get();
+        $jobTitles = User::onlyTrashed()->whereNotNull('job_title')->where('job_title', '!=', '')->distinct()->pluck('job_title')->sort()->values();
+
+        return view('employee_profiles.archive', compact('users', 'allArchivedUsers', 'jobTitles', 'sortBy', 'sortDir'));
+    }
+
+    /**
+     * Restore an archived employee back to active employees list.
+     */
+    public function restore(Request $request, $id)
+    {
+        if (!Auth::user()->can('employees.edit_profiles')) {
+            abort(403, 'غير مصرح لك باسترجاع موظف');
+        }
+
+        $user = User::onlyTrashed()->findOrFail($id);
+        $user->restore();
+
+        AuditLog::log(
+            Auth::user()->name,
+            'Restored',
+            'Employee Profile',
+            $user->name,
+            "تم استرجاع حساب الموظف «{$user->name}» من الأرشيف وإعادته للموظفين النشطين"
+        );
+
+        return redirect()->route('employee_profiles.index', ['highlight_user_id' => $user->id])->with(
+            'success',
+            "🎉 تم استرجاع الموظف «{$user->name}» من الأرشيف بنجاح وإعادته للموظفين النشطين!"
+        );
     }
 
     public function unlockModule(Request $request)
@@ -647,58 +726,26 @@ class EmployeeProfileController extends Controller
         $userRole = $user->role;
 
         DB::transaction(function () use ($user) {
-            // Keep shift roster entries intact but detach user_id so schedules don't break
-            if (class_exists(\App\Models\ShiftRosterEntry::class) && Schema::hasTable('shift_roster_entries') && Schema::hasColumn('shift_roster_entries', 'user_id')) {
-                \App\Models\ShiftRosterEntry::where('user_id', $user->id)->update(['user_id' => null]);
-            }
-            if (class_exists(\App\Models\ShiftRoster::class) && Schema::hasTable('shift_rosters') && Schema::hasColumn('shift_rosters', 'created_by')) {
-                \App\Models\ShiftRoster::where('created_by', $user->id)->update(['created_by' => null]);
-            }
-
             // Reassign instructions created by user to current admin to prevent cascade loss
             if (Schema::hasTable('instructions') && Schema::hasColumn('instructions', 'created_by')) {
                 DB::table('instructions')->where('created_by', $user->id)->update(['created_by' => Auth::id()]);
             }
 
-            // Clean related tables that have user_id
-            $tablesToClean = [
-                'employee_devices',
-                'check_in_outs',
-                'overtimes',
-                'leaves',
-                'permissions',
-                'penalties',
-                'incentives',
-                'settlements',
-            ];
-
-            foreach ($tablesToClean as $tableName) {
-                if (Schema::hasTable($tableName) && Schema::hasColumn($tableName, 'user_id')) {
-                    DB::table($tableName)->where('user_id', $user->id)->delete();
-                }
-            }
-
-            if (Schema::hasTable('notifications')) {
-                DB::table('notifications')->where('notifiable_id', $user->id)->where('notifiable_type', User::class)->delete();
-            }
+            // Revoke active API tokens so archived user cannot make authenticated requests
             if (Schema::hasTable('personal_access_tokens')) {
                 DB::table('personal_access_tokens')->where('tokenable_id', $user->id)->where('tokenable_type', User::class)->delete();
             }
 
-            if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
-                Storage::disk('public')->delete($user->profile_picture);
-            }
-            Storage::disk('public')->deleteDirectory("employee_documents/{$user->id}");
-
+            // Soft-delete the user: sets deleted_at and preserves all data, documents, and historical records
             $user->delete();
         });
 
         AuditLog::log(
             Auth::user()->name,
-            'Deleted',
+            'Archived',
             'Employee Profile',
             $userName,
-            "Deleted user: {$userName} ({$userEmail}), Role: {$userRole}"
+            "تم نقل حساب الموظف إلى الأرشيف (Email: {$userEmail}, Job: {$user->job_title}) مع الحفاظ على كافة وثائقه وسجلاته"
         );
 
         $redirectParams = array_filter([
@@ -709,7 +756,10 @@ class EmployeeProfileController extends Controller
             'sort_dir'  => $request->input('return_sort_dir'),
         ]);
 
-        return redirect()->route('employee_profiles.index', $redirectParams)->with('success', "🗑️ تم حذف حساب الموظف «{$userName}» بنجاح وإزالة كافة بياناته.");
+        return redirect()->route('employee_profiles.index', $redirectParams)->with(
+            'success',
+            "🗄️ تم نقل الموظف «{$userName}» إلى الأرشيف بنجاح! جميع بياناته ووثائقه وسجلاته محفوظة بالكامل ويمكن مراجعتها أو استرجاعه في أي وقت."
+        );
     }
 
     /**
@@ -751,7 +801,7 @@ class EmployeeProfileController extends Controller
      */
     public function viewDocument(Request $request, $id, $type)
     {
-        $user = User::findOrFail($id);
+        $user = User::withTrashed()->findOrFail($id);
 
         // الصلاحية: الموظف نفسه أو مسؤول مع صلاحية view_profiles
         if (Auth::id() != $user->id && !Auth::user()->can('employees.view_profiles')) {
@@ -813,7 +863,7 @@ class EmployeeProfileController extends Controller
      */
     public function uploadDocumentAjax(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::withTrashed()->findOrFail($id);
 
         $allowedTypes = ['profile_picture', 'national_id_card', 'qualification_certificate', 'other_document'];
         $type = $request->input('type');
@@ -962,7 +1012,7 @@ class EmployeeProfileController extends Controller
      */
     public function deleteDocumentAjax(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::withTrashed()->findOrFail($id);
         $type = $request->input('type');
 
         if (!in_array($type, ['profile_picture', 'national_id_card', 'qualification_certificate', 'other_document'], true)) {

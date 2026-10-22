@@ -14,6 +14,13 @@
                 </div>
                 
                 <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <a href="{{ route('employee_profiles.archive') }}" class="btn btn-outline-dark fw-bold px-3 py-2 d-inline-flex align-items-center gap-2 shadow-xs" style="border-radius: 10px; background: #ffffff;" title="عرض سجلات ووثائق الموظفين المؤرشفين">
+                        <span>🗄️ أرشيف الموظفين</span>
+                        @php $archivedCount = \App\Models\User::onlyTrashed()->count(); @endphp
+                        @if($archivedCount > 0)
+                            <span class="badge bg-danger text-white rounded-pill px-2 py-1" style="font-size: 0.75rem;">{{ $archivedCount }}</span>
+                        @endif
+                    </a>
                     @can('employees.create')
                     <a href="{{ route('employee_profiles.create') }}" class="btn btn-primary fw-bold px-3 py-2" style="border-radius: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border: 0;">
                         ⚡ إضافة موظف جديد
@@ -220,8 +227,8 @@
                                                 ✏️ تعديل
                                             </a>
                                             @if(auth()->id() !== $user->id && !$user->isDeveloper())
-                                            <button type="button" class="btn btn-sm btn-outline-danger px-3" style="border-radius: 8px;" onclick="openDeleteModal({{ $user->id }}, '{{ addslashes($user->name) }}')" title="حذف الموظف نهائياً">
-                                                🗑️ حذف
+                                            <button type="button" class="btn btn-sm btn-outline-danger px-3" style="border-radius: 8px;" onclick="openDeleteModal({{ $user->id }}, '{{ addslashes($user->name) }}')" title="أرشفة ونقل الموظف للأرشيف بأمان">
+                                                🗄️ أرشفة
                                             </button>
                                             @endif
                                             @endcan
@@ -260,8 +267,8 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg border-0" style="border-radius: 18px; overflow: hidden; background: #ffffff;">
             <div class="modal-header border-0 pb-0 pt-3 px-4 d-flex justify-content-between align-items-center w-100" style="direction: rtl;">
-                <h5 class="modal-title fw-bold text-danger mb-0 d-flex align-items-center gap-2" id="deleteModalLabel" style="font-size: 1.15rem;">
-                    <span>⚠️</span> <span>حذف حساب موظف نهائياً</span>
+                <h5 class="modal-title fw-bold text-slate-800 mb-0 d-flex align-items-center gap-2" id="deleteModalLabel" style="font-size: 1.15rem;">
+                    <span>🗄️</span> <span>نقل الموظف إلى الأرشيف</span>
                 </h5>
                 <button type="button" class="modal-custom-close" onclick="closeDeleteModal()" aria-label="إغلاق">
                     ✕
@@ -275,17 +282,20 @@
                 <input type="hidden" name="return_sort_by" value="{{ request('sort_by') }}">
                 <input type="hidden" name="return_sort_dir" value="{{ request('sort_dir') }}">
                 <div class="modal-body text-center pt-3 pb-4 px-4">
-                    <div class="alert alert-danger py-2 px-3 small border-0 mb-3" style="border-radius: 10px;">
-                        ⚠️ <strong>تنبيه هام:</strong> سيتم حذف حساب الموظف وكافة سجلاته وحركاته نهائياً من السيستم. لا يمكن التراجع عن هذه الخطوة!
+                    <div class="alert alert-info py-2 px-3 small border-0 mb-3 text-start d-flex align-items-start gap-2" style="border-radius: 10px; background: #eff6ff; color: #1e40af;">
+                        <span class="fs-5">💡</span>
+                        <div>
+                            <strong>حفظ كامل للبيانات:</strong> لن يتم فقدان أي بيانات، حضور، جزاءات، حوافز، أو وثائق. سيتم حفظ الموظف في صفحة <strong>أرشيف الموظفين</strong> مع إمكانية مراجعة ملفاته واسترجاع حسابه في أي وقت.
+                        </div>
                     </div>
-                    <p class="text-muted mb-3 fs-6">أدخل كلمة مرور النظام لتأكيد حذف حساب الموظف <strong id="deleteEmployeeName" class="text-danger"></strong></p>
+                    <p class="text-muted mb-3 fs-6">أدخل كلمة مرور النظام لتأكيد أرشفة حساب الموظف <strong id="deleteEmployeeName" class="text-primary"></strong></p>
                     <div class="form-group text-start">
                         <input type="password" name="system_password" id="delete_system_password" class="form-control form-control-lg text-center fw-bold" required placeholder="كلمة مرور النظام" style="border-radius: 12px; letter-spacing: 3px; font-size: 1.2rem;">
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-center gap-2">
                     <button type="button" class="btn btn-light px-4 fw-semibold" onclick="closeDeleteModal()" style="border-radius: 10px; min-width: 90px;">إلغاء</button>
-                    <button type="submit" class="btn btn-danger px-4 fw-bold" style="border-radius: 10px; background: linear-gradient(135deg, #ef4444, #dc2626); border: 0; min-width: 140px;">🗑️ تأكيد الحذف</button>
+                    <button type="submit" class="btn btn-danger px-4 fw-bold" style="border-radius: 10px; background: linear-gradient(135deg, #475569, #1e293b); border: 0; min-width: 150px;">🗄️ تأكيد الأرشفة</button>
                 </div>
             </form>
         </div>

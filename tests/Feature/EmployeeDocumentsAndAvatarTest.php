@@ -48,6 +48,7 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
                 $table->string('evaluation', 10)->nullable();
                 $table->rememberToken();
                 $table->timestamps();
+                $table->softDeletes();
             });
         } else {
             Schema::table('users', function ($table) {
@@ -62,6 +63,9 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
                 }
                 if (!Schema::hasColumn('users', 'evaluation')) {
                     $table->string('evaluation', 10)->nullable();
+                }
+                if (!Schema::hasColumn('users', 'deleted_at')) {
+                    $table->softDeletes();
                 }
             });
         }

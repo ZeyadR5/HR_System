@@ -19,15 +19,58 @@
                     $backUrl = route('employee_profiles.index', $backParams);
                 @endphp
                 <div class="mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                    <a href="{{ $backUrl }}" class="btn btn-light btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 fw-semibold border shadow-xs" style="background: #ffffff; color: #1e293b; border-color: #cbd5e1 !important;">
-                        <span>⬅️</span>
-                        <span>العودة لصفحة الموظفين</span>
-                    </a>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <a href="{{ $backUrl }}" class="btn btn-light btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 fw-semibold border shadow-xs" style="background: #ffffff; color: #1e293b; border-color: #cbd5e1 !important;">
+                            <span>⬅️</span>
+                            <span>العودة لصفحة الموظفين</span>
+                        </a>
+                        @if($user->trashed())
+                        <a href="{{ route('employee_profiles.archive') }}" class="btn btn-outline-dark btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 fw-semibold shadow-xs" style="background: #ffffff;">
+                            <span>🗄️</span>
+                            <span>العودة لأرشيف الموظفين</span>
+                        </a>
+                        @endif
+                    </div>
+                    @if(!$user->trashed())
+                        @can('employees.edit_profiles')
+                        <a href="{{ route('employee_profiles.edit', array_merge(['id' => $user->id], $backParams)) }}" class="btn btn-primary btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 fw-semibold shadow-xs">
+                            <span>✏️</span>
+                            <span>تعديل بيانات الموظف والتأمين</span>
+                        </a>
+                        @endcan
+                    @else
+                        @can('employees.edit_profiles')
+                        <form action="{{ route('employee_profiles.restore', $user->id) }}" method="POST" class="d-inline mb-0" onsubmit="return confirm('هل تريد استرجاع حساب الموظف «{{ addslashes($user->name) }}» وإعادته إلى قائمة الموظفين النشطين؟')">
+                            @csrf
+                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-3 py-2 fw-bold d-inline-flex align-items-center gap-2 shadow-xs">
+                                <span>♻️</span>
+                                <span>استرجاع الموظف للقائمة النشطة</span>
+                            </button>
+                        </form>
+                        @endcan
+                    @endif
+                </div>
+            @endif
+
+            @if($user->trashed())
+                <div class="alert alert-warning border-0 rounded-4 shadow-sm mb-4 p-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); color: #92400e; border-right: 5px solid #f59e0b !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="fs-2">🗄️</span>
+                        <div>
+                            <h6 class="fw-bold mb-1" style="color: #78350f;">هذا الحساب موجود في أرشيف الموظفين</h6>
+                            <div class="small" style="color: #92400e;">
+                                تمت أرشفته في <strong>{{ $user->deleted_at ? $user->deleted_at->format('d M Y (h:i A)') : '—' }}</strong> — جميع وثائقه وسجلاته وبياناته التاريخية محفوظة بالكامل هنا ولا تظهر في القوائم النشطة.
+                            </div>
+                        </div>
+                    </div>
                     @can('employees.edit_profiles')
-                    <a href="{{ route('employee_profiles.edit', array_merge(['id' => $user->id], $backParams)) }}" class="btn btn-primary btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 fw-semibold shadow-xs">
-                        <span>✏️</span>
-                        <span>تعديل بيانات الموظف والتأمين</span>
-                    </a>
+                    <form action="{{ route('employee_profiles.restore', $user->id) }}" method="POST" class="d-inline mb-0" onsubmit="return confirm('هل تريد استرجاع حساب الموظف «{{ addslashes($user->name) }}» وإعادته للموظفين النشطين؟')">
+                        @csrf
+                        <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 py-2 fw-bold d-inline-flex align-items-center gap-2 shadow-xs">
+                            <span>♻️</span>
+                            <span>استرجاع الحساب الآن</span>
+                        </button>
+                    </form>
                     @endcan
                 </div>
             @endif
