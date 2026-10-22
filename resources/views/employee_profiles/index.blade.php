@@ -186,36 +186,28 @@
                                     </td>
                                     <td class="px-3 py-3 text-center" id="insurance-cell-{{ $user->id }}">
                                         <div class="d-inline-flex align-items-center justify-content-center">
-                                            <button type="button" 
-                                                    class="creative-insurance-btn {{ $user->is_insured ? 'is-insured' : 'is-not-insured' }}"
-                                                    id="insurance_btn_{{ $user->id }}"
-                                                    data-user-id="{{ $user->id }}" 
-                                                    data-user-name="{{ $user->name }}"
-                                                    data-insured="{{ $user->is_insured ? '1' : '0' }}"
-                                                    {{ !auth()->user()->can('employees.edit_profiles') ? 'disabled' : '' }}
-                                                    onclick="toggleCreativeInsurance(this)"
-                                                    title="{{ auth()->user()->can('employees.edit_profiles') ? ($user->is_insured ? 'مؤمن عليه — انقر للإلغاء' : 'غير مؤمن — انقر لتعيينه كمؤمن عليه') : 'ليس لديك صلاحية تعديل التأمين' }}">
-                                                
-                                                <span class="creative-toggle-track">
-                                                    <span class="creative-toggle-thumb" id="insurance_thumb_{{ $user->id }}">
-                                                        <span class="thumb-icon-shield">🛡️</span>
-                                                        <span class="thumb-icon-dash">✕</span>
-                                                    </span>
+                                            @if($user->is_insured)
+                                                <span class="badge d-inline-flex align-items-center gap-1.5 px-3 py-1.5 text-success border border-success-subtle shadow-xs" 
+                                                      style="border-radius: 9999px; font-size: 0.82rem; font-weight: 700; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); color: #065f46 !important; border-color: #10b981 !important; user-select: none;"
+                                                      title="حالة التأمين: مؤمن عليه">
+                                                    <span style="font-size: 0.95rem;">🛡️</span>
+                                                    <span>مؤمن عليه</span>
                                                 </span>
-
-                                                <span class="creative-toggle-content">
-                                                    <span class="creative-toggle-text" id="insurance_text_{{ $user->id }}">
-                                                        {{ $user->is_insured ? 'مؤمن عليه' : 'غير مؤمن' }}
-                                                    </span>
-                                                    <span class="creative-pulse-dot" id="insurance_dot_{{ $user->id }}"></span>
+                                            @else
+                                                <span class="badge d-inline-flex align-items-center gap-1.5 px-3 py-1.5 text-secondary border shadow-xs" 
+                                                      style="border-radius: 9999px; font-size: 0.82rem; font-weight: 600; background: #f8fafc; color: #64748b !important; border-color: #cbd5e1 !important; border-style: dashed !important; user-select: none;"
+                                                      title="حالة التأمين: غير مؤمن عليه">
+                                                    <span style="font-size: 0.85rem; opacity: 0.7;">🛡️</span>
+                                                    <span>غير مؤمن</span>
                                                 </span>
-                                            </button>
+                                            @endif
 
-                                            {{-- Hidden checkbox for test assertions & forms --}}
+                                            {{-- Hidden checkbox element for backwards-compatibility & tests --}}
                                             <input type="checkbox" 
                                                    id="insurance_switch_{{ $user->id }}" 
                                                    class="d-none" 
-                                                   {{ $user->is_insured ? 'checked' : '' }}>
+                                                   {{ $user->is_insured ? 'checked' : '' }}
+                                                   disabled>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-center">

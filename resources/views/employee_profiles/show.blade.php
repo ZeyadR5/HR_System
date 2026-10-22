@@ -18,11 +18,17 @@
                     ]);
                     $backUrl = route('employee_profiles.index', $backParams);
                 @endphp
-                <div class="mb-3">
+                <div class="mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <a href="{{ $backUrl }}" class="btn btn-light btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 fw-semibold border shadow-xs" style="background: #ffffff; color: #1e293b; border-color: #cbd5e1 !important;">
                         <span>⬅️</span>
                         <span>العودة لصفحة الموظفين</span>
                     </a>
+                    @can('employees.edit_profiles')
+                    <a href="{{ route('employee_profiles.edit', array_merge(['id' => $user->id], $backParams)) }}" class="btn btn-primary btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 fw-semibold shadow-xs">
+                        <span>✏️</span>
+                        <span>تعديل بيانات الموظف والتأمين</span>
+                    </a>
+                    @endcan
                 </div>
             @endif
 
@@ -157,7 +163,35 @@
 
             {{-- 1.2. HR Details Overview Strip --}}
             <div class="row g-3 mb-4">
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 16px; background: #ffffff;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 46px; height: 46px; background: {{ $user->is_insured ? '#dcfce7' : '#f1f5f9' }}; color: {{ $user->is_insured ? '#166534' : '#64748b' }}; font-size: 1.3rem;">
+                                🛡️
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="text-muted small fw-semibold d-block" style="font-size: 0.78rem;">التأمين الاجتماعي</span>
+                                <div class="d-flex align-items-center gap-2 mt-0.5">
+                                    @if($user->is_insured)
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-bold" style="font-size: 0.8rem;">
+                                            مؤمن عليه
+                                        </span>
+                                    @else
+                                        <span class="badge bg-light text-secondary border px-2 py-1 rounded-pill fw-semibold" style="font-size: 0.8rem; border-style: dashed !important;">
+                                            غير مؤمن
+                                        </span>
+                                    @endif
+                                    @can('employees.edit_profiles')
+                                        <a href="{{ route('employee_profiles.edit', array_merge(['id' => $user->id], $backParams ?? [])) }}" class="text-primary text-decoration-none" title="تعديل التأمين وبيانات الموظف" style="font-size: 0.75rem;">
+                                            ✏️ تعديل
+                                        </a>
+                                    @endcan
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-3">
                     <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 16px; background: #ffffff;">
                         <div class="d-flex align-items-center gap-3">
                             <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 46px; height: 46px; background: #fef3c7; color: #b45309; font-size: 1.3rem;">
@@ -172,7 +206,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-sm-6 col-lg-3">
                     <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 16px; background: #ffffff;">
                         <div class="d-flex align-items-center gap-3">
                             <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 46px; height: 46px; background: #eff6ff; color: #1d4ed8; font-size: 1.3rem;">
@@ -192,7 +226,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-sm-6 col-lg-3">
                     <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 16px; background: #ffffff;">
                         <div class="d-flex align-items-center gap-3">
                             <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 46px; height: 46px; background: #fdf4ff; color: #7e22ce; font-size: 1.3rem;">
