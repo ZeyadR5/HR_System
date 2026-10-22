@@ -105,15 +105,45 @@
                                 </label>
                                 <select name="job_title" id="job_title" class="form-select form-select-lg" style="border-radius: 12px; font-size: .95rem;">
                                     <option value="">— اختر المسمى الوظيفي —</option>
-                                    <option value="Rec" {{ old('job_title') == 'Rec' ? 'selected' : '' }}>استقبال (Rec)</option>
-                                    <option value="Nur" {{ old('job_title') == 'Nur' ? 'selected' : '' }}>تمريض (Nur)</option>
-                                    <option value="Tec" {{ old('job_title') == 'Tec' ? 'selected' : '' }}>فني اشعة (Tec)</option>
-                                    <option value="Acc" {{ old('job_title') == 'Acc' ? 'selected' : '' }}>حسابات (Acc)</option>
-                                    <option value="Reporting" {{ old('job_title') == 'Reporting' ? 'selected' : '' }}>Reporting</option>
-                                    <option value="Super_V" {{ old('job_title') == 'Super_V' ? 'selected' : '' }}>مشرف (Super_V)</option>
-                                    <option value="IT" {{ old('job_title') == 'IT' ? 'selected' : '' }}>IT Tecnicall Support</option>
-                                    <option hidden value="IT Manager" {{ old('job_title') == 'IT' ? 'selected' : '' }}>IT Manager</option>
-                                    <option value="Call_Center" {{ old('job_title') == 'Call_Center' ? 'selected' : '' }}>كول سنتر (Call_Center)</option>
+
+                                    <optgroup label="👑 الإدارة العليا والمدراء">
+                                        <option value="CEO" {{ old('job_title') == 'CEO' ? 'selected' : '' }}>CEO</option>
+                                        <option value="Owner" {{ old('job_title') == 'Owner' ? 'selected' : '' }}>Owner</option>
+                                        <option value="POD" {{ old('job_title') == 'POD' ? 'selected' : '' }}>POD</option>
+                                        <option value="Accounting Manager" {{ old('job_title') == 'Accounting Manager' ? 'selected' : '' }}>Accounting Manager</option>
+                                        <option value="Contract Manager" {{ old('job_title') == 'Contract Manager' ? 'selected' : '' }}>Contract Manager</option>
+                                        <option value="Marketing Manager" {{ old('job_title') == 'Marketing Manager' ? 'selected' : '' }}>Marketing Manager</option>
+                                        <option value="IT Manager" {{ old('job_title') == 'IT Manager' ? 'selected' : '' }}>IT Manager</option>
+                                        <option value="Super_V" {{ old('job_title') == 'Super_V' ? 'selected' : '' }}>مشرف / إداري (Super_V)</option>
+                                    </optgroup>
+
+                                    <optgroup label="💼 الأقسام الإدارية والتسويق">
+                                        <option value="Marketing" {{ old('job_title') == 'Marketing' ? 'selected' : '' }}>Marketing (تسويق)</option>
+                                        <option value="Accounting" {{ old('job_title') == 'Accounting' ? 'selected' : '' }}>Accounting (حسابات)</option>
+                                        <option value="Contract" {{ old('job_title') == 'Contract' ? 'selected' : '' }}>Contract (تعاقدات)</option>
+                                        <option value="Public Relations" {{ old('job_title') == 'Public Relations' ? 'selected' : '' }}>Public Relations (علاقات عامة)</option>
+                                        <option value="Social media" {{ old('job_title') == 'Social media' ? 'selected' : '' }}>Social media (سوشيال ميديا)</option>
+                                        <option value="Store" {{ old('job_title') == 'Store' ? 'selected' : '' }}>Store (مخازن)</option>
+                                        <option value="Reporting" {{ old('job_title') == 'Reporting' ? 'selected' : '' }}>Reporting</option>
+                                    </optgroup>
+
+                                    <optgroup label="🩺 الطبي والتمريض والفني والتقني">
+                                        <option value="Doctor" {{ old('job_title') == 'Doctor' ? 'selected' : '' }}>Doctor (طبيب)</option>
+                                        <option value="Tec" {{ old('job_title') == 'Tec' ? 'selected' : '' }}>فني (Tec)</option>
+                                        <option value="Nur" {{ old('job_title') == 'Nur' ? 'selected' : '' }}>تمريض (Nur)</option>
+                                        <option value="IT Tecnicall Support" {{ old('job_title') == 'IT Tecnicall Support' ? 'selected' : '' }}>IT Tecnicall Support (دعم فني)</option>
+                                    </optgroup>
+
+                                    <optgroup label="📞 الاستقبال والاتصالات">
+                                        <option value="Rec" {{ old('job_title') == 'Rec' ? 'selected' : '' }}>استقبال (Rec)</option>
+                                        <option value="Call_Center" {{ old('job_title') == 'Call_Center' ? 'selected' : '' }}>كول سنتر (Call_Center)</option>
+                                    </optgroup>
+
+                                    <optgroup label="🛠️ الخدمات والصيانة والتشغيل">
+                                        <option value="Service" {{ old('job_title') == 'Service' ? 'selected' : '' }}>Service (خدمات)</option>
+                                        <option value="Maintenance" {{ old('job_title') == 'Maintenance' ? 'selected' : '' }}>Maintenance (صيانة)</option>
+                                        <option value="Driver" {{ old('job_title') == 'Driver' ? 'selected' : '' }}>Driver (سائق)</option>
+                                    </optgroup>
                                 </select>
                             </div>
 

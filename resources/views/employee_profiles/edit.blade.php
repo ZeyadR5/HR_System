@@ -73,16 +73,61 @@
                             <select name="job_title" id="job_title" 
                                     class="form-select form-select-lg @error('job_title') is-invalid @enderror" 
                                     style="border-radius: 10px; font-size: 1rem;">
-                                <option value="" {{ old('job_title', $user->job_title) == '' ? 'selected' : '' }}>اختر الوظيفة...</option>
-                                <option value="Rec" {{ old('job_title', $user->job_title) == 'Rec' ? 'selected' : '' }}>استقبال (Rec)</option>
-                                <option value="Nur" {{ old('job_title', $user->job_title) == 'Nur' ? 'selected' : '' }}>تمريض</option>
-                                <option value="Tec" {{ old('job_title', $user->job_title) == 'Tec' ? 'selected' : '' }}>فني</option>
-                                <option value="Acc" {{ old('job_title', $user->job_title) == 'Acc' ? 'selected' : '' }}>حسابات</option>
-                                <option value="Reporting" {{ old('job_title', $user->job_title) == 'Reporting' ? 'selected' : '' }}>Reporting</option>
-                                <option value="Super_V" {{ old('job_title', $user->job_title) == 'Super_V' ? 'selected' : '' }}>اداري</option>
-                                <option value="IT Tecnicall Support" {{ old('job_title', $user->job_title) == 'IT Tecnicall Support' ? 'selected' : '' }}>IT Tecnicall Support</option>
-                                <option hidden value="IT Manager" {{ old('job_title', $user->job_title) == 'IT Manager' ? 'selected' : '' }}>IT Manager</option>
-                                <option value="Call_Center" {{ old('job_title', $user->job_title) == 'Call_Center' ? 'selected' : '' }}>كول سنتر</option>
+                                <option value="" {{ old('job_title', $user->job_title) == '' ? 'selected' : '' }}>— اختر الوظيفة —</option>
+
+                                <optgroup label="👑 الإدارة العليا والمدراء">
+                                    <option value="CEO" {{ old('job_title', $user->job_title) == 'CEO' ? 'selected' : '' }}>CEO</option>
+                                    <option value="Owner" {{ old('job_title', $user->job_title) == 'Owner' ? 'selected' : '' }}>Owner</option>
+                                    <option value="POD" {{ old('job_title', $user->job_title) == 'POD' ? 'selected' : '' }}>POD</option>
+                                    <option value="Accounting Manager" {{ old('job_title', $user->job_title) == 'Accounting Manager' ? 'selected' : '' }}>Accounting Manager</option>
+                                    <option value="Contract Manager" {{ old('job_title', $user->job_title) == 'Contract Manager' ? 'selected' : '' }}>Contract Manager</option>
+                                    <option value="Marketing Manager" {{ old('job_title', $user->job_title) == 'Marketing Manager' ? 'selected' : '' }}>Marketing Manager</option>
+                                    <option value="IT Manager" {{ old('job_title', $user->job_title) == 'IT Manager' ? 'selected' : '' }}>IT Manager</option>
+                                    <option value="Super_V" {{ old('job_title', $user->job_title) == 'Super_V' ? 'selected' : '' }}>إداري / مشرف (Super_V)</option>
+                                </optgroup>
+
+                                <optgroup label="💼 الأقسام الإدارية والتسويق">
+                                    <option value="Marketing" {{ old('job_title', $user->job_title) == 'Marketing' ? 'selected' : '' }}>Marketing (تسويق)</option>
+                                    <option value="Accounting" {{ old('job_title', $user->job_title) == 'Accounting' ? 'selected' : '' }}>Accounting (حسابات)</option>
+                                    <option value="Contract" {{ old('job_title', $user->job_title) == 'Contract' ? 'selected' : '' }}>Contract (تعاقدات)</option>
+                                    <option value="Public Relations" {{ old('job_title', $user->job_title) == 'Public Relations' ? 'selected' : '' }}>Public Relations (علاقات عامة)</option>
+                                    <option value="Social media" {{ old('job_title', $user->job_title) == 'Social media' ? 'selected' : '' }}>Social media (سوشيال ميديا)</option>
+                                    <option value="Store" {{ old('job_title', $user->job_title) == 'Store' ? 'selected' : '' }}>Store (مخازن)</option>
+                                    <option value="Reporting" {{ old('job_title', $user->job_title) == 'Reporting' ? 'selected' : '' }}>Reporting</option>
+                                </optgroup>
+
+                                <optgroup label="🩺 الطبي والتمريض والفني والتقني">
+                                    <option value="Doctor" {{ old('job_title', $user->job_title) == 'Doctor' ? 'selected' : '' }}>Doctor (طبيب)</option>
+                                    <option value="Tec" {{ old('job_title', $user->job_title) == 'Tec' ? 'selected' : '' }}>فني (Tec)</option>
+                                    <option value="Nur" {{ old('job_title', $user->job_title) == 'Nur' ? 'selected' : '' }}>تمريض (Nur)</option>
+                                    <option value="IT Tecnicall Support" {{ old('job_title', $user->job_title) == 'IT Tecnicall Support' ? 'selected' : '' }}>IT Tecnicall Support (دعم فني)</option>
+                                </optgroup>
+
+                                <optgroup label="📞 الاستقبال والاتصالات">
+                                    <option value="Rec" {{ old('job_title', $user->job_title) == 'Rec' ? 'selected' : '' }}>استقبال (Rec)</option>
+                                    <option value="Call_Center" {{ old('job_title', $user->job_title) == 'Call_Center' ? 'selected' : '' }}>كول سنتر (Call_Center)</option>
+                                </optgroup>
+
+                                <optgroup label="🛠️ الخدمات والصيانة والتشغيل">
+                                    <option value="Service" {{ old('job_title', $user->job_title) == 'Service' ? 'selected' : '' }}>Service (خدمات)</option>
+                                    <option value="Maintenance" {{ old('job_title', $user->job_title) == 'Maintenance' ? 'selected' : '' }}>Maintenance (صيانة)</option>
+                                    <option value="Driver" {{ old('job_title', $user->job_title) == 'Driver' ? 'selected' : '' }}>Driver (سائق)</option>
+                                </optgroup>
+
+                                @php
+                                    $allKnownTitles = [
+                                        'CEO', 'Owner', 'POD', 'Accounting Manager', 'Contract Manager', 
+                                        'Marketing Manager', 'IT Manager', 'Super_V', 'Marketing', 'Accounting', 
+                                        'Contract', 'Public Relations', 'Social media', 'Store', 'Reporting', 
+                                        'Doctor', 'Tec', 'Nur', 'IT Tecnicall Support', 'Rec', 'Call_Center', 
+                                        'Service', 'Maintenance', 'Driver'
+                                    ];
+                                @endphp
+                                @if($user->job_title && !in_array($user->job_title, $allKnownTitles))
+                                    <option value="{{ $user->job_title }}" selected>
+                                        {{ $user->job_title }} (مسمى مخصص)
+                                    </option>
+                                @endif
                             </select>
                             @error('job_title')
                                 <div class="invalid-feedback">{{ $message }}</div>
