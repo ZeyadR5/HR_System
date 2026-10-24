@@ -26,9 +26,9 @@ class SuperAdminEntryController extends Controller
      */
     public function checkLimits(Request $request)
     {
-        $employeeName = trim($request->input('employee_name', ''));
-        $type = $request->input('entry_type', '');
-        $date = $request->input('date', now()->toDateString());
+        $employeeName = trim((string) $request->input('employee_name', ''));
+        $type = (string) $request->input('entry_type', '');
+        $date = $request->filled('date') ? (string) $request->input('date') : now()->toDateString();
 
         $user = !empty($employeeName) ? User::where('name', $employeeName)->first() : null;
 
@@ -47,7 +47,7 @@ class SuperAdminEntryController extends Controller
     /**
      * تقييم حدود الرصيد لموظف معين والتحقق من كسر الحدود.
      */
-    public function evaluateLimits(?User $user, string $type, string $dateStr, array $params = []): array
+    public function evaluateLimits(?User $user, ?string $type = '', ?string $dateStr = null, array $params = []): array
     {
         if (!$user) {
             return [
@@ -58,6 +58,9 @@ class SuperAdminEntryController extends Controller
                 'info_message' => 'الموظف غير مسجل بالنظام (إدخال يدوي حر بدون رصيد آلي).',
             ];
         }
+
+        $type = (string) $type;
+        $dateStr = !empty($dateStr) ? $dateStr : now()->toDateString();
 
         try {
             $date = Carbon::parse($dateStr);

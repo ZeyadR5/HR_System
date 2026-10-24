@@ -375,4 +375,17 @@ class SuperAdminManualEntryLimitsTest extends TestCase
         $this->assertNotNull($log);
         $this->assertStringContainsString('كسر حدود معتمد كاستثناء', $log->details);
     }
+
+    public function test_check_limits_safely_handles_missing_or_null_date(): void
+    {
+        $response = $this->actingAs($this->supervisor)
+            ->getJson(route('super_admin.entry.check_limits', [
+                'employee_name' => $this->employee->name,
+                'entry_type'    => 'leave',
+                'date'          => '',
+            ]));
+
+        $response->assertOk()
+            ->assertJsonPath('has_user', true);
+    }
 }

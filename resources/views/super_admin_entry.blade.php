@@ -1031,7 +1031,7 @@ function checkEmployeeLimits() {
     const params = new URLSearchParams({
         employee_name: employeeName,
         entry_type: entryType,
-        date: dateVal || '',
+        date: dateVal || new Date().toISOString().split('T')[0],
         days_count: daysCount,
         from: entryType === 'permission' ? (permFrom || '') : (otFrom || ''),
         to: entryType === 'permission' ? (permTo || '') : (otTo || ''),
