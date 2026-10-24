@@ -385,6 +385,39 @@
             font-size: 1.2rem;
         }
     }
+
+    @keyframes pulseBreach {
+        0%, 100% { border-color: #ef4444; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        50% { border-color: #dc2626; box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.15); }
+    }
+    .breach-alert-box {
+        animation: pulseBreach 2s infinite ease-in-out;
+    }
+    .balance-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        border: 1px solid transparent;
+    }
+    .balance-pill-ok {
+        background: #ecfdf5;
+        color: #065f46;
+        border-color: #a7f3d0;
+    }
+    .balance-pill-warn {
+        background: #fffbeb;
+        color: #92400e;
+        border-color: #fde68a;
+    }
+    .balance-pill-danger {
+        background: #fef2f2;
+        color: #991b1b;
+        border-color: #fecdd3;
+    }
 </style>
 @endsection
 
@@ -398,6 +431,27 @@
         <div class="alert-success">
             <span style="font-size:1.1rem;">✅</span>
             {{ session('success') }}
+        </div>
+    @endif
+
+    {{-- Alert when submitting exceeded limits and needs confirmation --}}
+    @if(session('needs_override_confirmation') && session('breached_warnings'))
+        <div style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 2px solid #f59e0b; border-radius: 14px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);">
+            <div style="display: flex; align-items: flex-start; gap: 0.8rem;">
+                <span style="font-size: 1.8rem; line-height: 1;">⚠️</span>
+                <div style="flex-grow: 1;">
+                    <h4 style="margin: 0 0 0.4rem; color: #92400e; font-size: 1.05rem; font-weight: 700;">تنبيه: هذه الإضافة اليدوية تتجاوز حدود الرصيد المسموح به للموظف!</h4>
+                    <ul style="margin: 0 0 0.8rem; padding-right: 1.2rem; color: #78350f; font-size: 0.88rem; line-height: 1.6;">
+                        @foreach(session('breached_warnings') as $w)
+                            <li><strong>{{ $w }}</strong></li>
+                        @endforeach
+                    </ul>
+                    <p style="margin: 0 0 0.8rem; font-size: 0.84rem; color: #92400e;">هل ترغب في اعتماد هذه الإضافة كـ <strong>استثناء إداري معتمد</strong> وتخطي الرصيد للموظف؟</p>
+                    <button type="button" class="btn btn-warning btn-sm fw-bold px-3 py-2 shadow-xs" onclick="confirmOverrideAndSubmit()" style="border-radius: 8px; background: #d97706; border-color: #b45309; color: #fff;">
+                        ⚡ نعم، اعتمد الإضافة كاستثناء الآن
+                    </button>
+                </div>
+            </div>
         </div>
     @endif
 
@@ -422,6 +476,7 @@
 
             <form action="{{ route('super_admin.entry.store') }}" method="POST" id="entryForm">
                 @csrf
+                <input type="hidden" name="confirmed_override" id="confirmed_override" value="0">
 
                 {{-- Step 1: Entry Type --}}
                 <div class="form-section">
@@ -540,6 +595,40 @@
                             @error('reason')
                                 <p class="error-msg">{{ $message }}</p>
                             @enderror
+                        </div>
+                    </div>
+
+                    {{-- Live Employee Balance & Limit Breach Alert --}}
+                    <div id="liveBalanceContainer" style="display: none; margin-top: 1.2rem;">
+                        {{-- Balance Stats Pill Bar --}}
+                        <div id="liveBalanceInfo" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 0.85rem 1.1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem;">
+                            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                                <span style="font-size: 1.25rem;">📊</span>
+                                <div>
+                                    <div style="font-size: 0.88rem; font-weight: 700; color: #1e293b;" id="liveEmployeeTitle"></div>
+                                    <div style="font-size: 0.76rem; color: #64748b;" id="livePeriodLabel"></div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="liveBalanceBadges">
+                            </div>
+                        </div>
+
+                        {{-- Limit Breach Warning Card --}}
+                        <div id="liveBreachBanner" class="breach-alert-box" style="display: none; margin-top: 0.8rem; background: linear-gradient(135deg, #fff1f2, #fee2e2); border: 2px solid #ef4444; border-radius: 12px; padding: 1rem 1.25rem;">
+                            <div style="display: flex; align-items: flex-start; gap: 0.8rem;">
+                                <span style="font-size: 1.7rem; line-height: 1;">⚠️</span>
+                                <div style="flex-grow: 1;">
+                                    <div style="font-weight: 800; color: #991b1b; font-size: 0.98rem; margin-bottom: 0.4rem;" id="liveBreachTitle">
+                                        تنبيه: هذا الإدخال يتجاوز حدود الرصيد المسموح به للموظف!
+                                    </div>
+                                    <div id="liveBreachList" style="color: #7f1d1d; font-size: 0.86rem; line-height: 1.6;">
+                                    </div>
+                                    <div style="margin-top: 0.6rem; font-size: 0.8rem; color: #b91c1c; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
+                                        <span>💡</span>
+                                        <span>يمكنك اعتماد الإضافة كاستثناء إداري مخصص عند النقر على الحفظ.</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -675,6 +764,40 @@
 
             </form>
 
+        </div>
+    </div>
+</div>
+
+{{-- Override Confirmation Modal --}}
+<div class="modal fade" id="overrideConfirmModal" tabindex="-1" aria-hidden="true" style="display: none; z-index: 1065;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+        <div class="modal-content border-0 shadow-lg text-end" style="border-radius: 18px; overflow: hidden; background: #fff;">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <span style="font-size: 1.5rem;">⚠️</span>
+                    <h5 class="modal-title fw-bold text-danger mb-0" style="font-size: 1.1rem;">تأكيد كسر حدود الرصيد للموظف</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body p-4 text-end">
+                <p class="text-muted small mb-2">
+                    البيانات المدخلة تتجاوز الحد النظامي المعتمد لهذا الموظف:
+                </p>
+                <div id="modalBreachWarnings" class="p-3 rounded-3 mb-3" style="background: #fff1f2; border: 1px solid #fecdd3; color: #9f1239; font-size: 0.88rem; line-height: 1.6;">
+                </div>
+                <div class="p-2 rounded-2" style="background: #fffbeb; border: 1px solid #fde68a; font-size: 0.84rem; color: #92400e;">
+                    هل تؤكد رغبتك في تسجيل هذه الإضافة اليدوية كـ <strong>استثناء إداري معتمد</strong> مع توثيق ذلك في سجل العمليات؟
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-between gap-2">
+                <button type="button" class="btn btn-warning fw-bold px-3 py-2 shadow-xs d-flex align-items-center gap-1" id="confirmOverrideBtn" style="border-radius: 10px; background: #d97706; border-color: #b45309; color: #fff;">
+                    <span>⚡</span>
+                    <span>نعم، اعتمد الإضافة كاستثناء</span>
+                </button>
+                <button type="button" class="btn btn-light fw-semibold px-3 py-2" data-bs-dismiss="modal" style="border-radius: 10px; border: 1px solid #cbd5e1;">
+                    تراجع وتعديل
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -855,30 +978,179 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ---- Date Picker ----
-flatpickr('#entry_date', {
-    dateFormat: 'Y-m-d',
-    locale: { firstDayOfWeek: 6 },
-    allowInput: true,
-});
-
-// ---- Auto-fill day on date select ----
-document.getElementById('entry_date')._flatpickr?.config.onChange.push(function(dates) {
-    if (dates.length > 0) {
-        const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        document.getElementById('entry_day').value = days[dates[0].getDay()];
-    }
-});
-
-// Flatpickr onChange workaround
+// ---- Date Picker with limits check ----
 const dateFp = flatpickr('#entry_date', {
     dateFormat: 'Y-m-d',
+    locale: { firstDayOfWeek: 6 },
     allowInput: true,
     onChange: function(dates) {
         if (dates.length > 0) {
             const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
             document.getElementById('entry_day').value = days[dates[0].getDay()];
         }
+        debouncedCheckLimits();
+    }
+});
+
+// ---- Real-time Employee Limits & Breach Checking ----
+window.currentLimitBreached = false;
+window.currentBreachWarnings = [];
+let checkLimitsTimer = null;
+
+function debouncedCheckLimits() {
+    clearTimeout(checkLimitsTimer);
+    checkLimitsTimer = setTimeout(checkEmployeeLimits, 300);
+}
+
+function checkEmployeeLimits() {
+    const employeeName = document.getElementById('employee_name')?.value?.trim();
+    const checkedRadio = document.querySelector('input[name="entry_type"]:checked');
+    const entryType = checkedRadio ? checkedRadio.value : '';
+    const dateVal = document.getElementById('entry_date')?.value?.trim();
+    const daysCount = document.getElementById('leave_days')?.value || 1;
+    const otFrom = document.getElementById('ot_from')?.value;
+    const otTo = document.getElementById('ot_to')?.value;
+    const permFrom = document.getElementById('perm_from')?.value;
+    const permTo = document.getElementById('perm_to')?.value;
+    const permType = document.getElementById('perm_type')?.value;
+
+    const container = document.getElementById('liveBalanceContainer');
+    const breachBanner = document.getElementById('liveBreachBanner');
+    const titleEl = document.getElementById('liveEmployeeTitle');
+    const periodLabelEl = document.getElementById('livePeriodLabel');
+    const badgesEl = document.getElementById('liveBalanceBadges');
+    const breachListEl = document.getElementById('liveBreachList');
+
+    if (!employeeName || !entryType) {
+        if (container) container.style.display = 'none';
+        window.currentLimitBreached = false;
+        window.currentBreachWarnings = [];
+        return;
+    }
+
+    const params = new URLSearchParams({
+        employee_name: employeeName,
+        entry_type: entryType,
+        date: dateVal || '',
+        days_count: daysCount,
+        from: entryType === 'permission' ? (permFrom || '') : (otFrom || ''),
+        to: entryType === 'permission' ? (permTo || '') : (otTo || ''),
+        permission_type: permType || ''
+    });
+
+    fetch('{{ route("super_admin.entry.check_limits") }}?' + params.toString())
+        .then(response => response.json())
+        .then(data => {
+            if (!data.has_user) {
+                if (container) container.style.display = 'none';
+                window.currentLimitBreached = false;
+                window.currentBreachWarnings = [];
+                return;
+            }
+
+            container.style.display = 'block';
+            titleEl.textContent = `👤 ${data.user_name} (${data.job_title || 'موظف'})`;
+            periodLabelEl.textContent = data.stats?.period_label ? `دورة القبض: ${data.stats.period_label}` : '';
+
+            // Render stats badges
+            let badgesHtml = '';
+            const s = data.stats || {};
+
+            if (entryType === 'leave') {
+                const monthClass = (s.month_remaining <= 0) ? 'balance-pill-danger' : (s.month_remaining === 1 ? 'balance-pill-warn' : 'balance-pill-ok');
+                const yearClass = (s.year_remaining <= 0) ? 'balance-pill-danger' : (s.year_remaining <= 3 ? 'balance-pill-warn' : 'balance-pill-ok');
+
+                badgesHtml += `<span class="balance-pill ${monthClass}">🏖️ إجازات الشهر: ${s.month_used} / ${s.month_limit} يوم (متبقي: ${s.month_remaining})</span>`;
+                badgesHtml += `<span class="balance-pill ${yearClass}">🌟 إجازات السنة: ${s.year_used} / ${s.year_limit} يوم (متبقي: ${s.year_remaining})</span>`;
+            } else if (entryType === 'permission') {
+                const permClass = (s.minutes_remaining <= 0) ? 'balance-pill-danger' : (s.minutes_remaining <= 60 ? 'balance-pill-warn' : 'balance-pill-ok');
+                badgesHtml += `<span class="balance-pill ${permClass}">📋 أذونات الشهر: ${s.hours_used} / ${s.hours_limit} ساعات</span>`;
+                badgesHtml += `<span class="balance-pill ${permClass}">⏳ المتبقي: ${s.minutes_remaining} دقيقة</span>`;
+            } else if (entryType === 'overtime') {
+                const otClass = (s.day_remaining <= 0) ? 'balance-pill-danger' : (s.day_remaining <= 1 ? 'balance-pill-warn' : 'balance-pill-ok');
+                badgesHtml += `<span class="balance-pill ${otClass}">⏱️ إضافي اليوم: ${s.day_used} / ${s.day_limit} ساعات (متبقي: ${s.day_remaining})</span>`;
+            }
+
+            badgesEl.innerHTML = badgesHtml;
+
+            // Handle breach alert
+            window.currentLimitBreached = !!data.is_breached;
+            window.currentBreachWarnings = data.warnings || [];
+
+            if (data.is_breached && data.warnings && data.warnings.length > 0) {
+                breachBanner.style.display = 'block';
+                breachListEl.innerHTML = data.warnings.map(w => `<div style="margin-bottom:0.25rem;">• <strong>${w}</strong></div>`).join('');
+            } else {
+                breachBanner.style.display = 'none';
+                breachListEl.innerHTML = '';
+            }
+        })
+        .catch(err => {
+            console.error('Error checking limits:', err);
+        });
+}
+
+// Attach listeners to trigger limits check
+['input', 'change'].forEach(evt => {
+    document.getElementById('employee_name')?.addEventListener(evt, debouncedCheckLimits);
+    document.getElementById('leave_days')?.addEventListener(evt, debouncedCheckLimits);
+    document.getElementById('ot_from')?.addEventListener(evt, debouncedCheckLimits);
+    document.getElementById('ot_to')?.addEventListener(evt, debouncedCheckLimits);
+    document.getElementById('perm_from')?.addEventListener(evt, debouncedCheckLimits);
+    document.getElementById('perm_to')?.addEventListener(evt, debouncedCheckLimits);
+    document.getElementById('perm_type')?.addEventListener(evt, debouncedCheckLimits);
+});
+
+typeRadios.forEach(radio => {
+    radio.addEventListener('change', debouncedCheckLimits);
+});
+
+// Intercept form submit if limit is breached
+const entryForm = document.getElementById('entryForm');
+if (entryForm) {
+    entryForm.addEventListener('submit', function(e) {
+        const overrideInput = document.getElementById('confirmed_override');
+        if (window.currentLimitBreached && overrideInput.value !== '1') {
+            e.preventDefault();
+            const modalWarningsBox = document.getElementById('modalBreachWarnings');
+            if (modalWarningsBox) {
+                modalWarningsBox.innerHTML = window.currentBreachWarnings.map(w => `<div style="margin-bottom:0.35rem;">⚠️ <strong>${w}</strong></div>`).join('');
+            }
+            const modalEl = document.getElementById('overrideConfirmModal');
+            if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            } else {
+                if (confirm('⚠️ تنبيه كسر حدود الرصيد للموظف:\n\n' + window.currentBreachWarnings.join('\n') + '\n\nهل ترغب في اعتماد الإضافة كاستثناء إداري؟')) {
+                    overrideInput.value = '1';
+                    entryForm.submit();
+                }
+            }
+        }
+    });
+}
+
+// Modal confirmation action
+document.getElementById('confirmOverrideBtn')?.addEventListener('click', function() {
+    const overrideInput = document.getElementById('confirmed_override');
+    if (overrideInput && entryForm) {
+        overrideInput.value = '1';
+        entryForm.submit();
+    }
+});
+
+function confirmOverrideAndSubmit() {
+    const overrideInput = document.getElementById('confirmed_override');
+    if (overrideInput && entryForm) {
+        overrideInput.value = '1';
+        entryForm.submit();
+    }
+}
+
+// Initial check on page load if employee_name is filled
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('employee_name')?.value?.trim()) {
+        checkEmployeeLimits();
     }
 });
 </script>

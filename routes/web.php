@@ -158,6 +158,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/reset-password', [LoginController::class, 'reset_password_post'])->middleware('permission:employees.reset_password')->name('admin.reset_password.post');
 
     Route::get('/super-admin/entry', [SuperAdminEntryController::class, 'index'])->middleware('permission:employees.manual_entry')->name('super_admin.entry');
+    Route::get('/super-admin/entry/check-limits', [SuperAdminEntryController::class, 'checkLimits'])->middleware('permission:employees.manual_entry')->name('super_admin.entry.check_limits');
     Route::post('/super-admin/entry', [SuperAdminEntryController::class, 'store'])->middleware('permission:employees.manual_entry')->name('super_admin.entry.store');
 
     Route::get('/employee-profiles', [EmployeeProfileController::class, 'index'])->middleware('permission:employees.view_profiles')->name('employee_profiles.index');
