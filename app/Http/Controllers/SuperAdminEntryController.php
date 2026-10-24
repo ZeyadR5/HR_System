@@ -230,6 +230,12 @@ class SuperAdminEntryController extends Controller
             'date'          => 'required|date',
             'day'           => 'required|string|max:50',
             'reason'        => 'required|string|max:1000',
+        ], [
+            'date.required'          => 'حقل التاريخ إجباري ولا يمكن حفظ أو رفع أي إذن أو إجازة أو إضافي بدونه.',
+            'date.date'              => 'صيغة التاريخ غير صالحة.',
+            'day.required'           => 'حقل اليوم إجباري.',
+            'employee_name.required' => 'اسم الموظف إجباري.',
+            'reason.required'        => 'سبب الإدخال إجباري.',
         ]);
 
         $user = User::where('name', $request->employee_name)->first();

@@ -557,7 +557,8 @@
                                 id="entry_date"
                                 class="form-control {{ $errors->has('date') ? 'is-invalid' : '' }}"
                                 placeholder="اختر التاريخ"
-                                value="{{ old('date') }}"
+                                value="{{ old('date', date('Y-m-d')) }}"
+                                required
                                 autocomplete="off">
                             @error('date')
                                 <p class="error-msg">{{ $message }}</p>
@@ -570,11 +571,15 @@
                             <label class="form-label" for="entry_day">
                                 <span class="required">*</span> اليوم
                             </label>
+                            @php
+                                $daysMap = [0 => 'الأحد', 1 => 'الاثنين', 2 => 'الثلاثاء', 3 => 'الأربعاء', 4 => 'الخميس', 5 => 'الجمعة', 6 => 'السبت'];
+                                $defaultDay = $daysMap[date('w')];
+                            @endphp
                             <select name="day" id="entry_day"
-                                class="form-control {{ $errors->has('day') ? 'is-invalid' : '' }}">
+                                class="form-control {{ $errors->has('day') ? 'is-invalid' : '' }}" required>
                                 <option value="">اختر اليوم</option>
                                 @foreach(['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'] as $d)
-                                    <option value="{{ $d }}" {{ old('day') === $d ? 'selected' : '' }}>{{ $d }}</option>
+                                    <option value="{{ $d }}" {{ old('day', $defaultDay) === $d ? 'selected' : '' }}>{{ $d }}</option>
                                 @endforeach
                             </select>
                             @error('day')
@@ -1021,7 +1026,7 @@ function checkEmployeeLimits() {
     const badgesEl = document.getElementById('liveBalanceBadges');
     const breachListEl = document.getElementById('liveBreachList');
 
-    if (!employeeName || !entryType) {
+    if (!employeeName || !entryType || !dateVal) {
         if (container) container.style.display = 'none';
         window.currentLimitBreached = false;
         window.currentBreachWarnings = [];
@@ -1031,7 +1036,7 @@ function checkEmployeeLimits() {
     const params = new URLSearchParams({
         employee_name: employeeName,
         entry_type: entryType,
-        date: dateVal || new Date().toISOString().split('T')[0],
+        date: dateVal,
         days_count: daysCount,
         from: entryType === 'permission' ? (permFrom || '') : (otFrom || ''),
         to: entryType === 'permission' ? (permTo || '') : (otTo || ''),
@@ -1109,6 +1114,14 @@ typeRadios.forEach(radio => {
 const entryForm = document.getElementById('entryForm');
 if (entryForm) {
     entryForm.addEventListener('submit', function(e) {
+        const dateInput = document.getElementById('entry_date');
+        if (!dateInput || !dateInput.value.trim()) {
+            e.preventDefault();
+            alert('⚠️ لا يمكن حفظ أي إذن أو إجازة أو إضافي بدون تحديد التاريخ!');
+            if (dateInput) dateInput.focus();
+            return false;
+        }
+
         const overrideInput = document.getElementById('confirmed_override');
         if (window.currentLimitBreached && overrideInput.value !== '1') {
             e.preventDefault();
@@ -1132,6 +1145,12 @@ if (entryForm) {
 
 // Modal confirmation action
 document.getElementById('confirmOverrideBtn')?.addEventListener('click', function() {
+    const dateInput = document.getElementById('entry_date');
+    if (!dateInput || !dateInput.value.trim()) {
+        alert('⚠️ لا يمكن حفظ أي إذن أو إجازة أو إضافي بدون تحديد التاريخ!');
+        if (dateInput) dateInput.focus();
+        return;
+    }
     const overrideInput = document.getElementById('confirmed_override');
     if (overrideInput && entryForm) {
         overrideInput.value = '1';
@@ -1140,6 +1159,12 @@ document.getElementById('confirmOverrideBtn')?.addEventListener('click', functio
 });
 
 function confirmOverrideAndSubmit() {
+    const dateInput = document.getElementById('entry_date');
+    if (!dateInput || !dateInput.value.trim()) {
+        alert('⚠️ لا يمكن حفظ أي إذن أو إجازة أو إضافي بدون تحديد التاريخ!');
+        if (dateInput) dateInput.focus();
+        return;
+    }
     const overrideInput = document.getElementById('confirmed_override');
     if (overrideInput && entryForm) {
         overrideInput.value = '1';
