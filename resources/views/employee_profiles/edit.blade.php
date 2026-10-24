@@ -83,7 +83,7 @@
                                     <option value="Contract Manager" {{ old('job_title', $user->job_title) == 'Contract Manager' ? 'selected' : '' }}>Contract Manager</option>
                                     <option value="Marketing Manager" {{ old('job_title', $user->job_title) == 'Marketing Manager' ? 'selected' : '' }}>Marketing Manager</option>
                                     <option value="IT Manager" {{ old('job_title', $user->job_title) == 'IT Manager' ? 'selected' : '' }}>IT Manager</option>
-                                    <option value="Super_V" {{ old('job_title', $user->job_title) == 'Super_V' ? 'selected' : '' }}>إداري / مشرف (Super_V)</option>
+                                    <option value="Super_V" {{ old('job_title', $user->job_title) == 'Super_V' ? 'selected' : '' }}> مشرف (Super_V)</option>
                                 </optgroup>
 
                                 <optgroup label="💼 الأقسام الإدارية والتسويق">
