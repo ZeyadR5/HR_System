@@ -315,7 +315,7 @@
                         <div class="card border-0 mb-4" style="border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
                             <div class="card-body p-3">
                                 @php
-                                    $canManageAvatar = Auth::id() === $user->id || Auth::user()->can('employees.avatar_manage');
+                                    $canManageAvatar = Auth::user()->can('employees.avatar_manage');
                                 @endphp
                                 <label class="form-label fw-bold text-slate-800 d-flex align-items-center justify-content-between mb-3" style="font-size: 0.95rem;">
                                     <span class="d-flex align-items-center gap-2">
@@ -364,7 +364,7 @@
                                         <div id="bar_profile_picture" class="mt-2 p-2 rounded-2 bg-light border d-none align-items-center justify-content-between flex-wrap gap-2">
                                             <span class="small text-primary fw-semibold" id="text_profile_picture"></span>
                                         </div>
-                                        <div class="form-text extra-small text-muted" style="font-size: 0.75rem;">الامتدادات المدعومة: JPG, PNG, WEBP (الحد الأقصى 5 ميجابايت). يمكن للموظف أيضاً تعديل صورته بنفسه من بروفايله.</div>
+                                        <div class="form-text extra-small text-muted" style="font-size: 0.75rem;">الامتدادات المدعومة: JPG, PNG, WEBP (الحد الأقصى 5 ميجابايت). تغيير وحذف الصور متاح فقط للـ HR ومن يملك الصلاحية من لوحة التحكم.</div>
                                         @error('profile_picture')
                                             <div class="text-danger small mt-1">{{ $message }}</div>
                                         @enderror

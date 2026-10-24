@@ -133,7 +133,7 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
         return UploadedFile::fake()->createWithContent($filename, $bytes);
     }
 
-    public function test_employee_can_update_their_own_profile_picture(): void
+    public function test_employee_without_avatar_manage_permission_cannot_update_profile_picture(): void
     {
         Storage::fake('public');
 
@@ -151,11 +151,42 @@ class EmployeeDocumentsAndAvatarTest extends TestCase
                 'profile_picture' => $file,
             ]);
 
-        $response->assertSessionHas('success');
-        $employee->refresh();
+        $response->assertRedirect(route('Overtime'));
+        $response->assertSessionHasErrors('error');
+        $this->assertNull($employee->fresh()->profile_picture);
 
-        $this->assertNotNull($employee->profile_picture);
-        $this->assertTrue(Storage::disk('public')->exists($employee->profile_picture));
+        // Also test AJAX avatar upload attempt by regular employee -> 403
+        $ajaxResponse = $this->actingAs($employee)
+            ->post(route('employee_profiles.upload_document_ajax', $employee->id), [
+                'type' => 'profile_picture',
+                'file' => $file,
+            ]);
+        $ajaxResponse->assertStatus(403);
+    }
+
+    public function test_user_with_avatar_manage_permission_can_update_profile_picture(): void
+    {
+        Storage::fake('public');
+
+        $hrUser = User::create([
+            'name'     => 'مسؤول HR',
+            'email'    => 'hr_avatar@example.com',
+            'password' => bcrypt('123456'),
+            'role'     => 'admin', // admin has employees.avatar_manage in test setup
+        ]);
+
+        $file = $this->fakePngFile('my_avatar.png');
+
+        $response = $this->actingAs($hrUser)
+            ->post(route('my_profile.update_picture'), [
+                'profile_picture' => $file,
+            ]);
+
+        $response->assertSessionHas('success');
+        $hrUser->refresh();
+
+        $this->assertNotNull($hrUser->profile_picture);
+        $this->assertTrue(Storage::disk('public')->exists($hrUser->profile_picture));
     }
 
     public function test_admin_can_upload_employee_documents_and_avatar(): void

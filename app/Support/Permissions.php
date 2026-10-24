@@ -103,7 +103,7 @@ class Permissions
                     'employees.edit_profiles'    => 'تعديل بيانات الموظفين (المسمى، الراتب، ساعات العمل)',
                     'employees.documents_upload' => 'رفع وإضافة وثائق الموظفين (البطاقة، المؤهل، أخرى)',
                     'employees.documents_delete' => 'حذف وثائق وأوراق الموظفين الرسمية',
-                    'employees.avatar_manage'    => 'تعديل وحذف الصورة الشخصية للموظفين (كـ HR)',
+                    'employees.avatar_manage'    => 'تغيير وحذف صور البروفايلات للموظفين (الـ HR فقط)',
                     'employees.reset_password'   => 'إعادة ضبط كلمة السر للموظفين',
                     'employees.create'           => 'إضافة موظفين جدد',
                     'employees.manual_entry'     => 'الإضافة اليدوية (إجازات، أذونات، إضافي للموظفين)',

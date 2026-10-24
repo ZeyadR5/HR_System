@@ -83,7 +83,7 @@ Route::middleware(['auth'])->group(function () {
 
     // بروفايلي الشخصي
     Route::get('/my-profile', [EmployeeProfileController::class, 'myProfile'])->name('my_profile');
-    Route::post('/my-profile/update-picture', [EmployeeProfileController::class, 'updateMyProfilePicture'])->name('my_profile.update_picture');
+    Route::post('/my-profile/update-picture', [EmployeeProfileController::class, 'updateMyProfilePicture'])->middleware('permission:employees.avatar_manage')->name('my_profile.update_picture');
 
     // صفحة الإشعارات
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

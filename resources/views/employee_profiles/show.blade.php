@@ -130,13 +130,13 @@
                                     @endif
                                 </div>
 
-                                @if(Auth::id() === $user->id || Auth::user()->can('employees.avatar_manage'))
+                                @if(Auth::user()->can('employees.avatar_manage'))
                                     {{-- Hidden avatar file input for instant upload --}}
                                     <input type="file" id="avatar_ajax_input" accept="image/png, image/jpeg, image/jpg, image/webp" style="display: none;" onchange="uploadAvatarDirect(this)">
                                     <button type="button" 
                                             class="btn btn-primary btn-sm rounded-circle position-absolute bottom-0 end-0 p-0 d-flex align-items-center justify-content-center shadow" 
                                             style="width: 36px; height: 36px; border: 3px solid #1e293b; z-index: 15;" 
-                                            title="تغيير الصورة الشخصية فوراً" 
+                                            title="تغيير الصورة الشخصية (HR)" 
                                             onclick="event.stopPropagation(); document.getElementById('avatar_ajax_input').click()">
                                         <span style="font-size: 0.95rem;">📷</span>
                                     </button>

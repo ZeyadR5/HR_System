@@ -501,6 +501,9 @@ class EmployeeProfileController extends Controller
 
         foreach ($docKeys as $column => $deleteParam) {
             if ($request->boolean($deleteParam) && !empty($user->{$column})) {
+                if (!Auth::user()->can('employees.avatar_manage')) {
+                    return back()->withErrors(['profile_picture' => 'غير مصرح لك بحذف صورة البروفايل (خاصة بالـ HR).']);
+                }
                 if (Storage::disk('public')->exists($user->{$column})) {
                     Storage::disk('public')->delete($user->{$column});
                 }
@@ -510,6 +513,9 @@ class EmployeeProfileController extends Controller
 
         // رفع صورة البروفايل
         if ($request->hasFile('profile_picture')) {
+            if (!Auth::user()->can('employees.avatar_manage')) {
+                return back()->withErrors(['profile_picture' => 'غير مصرح لك بتغيير أو رفع صورة البروفايل (خاصة بالـ HR).']);
+            }
             if (!empty($user->profile_picture) && Storage::disk('public')->exists($user->profile_picture)) {
                 Storage::disk('public')->delete($user->profile_picture);
             }
@@ -767,6 +773,10 @@ class EmployeeProfileController extends Controller
      */
     public function updateMyProfilePicture(Request $request)
     {
+        if (!Auth::user()->can('employees.avatar_manage')) {
+            abort(403, 'غير مصرح لك بتغيير صورتك الشخصية (خاصة بإدارة الـ HR ومن يملك الصلاحية من لوحة التحكم).');
+        }
+
         $request->validate([
             'profile_picture' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
         ], [
@@ -876,15 +886,15 @@ class EmployeeProfileController extends Controller
         }
 
         // التحقق من الصلاحيات:
-        // صورة البروفايل: يمكن للموظف نفسه رفعها أو للـ HR/Admin
+        // صورة البروفايل: للـ HR أو من يملك صلاحية employees.avatar_manage فقط
         // الوثائق الرسمية الـ 3: للـ HR/Admin فقط حصراً
         if ($type === 'profile_picture') {
-            $canAvatar = Auth::id() == $user->id || Auth::user()->can('employees.avatar_manage');
+            $canAvatar = Auth::user()->can('employees.avatar_manage');
 
             if (!$canAvatar) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'غير مصرح لك بتحديث صورة هذا الموظف.'
+                    'message' => 'غير مصرح لك بتغيير صورة هذا الموظف (خاصة بالـ HR ومن يملك الصلاحية).'
                 ], 403);
             }
         } else {
@@ -1020,10 +1030,10 @@ class EmployeeProfileController extends Controller
         }
 
         if ($type === 'profile_picture') {
-            $canAvatar = Auth::id() == $user->id || Auth::user()->can('employees.avatar_manage');
+            $canAvatar = Auth::user()->can('employees.avatar_manage');
 
             if (!$canAvatar) {
-                return response()->json(['success' => false, 'message' => 'غير مصرح لك بحذف الصورة.'], 403);
+                return response()->json(['success' => false, 'message' => 'غير مصرح لك بحذف صورة البروفايل (خاصة بالـ HR ومن يملك الصلاحية).'], 403);
             }
         } else {
             $canDeleteDocs = Auth::user()->can('employees.documents_delete');
