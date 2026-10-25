@@ -10,3 +10,8 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('backup:run')->daily()->at('00:00');
+
+if (env('DEMO_MODE', false)) {
+    Schedule::command('demo:reset --force')->dailyAt('00:00');
+}
+

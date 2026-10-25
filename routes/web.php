@@ -235,3 +235,20 @@ Route::middleware(['auth', 'developer'])->prefix('developer')->name('developer.'
     Route::post('/shifts/{shift}/delete', [DeveloperShiftGroupController::class, 'destroy'])->name('shifts.destroy');
     Route::post('/shifts/users/{user}/assign', [DeveloperShiftGroupController::class, 'assignUser'])->name('shifts.assign_user');
 });
+
+// ==========================================
+// البيئة التجريبية (Demo Sandbox Actions)
+// ==========================================
+Route::post('/demo/reset', function () {
+    if (!config('app.demo_mode')) {
+        abort(403, 'البيئة التجريبية غير مفعلة.');
+    }
+    if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+        abort(403, 'غير مصرح بهذا الإجراء.');
+    }
+
+    \Illuminate\Support\Facades\Artisan::call('demo:reset', ['--force' => true]);
+
+    return redirect()->back()->with('success', '✨ تم إعادة ضبط البيئة التجريبية واستعادة كافة البيانات الافتراضية بنجاح!');
+})->name('demo.reset');
+

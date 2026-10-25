@@ -92,6 +92,11 @@ class User extends Authenticatable
         return $this->role === \App\Support\Permissions::DEVELOPER_ROLE;
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin' || $this->isDeveloper();
+    }
+
     /** قائمة صلاحيات المستخدم الفعلية */
     public function permissionList(): array
     {

@@ -845,13 +845,102 @@
             border-color: #d1d5db;
         }
 
-        .ts-wrapper.focus .ts-control {
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-            border-color: #2563eb;
+        /* Demo Sandbox Banner */
+        .demo-ribbon-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 38px;
+            background: linear-gradient(90deg, #6366f1, #2563eb, #0d9488);
+            color: #fff;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .demo-ribbon-inner {
+            width: 100%;
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .demo-badge {
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(4px);
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 700;
+            margin-left: 6px;
+            white-space: nowrap;
+        }
+        .demo-btn-action {
+            background: #ffffff;
+            color: #1e1b4b;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 0.75rem;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        .demo-btn-action:hover {
+            transform: scale(1.03);
+            background: #f1f5f9;
+            color: #312e81;
+        }
+        body.has-demo-ribbon .creative-header {
+            top: 38px !important;
+        }
+        body.has-demo-ribbon .page-content {
+            padding-top: 118px !important;
+        }
+        body.has-demo-ribbon .sidepanel {
+            top: 38px !important;
+            height: calc(100vh - 38px) !important;
+        }
+        @media (max-width: 768px) {
+            .demo-ribbon-text-long {
+                display: none;
+            }
         }
     </style>
 </head>
-<body>
+<body class="{{ config('app.demo_mode') ? 'has-demo-ribbon' : '' }}">
+    @if(config('app.demo_mode'))
+    <div class="demo-ribbon-bar">
+        <div class="demo-ribbon-inner">
+            <div style="display:flex; align-items:center; gap:0.4rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                <span class="demo-badge">🚀 بيئة تجريبية (Sandbox Demo)</span>
+                <span class="demo-ribbon-text-long">النظام مفتوح بالكامل للتجربة. تُعاد تهيئة البيانات تلقائياً يومياً منتصف الليل.</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.5rem; white-space:nowrap;">
+                @guest
+                    <a href="{{ route('login') }}" class="demo-btn-action">🔑 دخول الأدمن (admin@demo.com / demo123456)</a>
+                @else
+                    @if(Auth::user()->isSuperAdmin())
+                        <form action="{{ route('demo.reset') }}" method="POST" style="margin:0;" onsubmit="return confirm('هل تريد إعادة ضبط بيانات البيئة التجريبية واستعادة البيانات الافتراضية الآن؟');">
+                            @csrf
+                            <button type="submit" class="demo-btn-action" style="background:#fee2e2; color:#991b1b;">🔄 إعادة ضبط الداتا</button>
+                        </form>
+                    @endif
+                    <span style="font-size:0.75rem; background:rgba(255,255,255,0.18); padding:2px 8px; border-radius:6px;">👤 {{ Auth::user()->name }}</span>
+                @endguest
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Global Loader Overlay -->
     <div id="global-loader">
         <svg class="loader-z" viewBox="0 0 100 100">
