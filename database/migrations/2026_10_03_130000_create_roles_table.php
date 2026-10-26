@@ -47,6 +47,10 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE users MODIFY COLUMN role VARCHAR(50) NOT NULL DEFAULT 'user'");
+        }
+
         $defaults = Permissions::defaults();
         $now = now();
 
