@@ -70,15 +70,18 @@ public function reset_password_post(Request $request)
     return redirect()->back()->with('success', 'Password reset successfully!');
 }
 
-function logout(Request $request){
-    AuditLog::log(Auth::user()->name, 'Logout', 'Auth', 'System');
-    Auth::logout();
+    public function logout(Request $request)
+    {
+        if (Auth::check()) {
+            AuditLog::log(Auth::user()->name, 'Logout', 'Auth', 'System');
+            Auth::logout();
+        }
 
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-    return redirect()->route('login');
-}
+        return redirect()->route('login');
+    }
 
 
 }
