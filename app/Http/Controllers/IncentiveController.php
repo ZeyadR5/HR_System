@@ -16,10 +16,7 @@ class IncentiveController extends Controller
     {
         if (!Auth::user()->can('incentives.create') && !in_array(Auth::user()->role, ['super_admin', 'developer'])) abort(403);
 
-        $users = User::where(function ($q) {
-            $q->whereNull('job_title')
-              ->orWhereRaw('LOWER(job_title) NOT LIKE ?', ['%tec%']);
-        })->orderBy('name')->get();
+        $users = User::orderBy('name')->get();
 
         return view('incentive', compact('users'));
     }
@@ -55,11 +52,8 @@ class IncentiveController extends Controller
         $periodStart = $period['start'];
         $periodEnd = $period['end'];
 
-        // استبعاد أي موظف المسمى الوظيفي بتاعه يحتوي على tec
-        $usersQuery = User::where(function ($q) {
-            $q->whereNull('job_title')
-              ->orWhereRaw('LOWER(job_title) NOT LIKE ?', ['%tec%']);
-        });
+        // عرض كل الموظفين
+        $usersQuery = User::query();
 
         if ($request->filled('user_id')) {
             $usersQuery->where('id', $request->user_id);
@@ -82,15 +76,11 @@ class IncentiveController extends Controller
 
         $users = $usersQuery->get();
 
-        // قائمة كل الموظفين المتاحين للفلترة (بدون tec)
-        $filterUsers = User::where(function ($q) {
-            $q->whereNull('job_title')
-              ->orWhereRaw('LOWER(job_title) NOT LIKE ?', ['%tec%']);
-        })->orderBy('name')->get();
+        // قائمة كل الموظفين المتاحين للفلترة
+        $filterUsers = User::orderBy('name')->get();
 
         $jobTitles = User::whereNotNull('job_title')
             ->where('job_title', '!=', '')
-            ->whereRaw('LOWER(job_title) NOT LIKE ?', ['%tec%'])
             ->distinct()
             ->pluck('job_title')
             ->sort()
@@ -100,10 +90,6 @@ class IncentiveController extends Controller
                 $periodStart->toDateString(),
                 $periodEnd->toDateString(),
             ])
-            ->whereHas('user', function ($q) {
-                $q->whereNull('job_title')
-                  ->orWhereRaw('LOWER(job_title) NOT LIKE ?', ['%tec%']);
-            })
             ->orderByDesc('date')
             ->orderByDesc('created_at');
 
@@ -143,10 +129,6 @@ class IncentiveController extends Controller
                 $periodStart->toDateString(),
                 $periodEnd->toDateString(),
             ])
-            ->whereHas('user', function ($q) {
-                $q->whereNull('job_title')
-                  ->orWhereRaw('LOWER(job_title) NOT LIKE ?', ['%tec%']);
-            })
             ->orderByDesc('date')
             ->orderByDesc('created_at')
             ->get();
