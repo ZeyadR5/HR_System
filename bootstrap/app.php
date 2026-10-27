@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->appendToGroup('web', \App\Http\Middleware\PreventDuplicateSubmission::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\LockEmployeeProfilesOnExit::class);
+        $middleware->append(\App\Http\Middleware\SanitizeInput::class);
+        $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
         $middleware->alias([
             'admin'       => \App\Http\Middleware\AdminMiddleware::class,
             'super_admin' => \App\Http\Middleware\SuperAdminMiddleware::class,

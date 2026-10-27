@@ -1,3 +1,6 @@
+# Prevent directory browsing unconditionally
+Options -Indexes -MultiViews
+
 <IfModule mod_php.c>
     php_value upload_max_filesize 10M
     php_value post_max_size 12M
@@ -7,11 +10,25 @@
     php_value post_max_size 12M
 </IfModule>
 
-<IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
+# Block access to hidden files and sensitive extensions
+<FilesMatch "^\.|\.(bak|config|sql|fla|psd|ini|log|sh|inc|swp|dist|env|yml|yaml|json|lock)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
     </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
 
+# Allow public webmanifest and favicon json if needed
+<Files "site.webmanifest">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+</Files>
+
+<IfModule mod_rewrite.c>
     RewriteEngine On
 
     # Handle Authorization Header

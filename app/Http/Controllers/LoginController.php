@@ -2,44 +2,74 @@
 
 
 namespace App\Http\Controllers;
+
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use App\Models\AuditLog;
 
 class LoginController extends Controller
 {
-    function login(){
+    public function login()
+    {
         return view('login');
     }
 
-function login_post(Request $request){
-    $request->validate([
-        'email'    => 'required|email',
-        'password' => 'required',
-    ]);
+    public function login_post(Request $request)
+    {
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
+        ]);
 
-    $credentials = $request->only('email', 'password');
+        // Rate Limiting: 5 attempts per minute per email + IP
+        $throttleKey = Str::transliterate(Str::lower($request->input('email')) . '|' . $request->ip());
 
-    if(Auth::attempt($credentials)){
-        $request->session()->regenerate();
-        
-        AuditLog::log(Auth::user()->name, 'Login', 'Auth', 'System');
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
 
-        if(Auth::user()->role === 'admin'){
-            return redirect()->route('home');
-        } else {
+            AuditLog::log(
+                $request->input('email', 'Guest'),
+                'Rate Limit Exceeded',
+                'Auth',
+                'System',
+                "تم حظر محاولات الدخول مؤقتاً لتجاوز الحد المسموح (المتبقي: {$seconds} ثانية) من IP: " . $request->ip()
+            );
+
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors([
+                    'email' => "تم حظر محاولات الدخول مؤقتاً لكثرة المحاولات الخاطئة. يرجى الانتظار {$seconds} ثانية ثم المحاولة مجدداً."
+                ]);
+        }
+
+        $credentials = $request->only('email', 'password');
+
+        if (Auth::attempt($credentials)) {
+            // Clear rate limiter upon successful login
+            RateLimiter::clear($throttleKey);
+
+            $request->session()->regenerate();
+            
+            AuditLog::log(Auth::user()->name, 'Login', 'Auth', 'System');
+
             return redirect()->route('home');
         }
+
+        // Increment rate limiter on failure
+        RateLimiter::hit($throttleKey, 60);
+
+        // تسجيل محاولة الدخول الفاشلة
+        $attemptedEmail = $request->email;
+        AuditLog::log($attemptedEmail, 'Failed Login', 'Auth', 'System', 'محاولة تسجيل دخول فاشلة للإيميل: ' . $attemptedEmail);
+
+        return back()
+            ->withInput($request->only('email'))
+            ->withErrors(['email' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.']);
     }
-
-    // تسجيل محاولة الدخول الفاشلة
-    $attemptedEmail = $request->email;
-    AuditLog::log($attemptedEmail, 'Failed Login', 'Auth', 'System', 'محاولة تسجيل دخول فاشلة للإيميل: ' . $attemptedEmail);
-
-    return back()->withErrors(['email' => 'Invalid credentials.']);
-}
 
 public function reset_password_index()
 {

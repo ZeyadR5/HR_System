@@ -1,0 +1,20 @@
+# Prevent Directory Listing for the entire project
+Options -Indexes -MultiViews
+
+# Deny access to sensitive files and directories
+<FilesMatch "^\.|\.(env|sql|log|json|lock|yml|yaml|md|xml|git)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Redirect root requests to public directory safely if Apache DocumentRoot is set to project root
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^$ public/ [L]
+    RewriteRule (.*) public/$1 [L]
+</IfModule>

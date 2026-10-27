@@ -106,7 +106,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const disabledDates = {!! json_encode($takenLeaves ?? []) !!};
+        const disabledDates = @json($takenLeaves ?? []);
         
         flatpickr("#date", {
             dateFormat: "Y-m-d",
