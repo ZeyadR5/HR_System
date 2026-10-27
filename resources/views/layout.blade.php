@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>@hasSection('title') @yield('title') - HR System @else نظام الموارد البشرية - HR System @endif</title>
 
     {{-- Favicon & Tab Icons --}}
@@ -24,6 +24,11 @@
     @yield('styles')
 
     <style>
+        :root {
+            --sat: env(safe-area-inset-top, 0px);
+            --sab: env(safe-area-inset-bottom, 0px);
+        }
+
         * {
             box-sizing: border-box;
         }
@@ -48,17 +53,17 @@
            --- Creative Header & Slide-Out Side Panel Styles ---
            ========================================================= */
         .creative-header {
-            background: rgba(15, 23, 42, 0.96);
+            background: rgba(15, 23, 42, 0.98);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             color: #fff;
-            padding: 0 1.25rem;
+            padding: var(--sat) 1rem 0 1rem;
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 1000;
-            height: 64px;
+            height: calc(64px + var(--sat));
             display: flex;
             align-items: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -73,9 +78,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 100%;
+            height: 64px;
             gap: 0.85rem;
         }
+
 
         .header-start, .header-end, .header-center {
             display: flex;
@@ -689,7 +695,7 @@
         @media (max-width: 640px) {
             .header-user-info { display: none; }
             .header-page-tag { display: none; }
-            .creative-header { padding: 0 0.85rem; }
+            .creative-header { padding: var(--sat) 0.75rem 0 0.75rem; }
             .header-logo span { display: none; }
         }
 
@@ -697,7 +703,8 @@
             width: 100%;
             max-width: 100%;
             padding: 14px;
-            padding-top: 80px;
+            padding-top: calc(80px + var(--sat)) !important;
+            padding-bottom: calc(20px + var(--sab)) !important;
             overflow-x: hidden;
             min-height: calc(100vh - 140px);
         }
@@ -732,14 +739,14 @@
         @media (min-width: 768px) {
             .page-content {
                 padding: 20px;
-                padding-top: 84px;
+                padding-top: calc(84px + var(--sat)) !important;
             }
         }
 
         @media (max-width: 576px) {
             .page-content {
                 padding: 10px;
-                padding-top: 74px;
+                padding-top: calc(76px + var(--sat)) !important;
             }
             .footer-inner {
                 font-size: 0.78rem;
@@ -1581,30 +1588,76 @@
         @endif
     });
 
-    // --- Local Push Notification Polling ---
+    // --- Push & Local Notifications (Capacitor & Web) ---
     @auth
-    setInterval(function() {
-        fetch('{{ route('poll_notifications') }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
+    (function () {
+        // تهيئة StatusBar و LocalNotifications عند العمل كتطبيق Native
+        if (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) {
+            if (Capacitor.Plugins && Capacitor.Plugins.StatusBar) {
+                Capacitor.Plugins.StatusBar.setOverlaysWebView({ overlay: false }).catch(function(){});
+                Capacitor.Plugins.StatusBar.setBackgroundColor({ color: '#0f172a' }).catch(function(){});
+                Capacitor.Plugins.StatusBar.setStyle({ style: 'DARK' }).catch(function(){});
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success' && data.notifications && data.notifications.length > 0) {
-                data.notifications.forEach(notif => {
-                    // Send to Flutter App
-                    if (window.NativeBridge) {
-                        window.NativeBridge.postMessage('notify:' + notif.title + '|' + notif.message);
-                    }
-                });
+            if (Capacitor.Plugins && Capacitor.Plugins.LocalNotifications) {
+                Capacitor.Plugins.LocalNotifications.requestPermissions().catch(function(){});
+                Capacitor.Plugins.LocalNotifications.createChannel({
+                    id: 'hr_channel',
+                    name: 'إشعارات الموارد البشرية',
+                    description: 'إشعارات قبول ورفض الإجازات والإضافي',
+                    importance: 5,
+                    visibility: 1,
+                    vibration: true,
+                    sound: 'beep.wav'
+                }).catch(function(){});
             }
-        })
-        .catch(e => console.error('Polling Error:', e));
-    }, 20000); // كل 20 ثانية
+        } else if (window.Notification && Notification.permission === 'default') {
+            Notification.requestPermission().catch(function(){});
+        }
+
+        function checkNotifications() {
+            fetch('{{ route('poll_notifications') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success' && data.notifications && data.notifications.length > 0) {
+                    data.notifications.forEach(notif => {
+                        // 1. في تطبيق الموبايل (Capacitor Local Notifications)
+                        if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications) {
+                            Capacitor.Plugins.LocalNotifications.schedule({
+                                notifications: [{
+                                    id: Math.floor(Math.random() * 1000000),
+                                    title: notif.title || 'إشعار جديد',
+                                    body: notif.message || '',
+                                    channelId: 'hr_channel',
+                                    sound: 'beep.wav',
+                                    schedule: { at: new Date(Date.now() + 100) }
+                                }]
+                            }).catch(function(e){ console.warn('LocalNotification error:', e); });
+                        }
+                        // 2. تطبيق Flutter القديم
+                        if (window.NativeBridge) {
+                            window.NativeBridge.postMessage('notify:' + notif.title + '|' + notif.message);
+                        }
+                        // 3. متصفح الويب
+                        if (window.Notification && Notification.permission === 'granted') {
+                            try {
+                                new Notification(notif.title, { body: notif.message, icon: '{{ asset('favicon.ico') }}' });
+                            } catch(err) {}
+                        }
+                    });
+                }
+            })
+            .catch(e => console.error('Polling Error:', e));
+        }
+
+        setInterval(checkNotifications, 15000); // فحص كل 15 ثانية
+    })();
     @endauth
 </script>
     @if(session('alert_error'))

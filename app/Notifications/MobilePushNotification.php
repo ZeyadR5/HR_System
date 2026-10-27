@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -32,7 +31,31 @@ class MobilePushNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        $channels = ['database'];
+        if (!empty($notifiable->email)) {
+            $channels[] = 'mail';
+        }
+        return $channels;
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(object $notifiable): MailMessage
+    {
+        $mail = (new MailMessage)
+            ->subject($this->title . ' - نظام الموارد البشرية')
+            ->greeting('مرحباً ' . ($notifiable->name ?? 'عزيزنا الموظف'))
+            ->line($this->message);
+
+        if (!empty($this->actionedBy)) {
+            $mail->line('تم اتخاذ الإجراء بواسطة: ' . $this->actionedBy);
+        }
+
+        return $mail
+            ->action('فتح النظام', url('/'))
+            ->line('هذا إشعار تلقائي صادر من نظام الموارد البشرية.')
+            ->salutation('مع تحيات إدارة الموارد البشرية - Gamma');
     }
 
     /**
