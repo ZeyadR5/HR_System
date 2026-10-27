@@ -1618,30 +1618,24 @@
     <script>
     (function () {
         if (!window.Capacitor || !Capacitor.isNativePlatform || !Capacitor.isNativePlatform()) return;
-        if (sessionStorage.getItem('bio_ok')) return;
-        var Bio = Capacitor.Plugins && Capacitor.Plugins.NativeBiometric;
-        if (!Bio) return;
-        var ov = document.createElement('div');
-        ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#0f172a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:sans-serif;text-align:center;padding:24px';
-        ov.innerHTML = '<div style="font-size:56px">🔒</div><div style="font-size:20px">التطبيق مقفل</div><div id="bioMsg" style="opacity:.7"></div>' +
-            '<button id="bioRetry" style="display:none;padding:10px 24px;border:0;border-radius:10px;background:#6366f1;color:#fff;font-size:16px">إعادة المحاولة</button>' +
-            '<form id="bioLogout" method="POST" action="{{ route('logout') }}" style="display:none">@csrf<button style="padding:10px 24px;border:0;border-radius:10px;background:#334155;color:#fff;font-size:16px">تسجيل خروج</button></form>';
-        document.body.appendChild(ov);
-        function verify() {
-            document.getElementById('bioRetry').style.display = 'none';
-            document.getElementById('bioLogout').style.display = 'none';
-            Bio.isAvailable().then(function (r) {
-                if (!r.isAvailable) { sessionStorage.setItem('bio_ok', '1'); ov.remove(); return; }
-                return Bio.verifyIdentity({reason: 'تأكيد الهوية', title: 'فتح التطبيق', subtitle: 'استخدم بصمتك', useFallback: true, maxAttempts: 3})
-                    .then(function () { sessionStorage.setItem('bio_ok', '1'); ov.remove(); });
-            }).catch(function () {
-                document.getElementById('bioMsg').textContent = 'فشل التحقق';
-                document.getElementById('bioRetry').style.display = '';
-                document.getElementById('bioLogout').style.display = '';
-            });
+        var pending = sessionStorage.getItem('pending_bio_save');
+        if (pending && Capacitor.Plugins && Capacitor.Plugins.NativeBiometric) {
+            try {
+                var creds = JSON.parse(pending);
+                Capacitor.Plugins.NativeBiometric.setCredentials({
+                    server: 'gamma.hrsystem',
+                    username: creds.username,
+                    password: creds.password
+                }).then(function () {
+                    localStorage.setItem('has_bio_saved', '1');
+                    sessionStorage.removeItem('pending_bio_save');
+                }).catch(function (e) {
+                    console.warn('Biometric save error:', e);
+                });
+            } catch (err) {
+                sessionStorage.removeItem('pending_bio_save');
+            }
         }
-        document.getElementById('bioRetry').onclick = verify;
-        verify();
     })();
     </script>
     @endauth
