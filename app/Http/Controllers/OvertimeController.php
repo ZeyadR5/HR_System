@@ -105,6 +105,14 @@ class OvertimeController extends Controller
 
         if ($over) {
             AuditLog::log(Auth::user()->name, 'Created', 'Overtime', $name, "Hours: {$total_hours}, Date: {$request->date}");
+            
+            \App\Models\User::notifyManagement(
+                'طلب إضافي جديد ⏱️',
+                "قام الموظف {$name} بتقديم طلب عمل إضافي ({$total_hours} ساعة) ليوم {$request->date}.",
+                $name,
+                Auth::id()
+            );
+
             return redirect()->route('home')->with('success', 'Overtime submitted successfully!');
         }
 

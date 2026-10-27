@@ -13,13 +13,57 @@ import android.os.Bundle;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
+import com.onesignal.OneSignal;
+import com.onesignal.debug.LogLevel;
 
 public class MainActivity extends BridgeActivity {
+    private static final String ONESIGNAL_APP_ID = "9d306f1d-5e6d-4d06-91ed-0395ed04a46a";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createNotificationChannel();
         requestNotificationPermission();
+
+        // تهيئة OneSignal على مستوى نظام أندرويد ليعمل والتطبيق مغلق
+        try {
+            OneSignal.getDebug().setLogLevel(LogLevel.VERBOSE);
+            OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
+            OneSignal.getNotifications().requestPermission(false, com.onesignal.Continue.none());
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+
+        // جسر جافاسكربت لربط User ID بـ OneSignal عند تسجيل الدخول
+        try {
+            if (this.bridge != null && this.bridge.getWebView() != null) {
+                this.bridge.getWebView().addJavascriptInterface(new Object() {
+                    @android.webkit.JavascriptInterface
+                    public void login(String userId) {
+                        if (userId != null && !userId.trim().isEmpty()) {
+                            OneSignal.login(userId.trim());
+                        }
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public String getSubscriptionId() {
+                        try {
+                            String subId = OneSignal.getUser().getPushSubscription().getId();
+                            return subId != null ? subId : "";
+                        } catch (Throwable t) {
+                            return "";
+                        }
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    public void logout() {
+                        OneSignal.logout();
+                    }
+                }, "NativeOneSignal");
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     private void createNotificationChannel() {

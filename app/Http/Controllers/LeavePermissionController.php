@@ -130,6 +130,13 @@ public function permission_index()
 
         AuditLog::log(Auth::user()->name, 'Created', 'Leave', $name, "Date: {$request->date}");
 
+        \App\Models\User::notifyManagement(
+            'طلب إجازة جديد 🏖️',
+            "قام الموظف {$name} بتقديم طلب إجازة ({$request->days_count} يوم) تبدأ من {$request->date}.",
+            $name,
+            Auth::id()
+        );
+
         return redirect()->route('home')->with('success', 'Leave submitted successfully!');
     }
 
@@ -311,6 +318,13 @@ public function view_permission(Request $request)
         ]);
 
         AuditLog::log(Auth::user()->name, 'Created', 'Permission', $name, "Type: {$request->permission_type}, Date: {$request->date}");
+
+        \App\Models\User::notifyManagement(
+            'طلب إذن جديد 🚪',
+            "قام الموظف {$name} بتقديم طلب إذن ({$request->permission_type}) ليوم {$request->date}.",
+            $name,
+            Auth::id()
+        );
 
         return redirect()->route('home')->with('success', 'Permission submitted successfully!');
     }

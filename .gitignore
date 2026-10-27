@@ -41,7 +41,7 @@ tk_mobile/build/
 tk_mobile/build_log.txt
 tk_mobile/.flutter-plugins
 tk_mobile/.flutter-plugins-dependencies
-tk_mobile/*.apk
+*.apk
 tk_mobile/android/build/
 tk_mobile/android/.kotlin/
 public/adminer.php

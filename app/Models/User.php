@@ -138,34 +138,63 @@ class User extends Authenticatable
             // 1. تسجيل الإشعار في قاعدة البيانات فوراً (لحساب الموظف بالسيستم)
             $this->notify(new \App\Notifications\MobilePushNotification($title, $message, $actionedBy));
 
-            // 2. إرسال الإيميل والإشعار السحابي (OneSignal) بعد استجابة المتصفح (afterResponse)
+            // 2. إرسال إشعار الهاتف السحابي فوراً (OneSignal Push Notification)
+            try {
+                \App\Services\OneSignalService::sendToUser($this->id, $title, $message);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('OneSignal Error: ' . $e->getMessage());
+            }
+
+            // 3. إرسال الإيميل الرسمي
             $recipientEmail = $this->email;
             $recipientName  = $this->name;
-            $userId         = $this->id;
-            dispatch(function () use ($recipientEmail, $recipientName, $userId, $title, $message, $actionedBy) {
-                // إرسال الإيميل
-                if (!empty($recipientEmail)) {
-                    try {
-                        \Illuminate\Support\Facades\Mail::to($recipientEmail)->send(
-                            new \App\Mail\EmployeeNotificationMail($recipientName, $title, $message, $actionedBy)
-                        );
-                    } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::error('Background Email Error: ' . $e->getMessage());
-                    }
-                }
-
-                // إرسال إشعار الهاتف السحابي (Push Notification)
+            if (!empty($recipientEmail)) {
                 try {
-                    \App\Services\OneSignalService::sendToUser($userId, $title, $message);
+                    \Illuminate\Support\Facades\Mail::to($recipientEmail)->send(
+                        new \App\Mail\EmployeeNotificationMail($recipientName, $title, $message, $actionedBy)
+                    );
                 } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('Background OneSignal Error: ' . $e->getMessage());
+                    \Illuminate\Support\Facades\Log::error('Email Error: ' . $e->getMessage());
                 }
-            })->afterResponse();
+            }
 
             return true;
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Notification Error: ' . $e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Notify all management roles (admin, super_admin, developer, technical_support)
+     * via database notification and OneSignal push notification.
+     */
+    public static function notifyManagement(string $title, string $message, ?string $actionedBy = null, ?int $exceptUserId = null): void
+    {
+        $managementRoles = ['admin', 'super_admin', 'developer', 'technical_support'];
+
+        $admins = self::whereIn('role', $managementRoles)
+            ->when($exceptUserId, fn($q) => $q->where('id', '!=', $exceptUserId))
+            ->get();
+
+        if ($admins->isEmpty()) {
+            return;
+        }
+
+        // 1. تسجيل الإشعارات في قاعدة البيانات لجميع أفراد الإدارة
+        foreach ($admins as $admin) {
+            try {
+                $admin->notify(new \App\Notifications\MobilePushNotification($title, $message, $actionedBy));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to DB-notify admin {$admin->id}: " . $e->getMessage());
+            }
+        }
+
+        // 2. إرسال إشعار سحابي موحد لجميع أفراد الإدارة عبر OneSignal
+        try {
+            \App\Services\OneSignalService::sendToUsers($admins->pluck('id')->all(), $title, $message);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to OneSignal-notify management: " . $e->getMessage());
         }
     }
 

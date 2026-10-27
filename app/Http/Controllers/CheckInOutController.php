@@ -99,6 +99,14 @@ class CheckInOutController extends Controller
 
         if ($attendance) {
             AuditLog::log(Auth::user()->name, 'Created', 'CheckInOut', $name, "Type: {$request->type}, Date: " . now()->toDateString());
+
+            \App\Models\User::notifyManagement(
+                "تسجيل {$request->type} جديد 📍",
+                "قام الموظف {$name} بتسجيل {$request->type} الساعة " . now()->format('h:i A') . ".",
+                $name,
+                Auth::id()
+            );
+
             return redirect()->route('home')->with('success', 'تم تسجيل ال' . $request->type . ' بنجاح!');
         }
 

@@ -38,13 +38,20 @@ class SettlementController extends Controller
             'note' => 'required|string|max:2000',
         ]);
 
-        Settlement::create([
+        $settlement = Settlement::create([
             'user_id' => Auth::id(),
             'name' => Auth::user()->name,
             'note' => $request->note,
             'date' => now()->toDateString(),
             'day' => now()->locale('ar')->dayName,
         ]);
+
+        \App\Models\User::notifyManagement(
+            'طلب تسوية جديد 📝',
+            "قام الموظف " . Auth::user()->name . " بتقديم طلب تسوية جديد: " . \Illuminate\Support\Str::limit($request->note, 100),
+            Auth::user()->name,
+            Auth::id()
+        );
 
         return redirect()->route('home')->with('success', 'تم إرسال التسوية بنجاح!');
     }

@@ -1612,9 +1612,14 @@
             }
 
             // تهيئة OneSignal لاستقبال الإشعارات السحابية حتى والتطبيق مقفول
+            if (window.NativeOneSignal) {
+                @auth
+                try { window.NativeOneSignal.login("{{ auth()->id() }}"); } catch(e){}
+                @endauth
+            }
             if (window.plugins && window.plugins.OneSignal) {
                 try {
-                    window.plugins.OneSignal.initialize("9d306f1d-5c6d-4d06-91ed-0395ed04a46a");
+                    window.plugins.OneSignal.initialize("9d306f1d-5e6d-4d06-91ed-0395ed04a46a");
                     window.plugins.OneSignal.Notifications.requestPermission(true);
                     @auth
                     window.plugins.OneSignal.login("{{ auth()->id() }}");
@@ -1627,14 +1632,35 @@
             Notification.requestPermission().catch(function(){});
         }
 
+        // تهيئة OneSignal مباشرة على التطبيق
+        function syncNativePush() {
+            try {
+                if (window.NativeOneSignal) {
+                    @auth
+                    window.NativeOneSignal.login("{{ auth()->id() }}");
+                    @endauth
+                }
+            } catch(e){}
+        }
+        syncNativePush();
+        setTimeout(syncNativePush, 1200);
+
         function checkNotifications() {
+            var pushId = '';
+            try {
+                if (window.NativeOneSignal && window.NativeOneSignal.getSubscriptionId) {
+                    pushId = window.NativeOneSignal.getSubscriptionId() || '';
+                }
+            } catch(e){}
+
             fetch('{{ route('poll_notifications') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     'Accept': 'application/json'
-                }
+                },
+                body: JSON.stringify({ onesignal_id: pushId })
             })
             .then(response => response.json())
             .then(data => {
@@ -1648,8 +1674,7 @@
                                     title: notif.title || 'إشعار جديد',
                                     body: notif.message || '',
                                     channelId: 'hr_channel',
-                                    sound: 'beep.wav',
-                                    schedule: { at: new Date(Date.now() + 100) }
+                                    sound: 'beep.wav'
                                 }]
                             }).catch(function(e){ console.warn('LocalNotification error:', e); });
                         }

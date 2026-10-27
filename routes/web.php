@@ -92,6 +92,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/poll-notifications', function (\Illuminate\Http\Request $request) {
         if (auth()->check()) {
             $user = auth()->user();
+
+            // حفظ معرف الجهاز تلقائياً لحساب الموظف لإرسال الإشعارات له والتطبيق مغلق
+            if ($request->filled('onesignal_id') && $user->onesignal_id !== $request->onesignal_id) {
+                $user->update(['onesignal_id' => $request->onesignal_id]);
+            }
+
             $notifications = $user->unreadNotifications;
             
             // تحويل الإشعارات لمصفوفة بسيطة
