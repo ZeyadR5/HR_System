@@ -1656,10 +1656,12 @@
             .catch(e => console.error('Polling Error:', e));
         }
 
-        setInterval(checkNotifications, 15000); // فحص كل 15 ثانية
+        // تشغيل الفحص فور فتح التطبيق بدون أي تأخير
+        checkNotifications();
+        setInterval(checkNotifications, 10000); // ثم كل 10 ثوانٍ
     })();
+    </script>
     @endauth
-</script>
     @if(session('alert_error'))
     <script>
         window.addEventListener('DOMContentLoaded', (event) => {
@@ -1671,11 +1673,14 @@
     <script>
     (function () {
         if (!window.Capacitor || !Capacitor.isNativePlatform || !Capacitor.isNativePlatform()) return;
+
+        // 1. حفظ بيانات الاعتماد للبصمة إذا كانت معلقة من تسجيل الدخول
         var pending = sessionStorage.getItem('pending_bio_save');
-        if (pending && Capacitor.Plugins && Capacitor.Plugins.NativeBiometric) {
+        var Bio = Capacitor.Plugins && Capacitor.Plugins.NativeBiometric;
+        if (pending && Bio) {
             try {
                 var creds = JSON.parse(pending);
-                Capacitor.Plugins.NativeBiometric.setCredentials({
+                Bio.setCredentials({
                     server: 'gamma.hrsystem',
                     username: creds.username,
                     password: creds.password
@@ -1689,6 +1694,53 @@
                 sessionStorage.removeItem('pending_bio_save');
             }
         }
+
+        // 2. طلب البصمة عند فتح التطبيق للتأكد من هوية المستخدم
+        if (sessionStorage.getItem('bio_unlocked') === '1') return;
+        if (!Bio) return;
+
+        Bio.isAvailable().then(function (result) {
+            if (!result || !result.isAvailable) return;
+
+            // إنشاء شاشة قفل أنيقة تمنع رؤية البيانات قبل البصمة
+            var ov = document.createElement('div');
+            ov.id = 'bioGateOverlay';
+            ov.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;color:#fff;text-align:center;font-family:sans-serif;';
+            ov.innerHTML = '<div style="width:84px;height:84px;border-radius:50%;background:rgba(99,102,241,0.15);border:2px solid rgba(99,102,241,0.4);display:flex;align-items:center;justify-content:center;margin-bottom:20px;font-size:40px;">👆</div>' +
+                '<div style="font-size:22px;font-weight:700;margin-bottom:8px;">تأكيد الهوية بالبصمة</div>' +
+                '<p id="bioGateMsg" style="font-size:13px;color:#94a3b8;max-width:280px;margin-bottom:24px;line-height:1.5;">يرجى وضع بصمة الإصبع لفتح تطبيق الموارد البشرية</p>' +
+                '<button type="button" id="bioGateRetryBtn" style="padding:12px 32px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:0;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 8px 20px rgba(99,102,241,0.35);margin-bottom:12px;">استخدام البصمة</button>' +
+                '<form method="POST" action="{{ route('logout') }}" style="margin-top:10px;">@csrf<button type="submit" style="background:transparent;border:0;color:#94a3b8;font-size:13px;text-decoration:underline;cursor:pointer;">تسجيل الدخول بكلمة المرور</button></form>';
+            document.body.appendChild(ov);
+
+            function promptBio() {
+                Bio.verifyIdentity({
+                    title: 'نظام الموارد البشرية',
+                    subtitle: 'استخدم بصمتك للدخول',
+                    reason: 'تأكيد الهوية بالبصمة للمتابعة',
+                    maxAttempts: 3,
+                    useFallback: true
+                }).then(function () {
+                    sessionStorage.setItem('bio_unlocked', '1');
+                    var gate = document.getElementById('bioGateOverlay');
+                    if (gate) {
+                        gate.style.transition = 'opacity 0.25s ease';
+                        gate.style.opacity = '0';
+                        setTimeout(function() { gate.remove(); }, 250);
+                    }
+                }).catch(function (err) {
+                    console.log('Bio prompt canceled or failed:', err);
+                    var msg = document.getElementById('bioGateMsg');
+                    if (msg) msg.textContent = 'لم يتم تأكيد البصمة. اضغط على الزر للمحاولة مجدداً أو سجل بالباسورد';
+                });
+            }
+
+            document.getElementById('bioGateRetryBtn').onclick = promptBio;
+            // إظهار نافذة البصمة فوراً للمستخدم
+            promptBio();
+        }).catch(function(e) {
+            console.warn('Bio availability check error:', e);
+        });
     })();
     </script>
     @endauth
