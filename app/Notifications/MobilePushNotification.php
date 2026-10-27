@@ -31,11 +31,7 @@ class MobilePushNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        $channels = ['database'];
-        if (!empty($notifiable->email)) {
-            $channels[] = 'mail';
-        }
-        return $channels;
+        return ['database'];
     }
 
     /**

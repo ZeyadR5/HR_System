@@ -130,12 +130,29 @@ class User extends Authenticatable
     }
 
     /**
-     * Send Push Notification to this user (Local).
+     * Send Notification to this user (Database, Mail in background, and Mobile).
      */
     public function sendOneSignalNotification($title, $message, $actionedBy = null)
     {
         try {
+            // 1. تسجيل الإشعار في قاعدة البيانات فوراً (لحساب الموظف بالسيستم)
             $this->notify(new \App\Notifications\MobilePushNotification($title, $message, $actionedBy));
+
+            // 2. إرسال الإيميل بعد استجابة المتصفح (afterResponse) لسرعة فورية للأدمن بدون أي انتظار
+            $recipientEmail = $this->email;
+            $recipientName  = $this->name;
+            if (!empty($recipientEmail)) {
+                dispatch(function () use ($recipientEmail, $recipientName, $title, $message, $actionedBy) {
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($recipientEmail)->send(
+                            new \App\Mail\EmployeeNotificationMail($recipientName, $title, $message, $actionedBy)
+                        );
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error('Background Email Error: ' . $e->getMessage());
+                    }
+                })->afterResponse();
+            }
+
             return true;
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Notification Error: ' . $e->getMessage());
