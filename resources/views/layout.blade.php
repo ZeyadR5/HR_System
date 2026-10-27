@@ -1610,6 +1610,19 @@
                     sound: 'beep.wav'
                 }).catch(function(){});
             }
+
+            // تهيئة OneSignal لاستقبال الإشعارات السحابية حتى والتطبيق مقفول
+            if (window.plugins && window.plugins.OneSignal) {
+                try {
+                    window.plugins.OneSignal.initialize("9d306f1d-5c6d-4d06-91ed-0395ed04a46a");
+                    window.plugins.OneSignal.Notifications.requestPermission(true);
+                    @auth
+                    window.plugins.OneSignal.login("{{ auth()->id() }}");
+                    @endauth
+                } catch(err) {
+                    console.warn('OneSignal init error:', err);
+                }
+            }
         } else if (window.Notification && Notification.permission === 'default') {
             Notification.requestPermission().catch(function(){});
         }

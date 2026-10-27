@@ -138,11 +138,13 @@ class User extends Authenticatable
             // 1. تسجيل الإشعار في قاعدة البيانات فوراً (لحساب الموظف بالسيستم)
             $this->notify(new \App\Notifications\MobilePushNotification($title, $message, $actionedBy));
 
-            // 2. إرسال الإيميل بعد استجابة المتصفح (afterResponse) لسرعة فورية للأدمن بدون أي انتظار
+            // 2. إرسال الإيميل والإشعار السحابي (OneSignal) بعد استجابة المتصفح (afterResponse)
             $recipientEmail = $this->email;
             $recipientName  = $this->name;
-            if (!empty($recipientEmail)) {
-                dispatch(function () use ($recipientEmail, $recipientName, $title, $message, $actionedBy) {
+            $userId         = $this->id;
+            dispatch(function () use ($recipientEmail, $recipientName, $userId, $title, $message, $actionedBy) {
+                // إرسال الإيميل
+                if (!empty($recipientEmail)) {
                     try {
                         \Illuminate\Support\Facades\Mail::to($recipientEmail)->send(
                             new \App\Mail\EmployeeNotificationMail($recipientName, $title, $message, $actionedBy)
@@ -150,8 +152,15 @@ class User extends Authenticatable
                     } catch (\Throwable $e) {
                         \Illuminate\Support\Facades\Log::error('Background Email Error: ' . $e->getMessage());
                     }
-                })->afterResponse();
-            }
+                }
+
+                // إرسال إشعار الهاتف السحابي (Push Notification)
+                try {
+                    \App\Services\OneSignalService::sendToUser($userId, $title, $message);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Background OneSignal Error: ' . $e->getMessage());
+                }
+            })->afterResponse();
 
             return true;
         } catch (\Exception $e) {

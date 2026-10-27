@@ -17,7 +17,7 @@ dependencies {
     implementation project(':capacitor-native-biometric')
 
 }
-
+apply from: "../../node_modules/onesignal-cordova-plugin/build-extras-onesignal.gradle"
 
 if (hasProperty('postBuildExtras')) {
   postBuildExtras()
