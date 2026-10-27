@@ -18,6 +18,11 @@ class CheckInOut extends Model
         'status',
         'refuse_reason',
         'actioned_by',
+        'latitude',
+        'longitude',
+        'distance_m',
+        'selfie_path',
+        'source',
     ];
 
     public function user()

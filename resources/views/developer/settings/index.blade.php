@@ -132,6 +132,40 @@
                     </div>
                 </div>
             </div>
+
+            {{-- الحضور بالموقع الجغرافي والسيلفي --}}
+            <div class="col-12">
+                <div class="card border-0 shadow-sm" style="border-radius: 16px; border-top: 4px solid #0d9488 !important;">
+                    <div class="card-body p-4">
+                        <h4 class="fw-bold mb-4">📍 الحضور بالموقع الجغرافي (Geofencing)</h4>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="form-check form-switch fs-5">
+                                    <input class="form-check-input" type="checkbox" role="switch" name="geofence_enabled" value="1" id="geofence_enabled" {{ $settings['geofence_enabled'] ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="geofence_enabled">تفعيل التحقق من الموقع</label>
+                                </div>
+                                <div class="form-check form-switch fs-5 mt-3">
+                                    <input class="form-check-input" type="checkbox" role="switch" name="require_selfie" value="1" id="require_selfie" {{ $settings['require_selfie'] ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="require_selfie">إلزام صورة سيلفي عند الحضور</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">خط العرض (Latitude)</label>
+                                <input type="number" step="any" name="office_latitude" value="{{ $settings['office_latitude'] }}" class="form-control form-control-lg" placeholder="30.0444196">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">خط الطول (Longitude)</label>
+                                <input type="number" step="any" name="office_longitude" value="{{ $settings['office_longitude'] }}" class="form-control form-control-lg" placeholder="31.2357116">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">نصف القطر المسموح (متر)</label>
+                                <input type="number" name="geofence_radius_m" value="{{ $settings['geofence_radius_m'] }}" class="form-control form-control-lg" min="10" max="5000">
+                            </div>
+                        </div>
+                        <small class="text-muted mt-3 d-block">💡 افتح مقر الشركة في Google Maps، اضغط بزر الماوس الأيمن على المكان وانسخ الإحداثيات (الرقم الأول = خط العرض، الثاني = خط الطول).</small>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="mt-5 text-end">

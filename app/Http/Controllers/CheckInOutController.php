@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CheckInOut;
+use App\Support\Geofence;
 use App\Models\AuditLog;
 use App\Models\User;
 use App\Support\PayrollPeriod;
@@ -20,7 +21,13 @@ class CheckInOutController extends Controller
         $hasCheckedIn = $todayRecords->where('type', 'حضور')->isNotEmpty();
         $hasCheckedOut = $todayRecords->where('type', 'انصراف')->isNotEmpty();
 
-        return view('check_in_out', compact('hasCheckedIn', 'hasCheckedOut'));
+        $geofence = [
+            'enabled'        => Geofence::enabled(),
+            'radius'         => Geofence::radius(),
+            'require_selfie' => Geofence::requireSelfie(),
+        ];
+
+        return view('check_in_out', compact('hasCheckedIn', 'hasCheckedOut', 'geofence'));
     }
 
     public function store(Request $request)
@@ -32,8 +39,36 @@ class CheckInOutController extends Controller
         }
 
         $request->validate([
-            'type' => 'required|in:حضور,انصراف',
+            'type'      => 'required|in:حضور,انصراف',
+            'latitude'  => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'selfie'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'source'    => 'nullable|in:web,app',
         ]);
+
+        // --- التحقق من الموقع الجغرافي (Geofencing) ---
+        $distance = null;
+        if ($request->filled('latitude') && $request->filled('longitude')) {
+            $distance = Geofence::distanceFromOffice((float) $request->latitude, (float) $request->longitude);
+        }
+
+        if (Geofence::enabled()) {
+            if ($distance === null) {
+                return redirect()->back()->withErrors(['error' => 'لا يمكن تسجيل الحضور بدون تحديد موقعك الجغرافي. فعّل الـ GPS وحاول مرة أخرى.']);
+            }
+            if ($distance > Geofence::radius()) {
+                return redirect()->back()->withErrors(['error' => 'أنت خارج نطاق الشركة بمسافة ' . $distance . ' متر (الحد المسموح ' . Geofence::radius() . ' متر).']);
+            }
+        }
+
+        // --- الصورة الشخصية كإثبات (إلزامية عند التفعيل في حالة الحضور) ---
+        if (Geofence::requireSelfie() && $request->type === 'حضور' && !$request->hasFile('selfie')) {
+            return redirect()->back()->withErrors(['error' => 'يجب التقاط صورة سيلفي لإثبات الحضور.']);
+        }
+
+        $selfiePath = $request->hasFile('selfie')
+            ? $request->file('selfie')->store('attendance_selfies/' . now()->format('Y-m'), 'public')
+            : null;
 
         $name = Auth::user()->name;
 
@@ -55,6 +90,11 @@ class CheckInOutController extends Controller
             'type' => $request->type,
             'status' => 'accepted',
             'actioned_by' => 'نظام تلقائي',
+            'latitude'    => $request->latitude,
+            'longitude'   => $request->longitude,
+            'distance_m'  => $distance,
+            'selfie_path' => $selfiePath,
+            'source'      => $request->input('source', 'web'),
         ]);
 
         if ($attendance) {

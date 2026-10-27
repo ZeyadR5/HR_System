@@ -19,6 +19,11 @@ class DeveloperSettingsController extends Controller
             'daily_overtime_limit' => Settings::get('daily_overtime_limit', 5),
             'settlement_start_day' => Settings::get('settlement_start_day', 1),
             'settlement_end_day' => Settings::get('settlement_end_day', 10),
+            'geofence_enabled' => (bool) Settings::get('geofence_enabled', false),
+            'require_selfie' => (bool) Settings::get('require_selfie', false),
+            'office_latitude' => Settings::get('office_latitude'),
+            'office_longitude' => Settings::get('office_longitude'),
+            'geofence_radius_m' => Settings::get('geofence_radius_m', 100),
         ];
 
         return view('developer.settings.index', compact('settings'));
@@ -36,6 +41,9 @@ class DeveloperSettingsController extends Controller
             'daily_overtime_limit' => 'required|integer|min:0',
             'settlement_start_day' => 'required|integer|min:1|max:31',
             'settlement_end_day' => 'required|integer|min:1|max:31',
+            'office_latitude' => 'nullable|numeric|between:-90,90',
+            'office_longitude' => 'nullable|numeric|between:-180,180',
+            'geofence_radius_m' => 'nullable|integer|min:10|max:5000',
         ]);
 
         Settings::set('payroll_start_day', $request->payroll_start_day);
@@ -47,6 +55,12 @@ class DeveloperSettingsController extends Controller
         Settings::set('daily_overtime_limit', $request->daily_overtime_limit);
         Settings::set('settlement_start_day', $request->settlement_start_day);
         Settings::set('settlement_end_day', $request->settlement_end_day);
+
+        Settings::set('geofence_enabled', $request->boolean('geofence_enabled'));
+        Settings::set('require_selfie', $request->boolean('require_selfie'));
+        Settings::set('office_latitude', $request->filled('office_latitude') ? (float) $request->office_latitude : null);
+        Settings::set('office_longitude', $request->filled('office_longitude') ? (float) $request->office_longitude : null);
+        Settings::set('geofence_radius_m', (int) ($request->geofence_radius_m ?: 100));
 
         return back()->with('success', '✅ تم حفظ إعدادات النظام بنجاح! جميع العمليات ستعتمد على هذه الأرقام من الآن.');
     }

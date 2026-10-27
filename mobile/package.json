@@ -1,0 +1,23 @@
+{
+  "name": "hr-system-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HR System - Capacitor Android/iOS shell",
+  "scripts": {
+    "sync": "cap sync android",
+    "open": "cap open android",
+    "build:apk": "cd android && gradlew.bat assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.6.9",
+    "@capacitor/camera": "^7.0.5",
+    "@capacitor/core": "^7.6.9",
+    "@capacitor/geolocation": "7.1.2",
+    "@capacitor/splash-screen": "^7.0.5",
+    "@capacitor/status-bar": "^7.0.6",
+    "capacitor-native-biometric": "^4.2.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.6.9"
+  }
+}
