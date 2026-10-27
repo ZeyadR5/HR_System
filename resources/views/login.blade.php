@@ -10,21 +10,19 @@
     @endforeach
 @endif
 
-<div class="max-w-sm mx-auto mt-20 px-4">
+<div class="max-w-sm mx-auto mt-16 px-4">
     <!-- Biometric Login Box (Shown on Native Mobile when fingerprint is registered) -->
-    <div id="bioLoginSection" style="display:none;" class="mb-6 p-5 rounded-2xl bg-slate-800/90 border border-indigo-500/40 text-center shadow-xl backdrop-blur-sm">
-        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-3xl shadow-inner">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004 11m0 0c0 .918.067 1.815.195 2.684m2.628 5.617A17.925 17.925 0 014 11"></path>
-            </svg>
+    <div id="bioLoginSection" style="display:none; background:#0f172a; color:#ffffff; border:1px solid rgba(99,102,241,0.4);" class="mb-6 p-6 rounded-2xl text-center shadow-2xl">
+        <div style="width:68px; height:68px; background:rgba(99,102,241,0.2); border:2px solid rgba(99,102,241,0.5); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:34px;">
+            👆
         </div>
-        <div class="text-base font-bold text-white mb-1">تسجيل الدخول بالبصمة</div>
-        <p class="text-xs text-gray-300 mb-4" id="bioStatus">اضغط أدناه أو استخدم بصمتك المسجلة للدخول الفوري</p>
-        <button type="button" id="bioLoginBtn" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold shadow-lg transition-all active:scale-95 cursor-pointer">
-            <span>دخول ببصمة الإصبع</span>
+        <div style="font-size:19px; font-weight:700; color:#ffffff; margin-bottom:6px;">تسجيل الدخول بالبصمة</div>
+        <p style="font-size:13px; color:#cbd5e1; margin-bottom:18px;" id="bioStatus">اضغط على الزر أدناه وضع بصمتك للدخول</p>
+        <button type="button" id="bioLoginBtn" style="width:100%; padding:13px 24px; background:linear-gradient(135deg, #4f46e5, #7c3aed); color:#ffffff; font-weight:700; font-size:15px; border-radius:12px; border:0; cursor:pointer; box-shadow:0 4px 15px rgba(79,70,229,0.4);">
+            👆 استخدام بصمة الإصبع
         </button>
-        <div class="mt-3">
-            <button type="button" id="bioForgetBtn" class="text-xs text-gray-400 hover:text-red-400 underline transition cursor-pointer">
+        <div style="margin-top:14px;">
+            <button type="button" id="bioForgetBtn" style="background:transparent; border:0; font-size:12px; color:#94a3b8; text-decoration:underline; cursor:pointer;">
                 إلغاء البصمة المحفوظة لهذا الجهاز
             </button>
         </div>
@@ -32,9 +30,9 @@
 
     <!-- Divider when Biometrics are active -->
     <div id="bioDivider" style="display:none;" class="relative flex py-2 items-center mb-6">
-        <div class="flex-grow border-t border-gray-600"></div>
-        <span class="flex-shrink mx-4 text-xs text-gray-400 font-medium">أو الدخول بكلمة المرور</span>
-        <div class="flex-grow border-t border-gray-600"></div>
+        <div class="flex-grow border-t border-gray-400"></div>
+        <span class="flex-shrink mx-4 text-xs text-gray-500 font-medium">أو الدخول بكلمة المرور</span>
+        <div class="flex-grow border-t border-gray-400"></div>
     </div>
 
     <!-- Standard Login Form -->
@@ -56,7 +54,7 @@
         <!-- Option to enable Biometrics on next login (Native Mobile only) -->
         <div id="saveBioOption" style="display:none;" class="flex items-center gap-2 mb-5">
             <input type="checkbox" id="enable_biometric" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-neutral-secondary-medium border-default-medium cursor-pointer" checked>
-            <label for="enable_biometric" class="text-xs text-gray-300 select-none cursor-pointer">
+            <label for="enable_biometric" class="text-xs text-gray-600 select-none cursor-pointer">
                 تفعيل الدخول ببصمة الإصبع مستقبلاً على هذا الجهاز
             </label>
         </div>
@@ -88,7 +86,7 @@
     Bio.isAvailable().then(function (result) {
         if (!result || !result.isAvailable) return;
 
-        // Biometrics supported on this phone
+        // دعم البصمة متاح على هذا الموبايل
         saveBioOpt.style.display = 'flex';
 
         var hasSaved = localStorage.getItem('has_bio_saved') === '1';
@@ -96,7 +94,7 @@
             bioSection.style.display = 'block';
             bioDivider.style.display = 'flex';
 
-            // Automatic prompt on first page load
+            // طلب البصمة فوراً عبر نافذة النظام
             triggerBioAuth();
         }
 
@@ -123,23 +121,34 @@
 
     function triggerBioAuth() {
         if (!Bio) return;
-        bioStatus.textContent = 'جاري التحقق من البصمة...';
+        bioStatus.textContent = 'ضع إصبعك على حساس البصمة الآن...';
 
-        Bio.getCredentials({ server: 'gamma.hrsystem' })
-            .then(function (creds) {
-                if (creds && creds.username && creds.password) {
-                    bioStatus.textContent = 'تم التعرف على البصمة! جاري الدخول...';
-                    emailInput.value = creds.username;
-                    passInput.value = creds.password;
-                    form.submit();
-                } else {
-                    bioStatus.textContent = 'لم يتم العثور على بصمة مسجلة، أدخل كلمة المرور أدناه';
-                }
-            })
-            .catch(function (err) {
-                console.log('Biometric prompt canceled/failed:', err);
-                bioStatus.textContent = 'يمكنك استخدام البصمة أو تسجيل الدخول بالباسورد أدناه';
-            });
+        // 1. إظهار نافذة البصمة الرسمية للنظام أولاً للتأكد من بصمة الموظف
+        Bio.verifyIdentity({
+            title: 'تسجيل الدخول بالبصمة',
+            subtitle: 'ضع بصمة إصبعك لتسجيل الدخول',
+            reason: 'تأكيد الهوية للمتابعة',
+            maxAttempts: 3,
+            useFallback: true
+        })
+        .then(function () {
+            // 2. بعد نجاح البصمة فقط، نجلب البيانات ونسجل الدخول
+            bioStatus.textContent = 'تم التحقق من البصمة بنجاح! جاري الدخول...';
+            return Bio.getCredentials({ server: 'gamma.hrsystem' });
+        })
+        .then(function (creds) {
+            if (creds && creds.username && creds.password) {
+                emailInput.value = creds.username;
+                passInput.value = creds.password;
+                form.submit();
+            } else {
+                bioStatus.textContent = 'لم يتم العثور على بيانات محفوظة، يرجى كتابة كلمة المرور';
+            }
+        })
+        .catch(function (err) {
+            console.log('Biometric prompt canceled/failed:', err);
+            bioStatus.textContent = 'تم إلغاء طلب البصمة. يمكنك المحاولة مجدداً أو كتابة كلمة المرور';
+        });
     }
 
     form.addEventListener('submit', function () {
